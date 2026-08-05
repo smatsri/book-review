@@ -1,0 +1,13 @@
+---
+description: Keep session memory and docs consistent when finishing work
+alwaysApply: true
+---
+
+# Knowledge base hygiene
+
+- Treat `todo.md` as short-term memory (Session + Now/Next/Done). Update it when finishing a task.
+- Treat `docs/` as current truth. Prefer `docs/architecture.md`, `docs/runbook.md`, `docs/decisions.md` over chat history.
+- Treat `idea.md` as vision only — do not implement or document aspirational agents as if they already exist.
+- One home per fact: update the matching file; link elsewhere instead of duplicating.
+- When a lasting choice changes (provider, CLI contract, layout), append or supersede an entry in `docs/decisions.md`.
+- Do not invent env vars, commands, or modules missing from code + docs.

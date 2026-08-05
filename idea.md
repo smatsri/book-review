@@ -1,5 +1,8 @@
 # מערכת סוכני AI לניתוח והעשרת ספרים
 
+> Vision / future design. **Current truth:** [`docs/architecture.md`](docs/architecture.md).  
+> Session memory: [`todo.md`](todo.md). Agent workflow: [`AGENTS.md`](AGENTS.md).
+
 ## רעיון כללי
 
 המטרה היא לבנות מערכת Multi-Agent שמדמה צוות עריכה ספרותי.
