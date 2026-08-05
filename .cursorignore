@@ -1,0 +1,6 @@
+# Raw book sources — keep out of Cursor index / agent context
+data/books/
+
+# Local env / venv
+.venv/
+.env
