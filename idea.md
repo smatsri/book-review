@@ -293,6 +293,8 @@ LLM Response
 - יצירת תיאורי תמונה.
 - שילוב תמונות.
 
+מפרט מלא לתוצר Visual Bible (סגנון, דמויות, סצנות, רמות ביטחון): [`idea/visual_bible_for_books.md`](idea/visual_bible_for_books.md).
+
 ---
 
 ## Footnote Agent
