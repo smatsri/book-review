@@ -5,26 +5,26 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Dual LLM providers (Gemini + LM Studio) done; next is Critic loop. Qwen lean noted for Reader/dev fidelity.
-- **Last success:** LM Studio smoke — `summarize --chapter 1 --force` with `LLM_PROVIDER=lmstudio` (~10 min on Qwen 3.5 9B); docs note `json_schema` + local timing.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
+- **Stopped at:** Critic loop (one-pass) implemented; next is book-level structured rollup.
+- **Last success:** Wired Reader → Editor draft → Critic → revise; critique JSON in `state/`; docs updated. Smoke not re-run in this session — use `summarize --chapter 1 --force`.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
 - **Parked:** Paid Flash vs stronger models / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
 
-- [ ] Add Critic loop (critique → revise → final)
-
-## Next
-
 - [ ] Book-level structured rollup in `state/` (cross-chapter characters, themes)
 
-## Later
+## Next
 
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Context: provider switch done (`LLM_PROVIDER=gemini|lmstudio`); hybrid map-local / Critic-cloud still open — see `docs/decisions.md`
   - Trigger: quality or quota needs beyond one global provider
-  - Lean: local Qwen for Reader/dev fidelity; ~5–10 min/chapter on M2 → single-chapter smoke, not full-book thrash; hybrid still open
+  - Lean: local Qwen for Reader/dev fidelity; ~5–10 min/call on M2 with thinking → single-chapter smoke, not full-book thrash; hybrid still open
   - Do not redo: chapter-1 Gemini vs Qwen comparison (notes in decisions + `idea/model_comparison_and_context_enrichment.md`)
+
+## Later
+
+- [ ] Multi-round Critic (loop until ok / max N) — only if one-pass is insufficient
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent
@@ -45,3 +45,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Split roles: Reader agent → Editor agent
 - [x] Persist per-chapter structured analysis in `state/`
 - [x] Dual LLM providers: Gemini + LM Studio (`LLM_PROVIDER`)
+- [x] Critic loop (critique → revise → final, one pass)

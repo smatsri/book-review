@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor per chapter, and merge a Markdown report.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, and merge a Markdown report.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -27,13 +27,13 @@ List chapters (no LLM call):
 python main.py chapters
 ```
 
-Summarize one chapter (Reader → Editor):
+Summarize one chapter (Reader → Editor → Critic → revise):
 
 ```powershell
 python main.py summarize --chapter 1
 ```
 
-Writes `state/chapter-01-analysis.json` and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` to regenerate.
+Writes `state/chapter-01-analysis.json`, `state/chapter-01-critique.json`, and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` to regenerate.
 
 ## Knowledge base
 
@@ -49,11 +49,11 @@ Writes `state/chapter-01-analysis.json` and `output/chapter-01-summary.md`. Re-r
 ## Layout
 
 ```
-agents/          # LLM agents (llm helper, reader, editor)
+agents/          # LLM agents (llm, reader, editor, critic)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
 output/          # Generated Markdown
-state/           # Intermediate JSON / Reader analysis
+state/           # Intermediate JSON (Reader analysis, Critic critique)
 book.py          # Load book + split chapters
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
@@ -63,7 +63,7 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Critic loop (critique → revise → final)  
+1. Book-level structured rollup in `state/`  
 2. Later: RAG, footnotes, visuals, export formats  
 
 Details: `todo.md` and `idea.md`.

@@ -24,6 +24,10 @@ def chapter_analysis_path(number: int) -> Path:
     return STATE_DIR / f"chapter-{number:02d}-analysis.json"
 
 
+def chapter_critique_path(number: int) -> Path:
+    return STATE_DIR / f"chapter-{number:02d}-critique.json"
+
+
 def write_book_report(chapters: list[Chapter]) -> Path:
     """Merge existing chapter summaries into one Markdown report (no LLM)."""
     parts: list[str] = []
@@ -52,12 +56,14 @@ def write_book_report(chapters: list[Chapter]) -> Path:
 
 
 def summarize_one(chapter: Chapter, *, force: bool) -> str:
-    """Reader → Editor for one chapter. Returns 'wrote', 'skip', or raises."""
-    from agents.editor import edit_analysis
+    """Reader → Editor → Critic → revise for one chapter. Returns 'wrote', 'skip', or raises."""
+    from agents.critic import critique_draft
+    from agents.editor import edit_analysis, revise_summary
     from agents.reader import read_chapter
 
     out_path = chapter_summary_path(chapter.number)
     notes_path = chapter_analysis_path(chapter.number)
+    critique_path = chapter_critique_path(chapter.number)
 
     if out_path.exists() and not force:
         print(
@@ -78,8 +84,22 @@ def summarize_one(chapter: Chapter, *, force: bool) -> str:
         )
         print(f"Wrote {notes_path.relative_to(ROOT)}")
 
-    print(f"Editing {chapter.heading} ...")
-    markdown = edit_analysis(analysis)
+    print(f"Editing draft {chapter.heading} ...")
+    draft = edit_analysis(analysis)
+
+    print(f"Critiquing {chapter.heading} ...")
+    critique = critique_draft(chapter, analysis, draft)
+    critique_path.write_text(
+        json.dumps(critique, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"Wrote {critique_path.relative_to(ROOT)} "
+        f"(verdict={critique.get('verdict', '?')})"
+    )
+
+    print(f"Revising {chapter.heading} ...")
+    markdown = revise_summary(analysis, draft, critique)
     out_path.write_text(markdown, encoding="utf-8")
     print(f"Wrote {out_path.relative_to(ROOT)}")
     return "wrote"
@@ -149,8 +169,8 @@ def build_parser() -> argparse.ArgumentParser:
     summarize_parser = sub.add_parser(
         "summarize",
         help=(
-            "Reader→Editor for chapter(s); writes state analysis + output summary; "
-            "--all also writes book-report.md"
+            "Reader→Editor→Critic→revise for chapter(s); writes state analysis + "
+            "critique + output summary; --all also writes book-report.md"
         ),
     )
     summarize_parser.add_argument(
@@ -168,7 +188,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--force",
         action="store_true",
         help=(
-            "Regenerate Reader notes and Editor summary even if output already exists"
+            "Regenerate Reader notes, critique, and summary even if output already exists"
         ),
     )
     summarize_parser.set_defaults(func=cmd_summarize)

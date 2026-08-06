@@ -52,4 +52,75 @@ Do not include a top-level title; the caller adds the chapter heading.
     return f"# {heading}\n\n{body}\n"
 
 
-__all__ = ["edit_analysis"]
+REVISE_SYSTEM_PROMPT = """You are a careful literary Editor agent doing a revision pass.
+You receive Reader analysis, a draft Markdown summary, and Critic feedback.
+Apply required fixes; use optional improvements when they improve fidelity.
+Be faithful to the chapter analysis and Critic evidence; do not invent events,
+characters, or quotes. Keep the same Markdown section structure as the draft."""
+
+
+def revise_summary(
+    analysis: dict[str, Any],
+    draft_markdown: str,
+    critique: dict[str, Any],
+    *,
+    model: str | None = None,
+) -> str:
+    """Revise draft Markdown using Critic feedback; return final chapter document."""
+    heading = analysis.get("heading") or f"Chapter {analysis.get('chapter', '?')}"
+    notes = json.dumps(
+        {
+            "plot": analysis.get("plot", ""),
+            "characters": analysis.get("characters", []),
+            "themes": analysis.get("themes", []),
+            "quotes": analysis.get("quotes", []),
+            "events": analysis.get("events", []),
+        },
+        indent=2,
+        ensure_ascii=False,
+    )
+    critique_payload = json.dumps(
+        {
+            "verdict": critique.get("verdict", ""),
+            "issues": critique.get("issues", []),
+            "must_fix": critique.get("must_fix", []),
+            "optional_improve": critique.get("optional_improve", []),
+        },
+        indent=2,
+        ensure_ascii=False,
+    )
+
+    user_prompt = f"""Chapter: {heading}
+
+Reader analysis (JSON):
+{notes}
+
+Draft summary (Markdown):
+---
+{draft_markdown}
+---
+
+Critic feedback (JSON):
+{critique_payload}
+
+Produce revised Markdown with these sections:
+1. Brief plot summary (a few paragraphs)
+2. Characters who appear or are mentioned
+3. Themes / motifs in this chapter
+4. Notable quotes (1-3 short quotes, if any stand out)
+
+Apply every item in must_fix. Apply optional_improve when it improves fidelity
+without inventing content. Do not include a top-level title; the caller adds the
+chapter heading.
+"""
+
+    body = generate_text(
+        system=REVISE_SYSTEM_PROMPT,
+        user=user_prompt,
+        model=model,
+        temperature=0.3,
+    )
+    return f"# {heading}\n\n{body}\n"
+
+
+__all__ = ["edit_analysis", "revise_summary"]

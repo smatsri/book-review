@@ -95,3 +95,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** `LLM_PROVIDER` selects `gemini` (default) or `lmstudio`. Both paths share `agents/llm.py` → `generate_text`. LM Studio uses the OpenAI-compatible local server (`LMSTUDIO_BASE_URL` / `LMSTUDIO_MODEL`). No CLI `--provider` flag; no per-agent hybrid yet.  
 **Consequences:** Switch providers in `.env`; install both `google-genai` and `openai`. LM Studio JSON mode uses `json_schema` (not `json_object`). Local 9B runs are slow/hot vs Gemini. Billing / paid Flash vs Pro mix and local+cloud hybrid remain open (Later).  
 **Supersedes:** “LLM cost / model choice (deferred)” for the provider-switch question only.
+
+## 2026-08 — Critic loop (one-pass)
+
+**Status:** current  
+**Context:** Reader JSON + Editor Markdown were publishable without a quality gate; `idea.md` stage 3 asks for critique → revision.  
+**Decision:** `summarize` runs Reader → Editor draft → Critic (`state/chapter-NN-critique.json`) → one Editor revise → `output/chapter-NN-summary.md`. Critic returns structured `verdict` / `issues` / `must_fix` / `optional_improve`. No multi-round loop yet. Skip/force unchanged (skip on existing summary; `--force` regenerates analysis + critique + summary).  
+**Consequences:** Up to four LLM calls per regenerated chapter. Thinking/reasoning (LM Studio UI) is optional and most useful on Critic; not a code toggle.  
+**Extends:** “Reader → Editor role split”.
