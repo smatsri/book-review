@@ -64,7 +64,7 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Decide billing / model quality strategy  
-2. Later: RAG, footnotes, visuals, export formats, LLM book synthesis  
+1. Fuzzy / LLM character–theme alias merge on the book rollup  
+2. Later: RAG, footnotes, visuals, export, LLM book synthesis; billing/hybrid when needed  
 
 Details: `todo.md` and `idea.md`.

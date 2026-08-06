@@ -88,6 +88,14 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Open (billing / quality mix):** paid Flash; Flash+Pro/Sonnet mix; per-agent hybrid. Provider plumbing is decided below.  
 **Tracked in:** `todo.md` Later.
 
+## 2026-08 — Park billing; local Qwen for current dev
+
+**Status:** current  
+**Context:** Dual providers work; free-tier Gemini quota was the original pain; local Qwen via LM Studio is acceptable for the current development loop.  
+**Decision:** Do not decide paid Flash / Pro-Sonnet mix / per-agent hybrid now. Keep `LLM_PROVIDER=lmstudio` (local Qwen) as the default working setup for ongoing feature work. Revisit billing/hybrid when quota returns as a blocker or local quality/latency is insufficient.  
+**Consequences:** Next product work can proceed without a billing choice; cost notes above remain reference material.  
+**Supersedes:** the “open now” urgency of billing in “LLM cost / model choice (deferred)” — still Later, not Now.
+
 ## 2026-08 — Dual providers: Gemini + LM Studio
 
 **Status:** current  

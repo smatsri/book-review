@@ -5,18 +5,16 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Book-level structured rollup shipped (`state/book-rollup.json`); next is billing / model quality strategy.
-- **Last success:** Deterministic `rollup.py` + `python main.py rollup`; characters/themes merged across chapter analyses; `summarize --all` writes report + rollup. Smoke: Alice → 12 chapters, 39 characters, 47 themes; `The White Rabbit` merges with `White Rabbit`.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
-- **Parked:** Paid Flash vs stronger models / per-agent hybrid — see Later + `docs/decisions.md`. Fuzzy character alias merge / LLM reduce — Later.
+- **Stopped at:** Billing / model mix parked; local Qwen via LM Studio is fine for current dev. Next build: fuzzy / LLM character–theme alias merge on the rollup.
+- **Last success:** Book-level structured rollup (`state/book-rollup.json`); Alice smoke 12 chapters / 39 characters / 47 themes.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now (see `docs/decisions.md`).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — revisit when quota or quality blocks local-only dev. See Later + `docs/decisions.md`.
 
 ## Now
 
-- [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
-  - Context: provider switch done (`LLM_PROVIDER=gemini|lmstudio`); hybrid map-local / Critic-cloud still open — see `docs/decisions.md`
-  - Trigger: quality or quota needs beyond one global provider
-  - Lean: local Qwen for Reader/dev fidelity; ~5–10 min/call on M2 with thinking → single-chapter smoke, not full-book thrash; hybrid still open
-  - Do not redo: chapter-1 Gemini vs Qwen comparison (notes in decisions + `idea/model_comparison_and_context_enrichment.md`)
+- [ ] Fuzzy / LLM character–theme alias merge (beyond normalize rules)
+  - Builds on `state/book-rollup.json` (e.g. Queen vs Queen of Hearts)
+  - Keep deterministic rollup as baseline; alias merge is an enrichment step
 
 ## Next
 
@@ -24,8 +22,11 @@ _(empty — promote from Later when ready)_
 
 ## Later
 
+- [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
+  - Parked: local Qwen (`LLM_PROVIDER=lmstudio`) is enough for current dev
+  - Trigger: free-tier/quota pain returns, or quality needs beyond local 9B
+  - Context / lean notes: `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] Multi-round Critic (loop until ok / max N) — only if one-pass is insufficient
-- [ ] Fuzzy / LLM character–theme alias merge (beyond normalize rules)
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent
