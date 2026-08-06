@@ -5,9 +5,10 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Reader → Editor split done; next is Critic loop.
+- **Stopped at:** Reader → Editor split done; next is Critic loop. LLM billing/model choice parked (deferred).
 - **Last success:** `summarize --chapter 1 --force` → `state/chapter-01-analysis.json` + `output/chapter-01-summary.md` (smoke).
 - **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split.
+- **Parked:** Free-tier Gemini 429 / paid vs stronger models — see Later + `docs/decisions.md`.
 
 ## Now
 
@@ -19,6 +20,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Later
 
+- [ ] Decide Gemini billing + model strategy (paid tier? Flash vs Pro vs mix)
+  - Context: deferred note in `docs/decisions.md` (“LLM cost / model choice — deferred”)
+  - Trigger: free-tier 429s blocking map/Critic work; no decision yet
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent

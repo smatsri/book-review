@@ -58,3 +58,19 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Context:** Stage-1 single summarizer mixed analysis and prose; Stage 2 needs separate roles before a Critic loop.  
 **Decision:** Replace `agents/summarizer.py` with `agents/reader.py` (chapter → JSON in `state/chapter-NN-analysis.json`) and `agents/editor.py` (JSON → `output/chapter-NN-summary.md`). Shared Gemini helper in `agents/llm.py`. CLI stays `summarize` / `--force` / `--all`; skip when summary exists; reuse Reader JSON when summary is missing.  
 **Consequences:** Up to two LLM calls per regenerated chapter; Markdown section contract for humans unchanged; structured notes enable Critic later.
+
+## 2026-08 — LLM cost / model choice (deferred)
+
+**Status:** deferred — not decided  
+**Context:** Free-tier Gemini hit `generate_content_free_tier_requests` (20/day on `gemini-3.5-flash`). Reader+Editor = 2 calls/chapter; Critic/footnotes will raise call count. Paying is mostly for quota; Alice-sized text cost is small.  
+**Summary (ballpark, analysis only, no image gen):**
+
+- Paid Flash list: ~$1.50/1M in, ~$9/1M out (thinking counts as output).
+- Clean Alice today (Reader+Editor): ~$0.25–1 per full pass.
+- Fuller stack (Critic + rollup + footnotes): ~$1–few $ per clean pass on Flash; Pro ~1.3×; Sonnet ~2×; Opus/Sol-class ~3×.
+- Dev thrash (`--force` full-book regen) dominates the bill more than one production run.
+- Likely pattern if upgrading quality: Flash for map/Reader, stronger model for Critic/Editor.
+
+**Open choice:** stay free + wait; enable billing on Flash; or Flash+Pro/Sonnet mix.  
+**Not decided:** do not change `GEMINI_MODEL` / provider until this is resolved.  
+**Tracked in:** `todo.md` Later.
