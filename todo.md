@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Critic loop (one-pass) implemented; next is book-level structured rollup.
-- **Last success:** Wired Reader → Editor draft → Critic → revise; critique JSON in `state/`; docs updated. Smoke not re-run in this session — use `summarize --chapter 1 --force`.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
+- **Stopped at:** Draft persistence + `--from` stage restart shipped; next remains book-level structured rollup.
+- **Last success:** Persist `state/chapter-NN-draft.md`; soft resume analysis→draft→critique; `summarize --from reader|draft|critic|revise` (exclusive with `--force`). Docs updated. Smoke: `--help` + missing-prereq / skip checks; full LLM `--from critic` not re-run here.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from` (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
 - **Parked:** Paid Flash vs stronger models / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
@@ -46,3 +46,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Persist per-chapter structured analysis in `state/`
 - [x] Dual LLM providers: Gemini + LM Studio (`LLM_PROVIDER`)
 - [x] Critic loop (critique → revise → final, one pass)
+- [x] Persist Editor draft + `summarize --from` stage restart / soft resume

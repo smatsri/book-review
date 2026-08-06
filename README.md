@@ -33,7 +33,7 @@ Summarize one chapter (Reader → Editor → Critic → revise):
 python main.py summarize --chapter 1
 ```
 
-Writes `state/chapter-01-analysis.json`, `state/chapter-01-critique.json`, and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` to regenerate.
+Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/chapter-01-critique.json`, and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` for a full regen or `--from draft|critic|revise` to restart mid-pipeline.
 
 ## Knowledge base
 
@@ -53,7 +53,7 @@ agents/          # LLM agents (llm, reader, editor, critic)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
 output/          # Generated Markdown
-state/           # Intermediate JSON (Reader analysis, Critic critique)
+state/           # Intermediate artifacts (Reader JSON, Editor draft, Critic JSON)
 book.py          # Load book + split chapters
 main.py          # CLI
 AGENTS.md        # Agent/human workflow

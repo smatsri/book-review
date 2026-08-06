@@ -22,7 +22,8 @@ chapters   summarize                                  report
 (CLI)      (CLI → Reader → Editor → Critic → revise)  (CLI, no LLM)
    |         |                                          |
 state/     state/chapter-NN-analysis.json
-chapters.json  state/chapter-NN-critique.json
+chapters.json  state/chapter-NN-draft.md
+               state/chapter-NN-critique.json
                → output/chapter-NN-summary.md
                (--all then merge → output/book-report.md)
 ```
@@ -32,13 +33,13 @@ chapters.json  state/chapter-NN-critique.json
 | Path | Role |
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
-| `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`), `report` |
+| `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`, `--from STAGE`), `report` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
 | `agents/critic.py` | Critic agent: chapter + analysis + draft → structured critique JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
-| `state/` | Chapter metadata + per-chapter Reader JSON + Critic JSON |
+| `state/` | Chapter metadata + Reader JSON + Editor draft Markdown + Critic JSON |
 | `output/` | Per-chapter summaries + merged `book-report.md` |
 
 ## Data model
@@ -72,13 +73,14 @@ Critic critique (`state/chapter-NN-critique.json`):
 - Reader / Critic: JSON mode (Gemini mime type / LM Studio `response_format=json_schema`; LM Studio rejects OpenAI’s `json_object`)
 - Editor draft + revise: Markdown sections — plot summary, characters, themes/motifs, notable quotes
 - Full-book report: deterministic merge of chapter files (no extra LLM call)
-- Regenerating a chapter: up to four LLM calls (Reader, Editor draft, Critic, revise)
+- Regenerating a chapter: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
 
-## Skip / force
+## Skip / force / from
 
-- Skip when `output/chapter-NN-summary.md` exists (unless `--force`)
-- If summary is missing but Reader JSON exists, Reader is reused; Editor draft → Critic → revise still run
-- `--force` regenerates Reader notes, critique, and summary
+- Skip when `output/chapter-NN-summary.md` exists (unless `--force` or `--from`)
+- Soft resume when summary is missing: reuse the contiguous prefix of artifacts (`analysis` → `draft` → `critique`), then continue from the first gap
+- `--force` regenerates from Reader through summary (mutually exclusive with `--from`)
+- `--from reader|draft|critic|revise` restarts at that stage (reuses earlier artifacts; requires them to exist); overrides skip when summary exists
 
 ## Not built yet
 

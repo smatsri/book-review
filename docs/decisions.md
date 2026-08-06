@@ -103,3 +103,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** `summarize` runs Reader → Editor draft → Critic (`state/chapter-NN-critique.json`) → one Editor revise → `output/chapter-NN-summary.md`. Critic returns structured `verdict` / `issues` / `must_fix` / `optional_improve`. No multi-round loop yet. Skip/force unchanged (skip on existing summary; `--force` regenerates analysis + critique + summary).  
 **Consequences:** Up to four LLM calls per regenerated chapter. Thinking/reasoning (LM Studio UI) is optional and most useful on Critic; not a code toggle.  
 **Extends:** “Reader → Editor role split”.
+
+## 2026-08 — Persist draft + `--from` stage restart
+
+**Status:** current  
+**Context:** Critic/revise iteration re-ran Reader + draft; local models make that expensive. Soft reuse only covered Reader JSON.  
+**Decision:** Persist Editor draft as `state/chapter-NN-draft.md`. Soft-resume when summary is missing from the first gap in analysis → draft → critique. Add `summarize --from reader|draft|critic|revise` to restart mid-pipeline (requires upstream artifacts; overrides summary skip). `--force` remains full regen and is mutually exclusive with `--from`.  
+**Consequences:** Crash recovery and Critic-only/revise-only smokes without separate CLI commands. Older chapters lack draft files until regenerated (`--force` or `--from draft`).  
+**Extends:** “Skip existing chapter summaries unless --force” and “Critic loop (one-pass)”.

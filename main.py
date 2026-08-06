@@ -15,6 +15,9 @@ OUTPUT_DIR = ROOT / "output"
 STATE_DIR = ROOT / "state"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
 
+# Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
+STAGES = ("reader", "draft", "critic", "revise")
+
 
 def chapter_summary_path(number: int) -> Path:
     return OUTPUT_DIR / f"chapter-{number:02d}-summary.md"
@@ -22,6 +25,10 @@ def chapter_summary_path(number: int) -> Path:
 
 def chapter_analysis_path(number: int) -> Path:
     return STATE_DIR / f"chapter-{number:02d}-analysis.json"
+
+
+def chapter_draft_path(number: int) -> Path:
+    return STATE_DIR / f"chapter-{number:02d}-draft.md"
 
 
 def chapter_critique_path(number: int) -> Path:
@@ -55,27 +62,115 @@ def write_book_report(chapters: list[Chapter]) -> Path:
     return BOOK_REPORT_PATH
 
 
-def summarize_one(chapter: Chapter, *, force: bool) -> str:
-    """Reader → Editor → Critic → revise for one chapter. Returns 'wrote', 'skip', or raises."""
+def _require_artifact(path: Path, *, stage: str, hint: str) -> None:
+    if not path.exists():
+        raise SystemExit(
+            f"Cannot --from {stage}: missing {path.relative_to(ROOT)}. {hint}"
+        )
+
+
+def _resolve_start(
+    *,
+    force: bool,
+    from_stage: str | None,
+    out_path: Path,
+    notes_path: Path,
+    draft_path: Path,
+    critique_path: Path,
+) -> str | None:
+    """Return pipeline start stage, or None to skip the chapter."""
+    if force and from_stage:
+        raise SystemExit("Use either --force or --from, not both")
+
+    if from_stage:
+        if from_stage == "draft":
+            _require_artifact(
+                notes_path,
+                stage=from_stage,
+                hint="Run Reader first (summarize without --from, or --from reader).",
+            )
+        elif from_stage == "critic":
+            _require_artifact(
+                notes_path,
+                stage=from_stage,
+                hint="Need Reader analysis first.",
+            )
+            _require_artifact(
+                draft_path,
+                stage=from_stage,
+                hint="Need Editor draft first (--from draft).",
+            )
+        elif from_stage == "revise":
+            _require_artifact(
+                notes_path,
+                stage=from_stage,
+                hint="Need Reader analysis first.",
+            )
+            _require_artifact(
+                draft_path,
+                stage=from_stage,
+                hint="Need Editor draft first.",
+            )
+            _require_artifact(
+                critique_path,
+                stage=from_stage,
+                hint="Need Critic JSON first (--from critic).",
+            )
+        return from_stage
+
+    if force:
+        return "reader"
+
+    if out_path.exists():
+        return None
+
+    # Soft resume: continue from the first missing artifact in the chain.
+    if not notes_path.exists():
+        return "reader"
+    if not draft_path.exists():
+        return "draft"
+    if not critique_path.exists():
+        return "critic"
+    return "revise"
+
+
+def summarize_one(
+    chapter: Chapter,
+    *,
+    force: bool,
+    from_stage: str | None,
+) -> str:
+    """Reader → Editor draft → Critic → revise for one chapter.
+
+    Returns 'wrote', 'skip', or raises.
+    """
     from agents.critic import critique_draft
     from agents.editor import edit_analysis, revise_summary
     from agents.reader import read_chapter
 
     out_path = chapter_summary_path(chapter.number)
     notes_path = chapter_analysis_path(chapter.number)
+    draft_path = chapter_draft_path(chapter.number)
     critique_path = chapter_critique_path(chapter.number)
 
-    if out_path.exists() and not force:
+    start = _resolve_start(
+        force=force,
+        from_stage=from_stage,
+        out_path=out_path,
+        notes_path=notes_path,
+        draft_path=draft_path,
+        critique_path=critique_path,
+    )
+    if start is None:
         print(
             f"Skip {chapter.heading}: {out_path.relative_to(ROOT)} already exists "
-            "(use --force to regenerate)"
+            "(use --force or --from STAGE to regenerate)"
         )
         return "skip"
 
-    if notes_path.exists() and not force:
-        print(f"Reusing Reader notes {notes_path.relative_to(ROOT)}")
-        analysis = json.loads(notes_path.read_text(encoding="utf-8"))
-    else:
+    start_idx = STAGES.index(start)
+
+    if start_idx <= STAGES.index("reader"):
         print(f"Reading {chapter.heading} ...")
         analysis = read_chapter(chapter)
         notes_path.write_text(
@@ -83,20 +178,33 @@ def summarize_one(chapter: Chapter, *, force: bool) -> str:
             encoding="utf-8",
         )
         print(f"Wrote {notes_path.relative_to(ROOT)}")
+    else:
+        print(f"Reusing Reader notes {notes_path.relative_to(ROOT)}")
+        analysis = json.loads(notes_path.read_text(encoding="utf-8"))
 
-    print(f"Editing draft {chapter.heading} ...")
-    draft = edit_analysis(analysis)
+    if start_idx <= STAGES.index("draft"):
+        print(f"Editing draft {chapter.heading} ...")
+        draft = edit_analysis(analysis)
+        draft_path.write_text(draft, encoding="utf-8")
+        print(f"Wrote {draft_path.relative_to(ROOT)}")
+    else:
+        print(f"Reusing Editor draft {draft_path.relative_to(ROOT)}")
+        draft = draft_path.read_text(encoding="utf-8")
 
-    print(f"Critiquing {chapter.heading} ...")
-    critique = critique_draft(chapter, analysis, draft)
-    critique_path.write_text(
-        json.dumps(critique, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
-    print(
-        f"Wrote {critique_path.relative_to(ROOT)} "
-        f"(verdict={critique.get('verdict', '?')})"
-    )
+    if start_idx <= STAGES.index("critic"):
+        print(f"Critiquing {chapter.heading} ...")
+        critique = critique_draft(chapter, analysis, draft)
+        critique_path.write_text(
+            json.dumps(critique, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        print(
+            f"Wrote {critique_path.relative_to(ROOT)} "
+            f"(verdict={critique.get('verdict', '?')})"
+        )
+    else:
+        print(f"Reusing Critic notes {critique_path.relative_to(ROOT)}")
+        critique = json.loads(critique_path.read_text(encoding="utf-8"))
 
     print(f"Revising {chapter.heading} ...")
     markdown = revise_summary(analysis, draft, critique)
@@ -142,7 +250,11 @@ def cmd_summarize(args: argparse.Namespace) -> None:
 
     wrote = skipped = 0
     for chapter in targets:
-        result = summarize_one(chapter, force=args.force)
+        result = summarize_one(
+            chapter,
+            force=args.force,
+            from_stage=args.from_stage,
+        )
         if result == "wrote":
             wrote += 1
         else:
@@ -170,7 +282,7 @@ def build_parser() -> argparse.ArgumentParser:
         "summarize",
         help=(
             "Reader→Editor→Critic→revise for chapter(s); writes state analysis + "
-            "critique + output summary; --all also writes book-report.md"
+            "draft + critique + output summary; --all also writes book-report.md"
         ),
     )
     summarize_parser.add_argument(
@@ -188,7 +300,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--force",
         action="store_true",
         help=(
-            "Regenerate Reader notes, critique, and summary even if output already exists"
+            "Regenerate from Reader through summary even if output already exists "
+            "(mutually exclusive with --from)"
+        ),
+    )
+    summarize_parser.add_argument(
+        "--from",
+        dest="from_stage",
+        choices=STAGES,
+        metavar="STAGE",
+        help=(
+            "Restart at STAGE (reader|draft|critic|revise), reusing earlier "
+            "artifacts; overrides skip when summary exists"
         ),
     )
     summarize_parser.set_defaults(func=cmd_summarize)
