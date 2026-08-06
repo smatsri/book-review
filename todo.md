@@ -5,16 +5,14 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Billing / model mix parked; local Qwen via LM Studio is fine for current dev. Next build: fuzzy / LLM character–theme alias merge on the rollup.
-- **Last success:** Book-level structured rollup (`state/book-rollup.json`); Alice smoke 12 chapters / 39 characters / 47 themes.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now (see `docs/decisions.md`).
+- **Stopped at:** Alias merge shipped (`aliases` → `state/book-rollup-merged.json`). Promote Next from Later when ready.
+- **Last success:** LLM character/theme alias merge on book rollup (baseline `book-rollup.json` unchanged).
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now, alias merge CLI/agent (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — revisit when quota or quality blocks local-only dev. See Later + `docs/decisions.md`.
 
 ## Now
 
-- [ ] Fuzzy / LLM character–theme alias merge (beyond normalize rules)
-  - Builds on `state/book-rollup.json` (e.g. Queen vs Queen of Hearts)
-  - Keep deterministic rollup as baseline; alias merge is an enrichment step
+_(empty — promote from Later when ready)_
 
 ## Next
 
@@ -50,3 +48,4 @@ _(empty — promote from Later when ready)_
 - [x] Critic loop (critique → revise → final, one pass)
 - [x] Persist Editor draft + `summarize --from` stage restart / soft resume
 - [x] Book-level structured rollup in `state/` (cross-chapter characters, themes)
+- [x] Fuzzy / LLM character–theme alias merge (`aliases` → `state/book-rollup-merged.json`)

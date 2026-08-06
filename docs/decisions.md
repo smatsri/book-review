@@ -125,5 +125,13 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Status:** current  
 **Context:** Per-chapter Reader JSON has characters/themes but no shared book cast or theme index; `book-report.md` only concatenates Markdown. Downstream agents need structured cross-chapter state.  
 **Decision:** Add `rollup.py` + CLI `rollup` writing `state/book-rollup.json` from all `chapter-NN-analysis.json` files (no LLM). Characters merge by normalized name (casefold, strip leading `The `); themes by case-insensitive exact string. Display name = most frequent raw form. `summarize --all` writes rollup after the report. Missing analyses fail like missing summaries for `report`.  
-**Consequences:** Cheap book index without API cost; aliases like `Queen` vs `Queen of Hearts` stay separate until a future fuzzy/LLM merge. Distinct from Later “LLM reduce” prose synthesis.  
+**Consequences:** Cheap book index without API cost; aliases like `Queen` vs `Queen of Hearts` stay separate until LLM alias merge. Distinct from Later “LLM reduce” prose synthesis.  
 **Extends:** “Full-book map + deterministic merge report”.
+
+## 2026-08 — LLM character/theme alias merge
+
+**Status:** current  
+**Context:** Deterministic rollup leaves true aliases split (`Queen` vs `Queen of Hearts`). Downstream cast/theme use needs a merged index without replacing the cheap baseline.  
+**Decision:** Add Alias Merger agent + CLI `aliases` writing `state/book-rollup-merged.json` from `book-rollup.json`. One LLM call proposes clusters (exact input strings only); `apply_alias_clusters` in `rollup.py` validates, fills singletons, unions chapters/notes, and picks display name/theme as longest alias. Skip unless `--force`. Not invoked by `summarize --all`. No fuzzy string library in v1.  
+**Consequences:** Enrichment is opt-in and provider-dependent; baseline rollup remains authoritative for exact-normalized merges. Bad LLM clusters fail closed (unknown/overlap dropped).  
+**Extends:** “Book-level structured rollup (deterministic)”.

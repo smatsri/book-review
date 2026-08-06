@@ -9,13 +9,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from book import Chapter, load_chapters
-from rollup import build_book_rollup
+from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "output"
 STATE_DIR = ROOT / "state"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
 BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
+BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -312,6 +313,52 @@ def cmd_rollup(_: argparse.Namespace) -> None:
     )
 
 
+def write_book_rollup_merged(*, force: bool) -> Path | None:
+    """LLM alias merge of book-rollup.json → book-rollup-merged.json.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_ROLLUP_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            "Run `python main.py rollup` first."
+        )
+
+    if BOOK_ROLLUP_MERGED_PATH.exists() and not force:
+        print(
+            f"Skip aliases: {BOOK_ROLLUP_MERGED_PATH.relative_to(ROOT)} already exists "
+            "(use --force to regenerate)"
+        )
+        return None
+
+    from agents.alias_merger import propose_alias_clusters
+
+    rollup = json.loads(BOOK_ROLLUP_PATH.read_text(encoding="utf-8"))
+    print("Proposing character/theme alias clusters ...")
+    clusters = propose_alias_clusters(rollup)
+    payload = apply_alias_clusters(rollup, clusters)
+    BOOK_ROLLUP_MERGED_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_ROLLUP_MERGED_PATH
+
+
+def cmd_aliases(args: argparse.Namespace) -> None:
+    merged_path = write_book_rollup_merged(force=args.force)
+    if merged_path is None:
+        return
+    payload = json.loads(merged_path.read_text(encoding="utf-8"))
+    multi_chars = sum(1 for c in payload["characters"] if len(c.get("aliases") or []) > 1)
+    multi_themes = sum(1 for t in payload["themes"] if len(t.get("aliases") or []) > 1)
+    print(f"Wrote {merged_path.relative_to(ROOT)}")
+    print(
+        f"  {len(payload['chapters_included'])} chapters, "
+        f"{len(payload['characters'])} characters ({multi_chars} multi-alias), "
+        f"{len(payload['themes'])} themes ({multi_themes} multi-alias)"
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Book review MVP")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -375,6 +422,20 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     rollup_parser.set_defaults(func=cmd_rollup)
+
+    aliases_parser = sub.add_parser(
+        "aliases",
+        help=(
+            "LLM alias merge of state/book-rollup.json into "
+            "state/book-rollup-merged.json"
+        ),
+    )
+    aliases_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-rollup-merged.json already exists",
+    )
+    aliases_parser.set_defaults(func=cmd_aliases)
 
     return parser
 

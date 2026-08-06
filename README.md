@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, and roll up cross-chapter characters/themes into `state/book-rollup.json`.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, roll up cross-chapter characters/themes into `state/book-rollup.json`, and optionally LLM-merge aliases into `state/book-rollup-merged.json`.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -49,13 +49,13 @@ Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/cha
 ## Layout
 
 ```
-agents/          # LLM agents (llm, reader, editor, critic)
+agents/          # LLM agents (llm, reader, editor, critic, alias_merger)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
 output/          # Generated Markdown
-state/           # Intermediate artifacts (Reader JSON, Editor draft, Critic JSON)
+state/           # Intermediate artifacts (Reader JSON, Editor draft, Critic JSON, rollups)
 book.py          # Load book + split chapters
-rollup.py        # Book-level character/theme merge (no LLM)
+rollup.py        # Book-level character/theme merge + alias apply
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
 idea.md          # Product / architecture vision
@@ -64,7 +64,6 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Fuzzy / LLM character–theme alias merge on the book rollup  
-2. Later: RAG, footnotes, visuals, export, LLM book synthesis; billing/hybrid when needed  
+1. Later: RAG, footnotes, visuals, export, LLM book synthesis; billing/hybrid when needed  
 
 Details: `todo.md` and `idea.md`.

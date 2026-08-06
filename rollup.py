@@ -106,3 +106,130 @@ def build_book_rollup(analyses: list[dict[str, Any]]) -> dict[str, Any]:
         "characters": characters,
         "themes": themes,
     }
+
+
+def _complete_clusters(known: list[str], clusters: list[list[str]]) -> list[list[str]]:
+    """Keep valid non-overlapping clusters; add singletons for uncovered names."""
+    used: set[str] = set()
+    completed: list[list[str]] = []
+    known_set = set(known)
+
+    for cluster in clusters:
+        cleaned: list[str] = []
+        for name in cluster:
+            if name in known_set and name not in used:
+                used.add(name)
+                cleaned.append(name)
+        if cleaned:
+            completed.append(cleaned)
+
+    for name in known:
+        if name not in used:
+            completed.append([name])
+
+    return completed
+
+
+def _pick_display_from_aliases(
+    aliases: list[str],
+    *,
+    chapter_counts: dict[str, int],
+) -> str:
+    """Longest alias; ties → most chapters in source rows, then alphabetical."""
+    return max(
+        aliases,
+        key=lambda a: (len(a), chapter_counts.get(a, 0), a.casefold()),
+    )
+
+
+def apply_alias_clusters(
+    rollup: dict[str, Any],
+    clusters: dict[str, list[list[str]]],
+) -> dict[str, Any]:
+    """Merge rollup characters/themes using alias clusters (no LLM).
+
+    Invalid / overlapping cluster members are ignored; uncovered labels become
+    singleton clusters. Display name/theme = longest alias (ties → more chapters,
+    then alphabetical).
+    """
+    char_by_name = {
+        c["name"]: c
+        for c in rollup.get("characters") or []
+        if isinstance(c, dict) and isinstance(c.get("name"), str)
+    }
+    theme_by_label = {
+        t["theme"]: t
+        for t in rollup.get("themes") or []
+        if isinstance(t, dict) and isinstance(t.get("theme"), str)
+    }
+
+    char_clusters = _complete_clusters(
+        list(char_by_name.keys()),
+        clusters.get("characters") or [],
+    )
+    theme_clusters = _complete_clusters(
+        list(theme_by_label.keys()),
+        clusters.get("themes") or [],
+    )
+
+    char_chapter_counts = {
+        name: len(entry.get("chapters") or [])
+        for name, entry in char_by_name.items()
+    }
+    theme_chapter_counts = {
+        label: len(entry.get("chapters") or [])
+        for label, entry in theme_by_label.items()
+    }
+
+    characters = []
+    for aliases in char_clusters:
+        display = _pick_display_from_aliases(
+            aliases, chapter_counts=char_chapter_counts
+        )
+        notes: list[str] = []
+        notes_seen: set[str] = set()
+        chapters: set[int] = set()
+        for alias in aliases:
+            entry = char_by_name[alias]
+            for note in entry.get("notes") or []:
+                if isinstance(note, str) and note and note not in notes_seen:
+                    notes_seen.add(note)
+                    notes.append(note)
+            for ch in entry.get("chapters") or []:
+                chapters.add(int(ch))
+        characters.append(
+            {
+                "name": display,
+                "aliases": sorted(aliases, key=str.casefold),
+                "notes": notes,
+                "chapters": sorted(chapters),
+            }
+        )
+
+    themes = []
+    for aliases in theme_clusters:
+        display = _pick_display_from_aliases(
+            aliases, chapter_counts=theme_chapter_counts
+        )
+        chapters: set[int] = set()
+        for alias in aliases:
+            entry = theme_by_label[alias]
+            for ch in entry.get("chapters") or []:
+                chapters.add(int(ch))
+        themes.append(
+            {
+                "theme": display,
+                "aliases": sorted(aliases, key=str.casefold),
+                "chapters": sorted(chapters),
+            }
+        )
+
+    characters.sort(key=lambda c: c["name"].casefold())
+    themes.sort(key=lambda t: t["theme"].casefold())
+
+    return {
+        "source": "book-rollup.json",
+        "chapters_included": list(rollup.get("chapters_included") or []),
+        "characters": characters,
+        "themes": themes,
+    }

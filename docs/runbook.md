@@ -71,6 +71,15 @@ python main.py rollup
 
 Writes `state/book-rollup.json`. Requires every chapter’s `state/chapter-NN-analysis.json` (same completeness rule as `report` for summaries). `summarize --all` also writes the rollup after the report.
 
+LLM alias merge of the rollup into `state/book-rollup-merged.json` (needs provider; not part of `summarize --all`):
+
+```powershell
+python main.py aliases
+python main.py aliases --force
+```
+
+Requires `state/book-rollup.json`. Skips when the merged file already exists unless `--force`.
+
 ## Smoke checks
 
 After changing the loader / splitter:
@@ -105,6 +114,12 @@ After changing map/merge:
 2. Re-run `python main.py summarize --all` — expect skips + refreshed report + rollup.
 3. `python main.py report` — expect `book-report.md` rewritten from existing chapter files.
 4. `python main.py rollup` — expect `state/book-rollup.json` with `chapters_included`, merged `characters` (`name` / `notes` / `chapters`), and `themes` (`theme` / `chapters`).
+
+After changing alias merge:
+
+1. With `state/book-rollup.json` present, `python main.py aliases --force` — expect `state/book-rollup-merged.json` with `source`, `characters` (`name` / `aliases` / `notes` / `chapters`), and `themes` (`theme` / `aliases` / `chapters`).
+2. Re-run `python main.py aliases` — expect a skip message and no LLM call.
+3. Prefer fewer character/theme rows than the baseline when the model merges aliases (e.g. Queen / Queen of Hearts).
 
 ## Notes
 
