@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, summarize one chapter with an LLM.
+Current MVP: load one Gutenberg plain-text book, split into chapters, summarize each with an LLM, merge into one Markdown report.
 
 ## Pipeline
 
@@ -16,13 +16,14 @@ data/books/*.txt
         |
    list[Chapter]
         |
-   +----+----+
-   |         |
-chapters   summarize
-(CLI)      (CLI → agents/summarizer.py → Gemini)
-   |         |
-state/     output/chapter-NN-summary.md
-chapters.json
+   +----+----+------------------+
+   |         |                  |
+chapters   summarize          report
+(CLI)      (CLI → Gemini)     (CLI, no LLM)
+   |         |                  |
+state/     output/              output/book-report.md
+chapters.json  chapter-NN-summary.md
+               (map; --all then merge)
 ```
 
 ## Main pieces
@@ -30,11 +31,11 @@ chapters.json
 | Path | Role |
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
-| `main.py` | CLI: `chapters`, `summarize --chapter N` (`--force` to overwrite existing output) |
+| `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`), `report` |
 | `agents/summarizer.py` | Stage-1 single agent (Gemini generate_content → Markdown) |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Intermediate JSON (e.g. chapter metadata) |
-| `output/` | Generated Markdown summaries |
+| `output/` | Per-chapter summaries + merged `book-report.md` |
 
 ## Data model
 
@@ -52,12 +53,13 @@ chapters.json
 - Default model: `gemini-3.5-flash`
 - SDK: `google-genai` (`client.models.generate_content`)
 - Output sections: plot summary, characters, themes/motifs, notable quotes
+- Full-book report: deterministic merge of chapter files (no extra LLM call)
 
 ## Not built yet
 
 Do not assume these exist in code:
 
-- Full-book map/reduce summary
+- LLM reduce / book-level synthesis beyond concatenated chapter reports
 - Reader / Critic / Editor agents
 - RAG / embeddings
 - Footnotes, visuals, export formats

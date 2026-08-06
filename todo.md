@@ -5,17 +5,16 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Skip-if-exists on `summarize` (+ `--force`); ready for full-book map.
-- **Last success:** `summarize` reuses `output/chapter-NN-summary.md` unless `--force`.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force policy.
+- **Stopped at:** Full-book map + merged report done; next is role split.
+- **Last success:** `summarize --all` → 12 chapter files + `output/book-report.md`; `report` merges without LLM.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI.
 
 ## Now
 
-- [ ] Summarize all chapters (map) and merge into one Markdown report
+- [ ] Split roles: Reader agent → Editor agent
 
 ## Next
 
-- [ ] Split roles: Reader agent → Editor agent
 - [ ] Add Critic loop (critique → revise → final)
 - [ ] Persist structured analysis in `state/` (characters, themes, etc.)
 
@@ -25,6 +24,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent
 - [ ] Export HTML / PDF / EPUB
+- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
 
 ## Done
 
@@ -36,3 +36,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Knowledge base: `docs/`, `AGENTS.md`, `.cursor/rules/knowledge-base.mdc`
 - [x] Switch LLM provider from OpenAI to Gemini
 - [x] Skip existing chapter summaries unless `--force`
+- [x] Summarize all chapters (map) and merge into one Markdown report

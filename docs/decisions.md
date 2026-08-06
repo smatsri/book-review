@@ -44,3 +44,10 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Context:** Full-book map and prompt iteration would re-call Gemini on chapters already summarized.  
 **Decision:** `summarize` skips when `output/chapter-NN-summary.md` exists; `--force` regenerates. No prompt-hash cache yet.  
 **Consequences:** Re-runs are cheap by default; prompt experiments use `--force` on a few chapters.
+
+## 2026-08 — Full-book map + deterministic merge report
+
+**Status:** current  
+**Context:** Need all chapter summaries assembled into one artifact without inventing Reader/Editor agents yet.  
+**Decision:** `summarize --all` maps every chapter (same skip/`--force` policy), then writes `output/book-report.md` by concatenating existing chapter Markdown. `report` merges without LLM. No LLM “reduce” synthesis yet.  
+**Consequences:** Book report is only as good as per-chapter files; missing chapters fail `report` / end of `--all` merge with a clear error.

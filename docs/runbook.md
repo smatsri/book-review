@@ -27,10 +27,23 @@ Summarize one chapter (needs API key; writes `output/chapter-NN-summary.md`):
 python main.py summarize --chapter 1
 ```
 
-Skips the LLM call if that output file already exists. Force a regenerate:
+Summarize every chapter, then merge into `output/book-report.md`:
+
+```powershell
+python main.py summarize --all
+```
+
+Skips the LLM call for any chapter whose output file already exists. Force regenerates:
 
 ```powershell
 python main.py summarize --chapter 1 --force
+python main.py summarize --all --force
+```
+
+Merge existing chapter summaries only (no LLM):
+
+```powershell
+python main.py report
 ```
 
 ## Smoke checks
@@ -50,7 +63,14 @@ After changing skip/force behavior:
 1. With an existing `output/chapter-01-summary.md`, run `python main.py summarize --chapter 1` — expect a skip message and no API call.
 2. `python main.py summarize --chapter 1 --force` — expect a write.
 
+After changing map/merge:
+
+1. `python main.py summarize --all` — expect per-chapter files under `output/` and `output/book-report.md`.
+2. Re-run `python main.py summarize --all` — expect skips + refreshed report.
+3. `python main.py report` — expect `book-report.md` rewritten from existing chapter files.
+
 ## Notes
 
 - Sample book: *Alice’s Adventures in Wonderland* under `data/books/`.
 - Book text is excluded from Cursor indexing via `.cursorignore`; agents should use `book.py` / CLI rather than reading the full raw file when possible.
+- Full-book `--all` makes one Gemini call per missing chapter; expect several minutes for a fresh run.
