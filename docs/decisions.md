@@ -111,3 +111,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Persist Editor draft as `state/chapter-NN-draft.md`. Soft-resume when summary is missing from the first gap in analysis → draft → critique. Add `summarize --from reader|draft|critic|revise` to restart mid-pipeline (requires upstream artifacts; overrides summary skip). `--force` remains full regen and is mutually exclusive with `--from`.  
 **Consequences:** Crash recovery and Critic-only/revise-only smokes without separate CLI commands. Older chapters lack draft files until regenerated (`--force` or `--from draft`).  
 **Extends:** “Skip existing chapter summaries unless --force” and “Critic loop (one-pass)”.
+
+## 2026-08 — Book-level structured rollup (deterministic)
+
+**Status:** current  
+**Context:** Per-chapter Reader JSON has characters/themes but no shared book cast or theme index; `book-report.md` only concatenates Markdown. Downstream agents need structured cross-chapter state.  
+**Decision:** Add `rollup.py` + CLI `rollup` writing `state/book-rollup.json` from all `chapter-NN-analysis.json` files (no LLM). Characters merge by normalized name (casefold, strip leading `The `); themes by case-insensitive exact string. Display name = most frequent raw form. `summarize --all` writes rollup after the report. Missing analyses fail like missing summaries for `report`.  
+**Consequences:** Cheap book index without API cost; aliases like `Queen` vs `Queen of Hearts` stay separate until a future fuzzy/LLM merge. Distinct from Later “LLM reduce” prose synthesis.  
+**Extends:** “Full-book map + deterministic merge report”.

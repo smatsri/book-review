@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, and merge a Markdown report.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, and roll up cross-chapter characters/themes into `state/book-rollup.json`.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -55,6 +55,7 @@ docs/            # Current-truth documentation
 output/          # Generated Markdown
 state/           # Intermediate artifacts (Reader JSON, Editor draft, Critic JSON)
 book.py          # Load book + split chapters
+rollup.py        # Book-level character/theme merge (no LLM)
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
 idea.md          # Product / architecture vision
@@ -63,7 +64,7 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Book-level structured rollup in `state/`  
-2. Later: RAG, footnotes, visuals, export formats  
+1. Decide billing / model quality strategy  
+2. Later: RAG, footnotes, visuals, export formats, LLM book synthesis  
 
 Details: `todo.md` and `idea.md`.

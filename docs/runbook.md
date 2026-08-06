@@ -63,6 +63,14 @@ Merge existing chapter summaries only (no LLM):
 python main.py report
 ```
 
+Merge chapter analyses into a book-level character/theme index (no LLM):
+
+```powershell
+python main.py rollup
+```
+
+Writes `state/book-rollup.json`. Requires every chapter’s `state/chapter-NN-analysis.json` (same completeness rule as `report` for summaries). `summarize --all` also writes the rollup after the report.
+
 ## Smoke checks
 
 After changing the loader / splitter:
@@ -93,9 +101,10 @@ After changing skip/force/`--from` behavior:
 
 After changing map/merge:
 
-1. `python main.py summarize --all` — expect per-chapter files under `output/` and `output/book-report.md`.
-2. Re-run `python main.py summarize --all` — expect skips + refreshed report.
+1. `python main.py summarize --all` — expect per-chapter files under `output/`, `output/book-report.md`, and `state/book-rollup.json`.
+2. Re-run `python main.py summarize --all` — expect skips + refreshed report + rollup.
 3. `python main.py report` — expect `book-report.md` rewritten from existing chapter files.
+4. `python main.py rollup` — expect `state/book-rollup.json` with `chapters_included`, merged `characters` (`name` / `notes` / `chapters`), and `themes` (`theme` / `chapters`).
 
 ## Notes
 

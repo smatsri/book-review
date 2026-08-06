@@ -9,11 +9,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from book import Chapter, load_chapters
+from rollup import build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "output"
 STATE_DIR = ROOT / "state"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
+BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -60,6 +62,32 @@ def write_book_report(chapters: list[Chapter]) -> Path:
     body = "\n\n---\n\n".join(parts)
     BOOK_REPORT_PATH.write_text(f"{header}\n---\n\n{body}\n", encoding="utf-8")
     return BOOK_REPORT_PATH
+
+
+def write_book_rollup(chapters: list[Chapter]) -> Path:
+    """Merge Reader analyses into state/book-rollup.json (no LLM)."""
+    analyses: list[dict] = []
+    missing: list[int] = []
+    for ch in chapters:
+        path = chapter_analysis_path(ch.number)
+        if not path.exists():
+            missing.append(ch.number)
+            continue
+        analyses.append(json.loads(path.read_text(encoding="utf-8")))
+
+    if missing:
+        available = ", ".join(str(n) for n in missing)
+        raise SystemExit(
+            f"Missing chapter analyses: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+
+    payload = build_book_rollup(analyses)
+    BOOK_ROLLUP_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_ROLLUP_PATH
 
 
 def _require_artifact(path: Path, *, stage: str, hint: str) -> None:
@@ -264,11 +292,24 @@ def cmd_summarize(args: argparse.Namespace) -> None:
         print(f"\nMap done: {wrote} written, {skipped} skipped")
         report_path = write_book_report(chapters)
         print(f"Wrote {report_path.relative_to(ROOT)}")
+        rollup_path = write_book_rollup(chapters)
+        print(f"Wrote {rollup_path.relative_to(ROOT)}")
 
 
 def cmd_report(_: argparse.Namespace) -> None:
     report_path = write_book_report(load_chapters())
     print(f"Wrote {report_path.relative_to(ROOT)}")
+
+
+def cmd_rollup(_: argparse.Namespace) -> None:
+    rollup_path = write_book_rollup(load_chapters())
+    payload = json.loads(rollup_path.read_text(encoding="utf-8"))
+    print(f"Wrote {rollup_path.relative_to(ROOT)}")
+    print(
+        f"  {len(payload['chapters_included'])} chapters, "
+        f"{len(payload['characters'])} characters, "
+        f"{len(payload['themes'])} themes"
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -282,7 +323,8 @@ def build_parser() -> argparse.ArgumentParser:
         "summarize",
         help=(
             "Reader→Editor→Critic→revise for chapter(s); writes state analysis + "
-            "draft + critique + output summary; --all also writes book-report.md"
+            "draft + critique + output summary; --all also writes book-report.md "
+            "and state/book-rollup.json"
         ),
     )
     summarize_parser.add_argument(
@@ -294,7 +336,10 @@ def build_parser() -> argparse.ArgumentParser:
     summarize_parser.add_argument(
         "--all",
         action="store_true",
-        help="Summarize every chapter, then merge into output/book-report.md",
+        help=(
+            "Summarize every chapter, then merge into output/book-report.md "
+            "and state/book-rollup.json"
+        ),
     )
     summarize_parser.add_argument(
         "--force",
@@ -321,6 +366,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Merge existing chapter summaries into output/book-report.md (no LLM)",
     )
     report_parser.set_defaults(func=cmd_report)
+
+    rollup_parser = sub.add_parser(
+        "rollup",
+        help=(
+            "Merge chapter analyses into state/book-rollup.json "
+            "(characters + themes; no LLM)"
+        ),
+    )
+    rollup_parser.set_defaults(func=cmd_rollup)
 
     return parser
 
