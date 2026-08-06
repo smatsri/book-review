@@ -61,7 +61,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — LLM cost / model choice (deferred)
 
-**Status:** deferred — not decided  
+**Status:** superseded by “Dual providers: Gemini + LM Studio”  
 **Context:** Free-tier Gemini hit `generate_content_free_tier_requests` (20/day on `gemini-3.5-flash`). Reader+Editor = 2 calls/chapter; Critic/footnotes will raise call count. Paying is mostly for quota; Alice-sized text cost is small.  
 **Summary (ballpark, analysis only, no image gen):**
 
@@ -81,3 +81,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Open choice:** stay free + wait; enable billing on Flash; Flash+Pro/Sonnet mix; local-only (e.g. Ollama/LM Studio); or local+cloud hybrid.  
 **Not decided:** do not change `GEMINI_MODEL` / provider / `agents/llm.py` until this is resolved.  
 **Tracked in:** `todo.md` Later.
+
+## 2026-08 — Dual providers: Gemini + LM Studio
+
+**Status:** current  
+**Context:** Free-tier Gemini 429s blocked iteration; local LM Studio (e.g. `qwen/qwen3.5-9b`) is available; Gemini should remain supported.  
+**Decision:** `LLM_PROVIDER` selects `gemini` (default) or `lmstudio`. Both paths share `agents/llm.py` → `generate_text`. LM Studio uses the OpenAI-compatible local server (`LMSTUDIO_BASE_URL` / `LMSTUDIO_MODEL`). No CLI `--provider` flag; no per-agent hybrid yet.  
+**Consequences:** Switch providers in `.env`; install both `google-genai` and `openai`. LM Studio JSON mode uses `json_schema` (not `json_object`). Local 9B runs are slow/hot vs Gemini. Billing / paid Flash vs Pro mix and local+cloud hybrid remain open (Later).  
+**Supersedes:** “LLM cost / model choice (deferred)” for the provider-switch question only.

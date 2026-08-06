@@ -11,7 +11,10 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Put `GEMINI_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.5-flash`).
+Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
+
+- **gemini** (default): set `GEMINI_API_KEY`. Optional: `GEMINI_MODEL` (default `gemini-3.5-flash`).
+- **lmstudio**: start LM Studio’s local server, load a model, set `LLM_PROVIDER=lmstudio`. Optional: `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `qwen/qwen3.5-9b`), `LMSTUDIO_API_KEY` (default `lm-studio`).
 
 ## Commands
 
@@ -61,6 +64,12 @@ After changing Reader / Editor:
 2. Open `state/chapter-01-analysis.json` — expect plot / characters / themes / quotes / events.
 3. Open `output/chapter-01-summary.md` — expect Markdown with the Editor section structure.
 
+After changing LLM provider / local model:
+
+1. For LM Studio: server running, model loaded, `LLM_PROVIDER=lmstudio` in `.env`.
+2. `python main.py summarize --chapter 1 --force`
+3. Same JSON + Markdown checks as Reader / Editor above.
+
 After changing skip/force behavior:
 
 1. With an existing `output/chapter-01-summary.md`, run `python main.py summarize --chapter 1` — expect a skip message and no API call.
@@ -76,4 +85,5 @@ After changing map/merge:
 
 - Sample book: *Alice’s Adventures in Wonderland* under `data/books/`.
 - Book text is excluded from Cursor indexing via `.cursorignore`; agents should use `book.py` / CLI rather than reading the full raw file when possible.
-- Fresh `--all` makes up to two Gemini calls per missing chapter (Reader + Editor); expect several minutes.
+- Fresh `--all` makes up to two LLM calls per missing chapter (Reader + Editor); expect several minutes (longer on local models).
+- Local Qwen (e.g. `qwen/qwen3.5-9b` in LM Studio) can take ~10 minutes per chapter on a MacBook when reasoning is on, and will warm the machine; prefer Gemini for fast iteration.

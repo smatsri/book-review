@@ -32,7 +32,7 @@ chapters.json  → output/chapter-NN-summary.md
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
 | `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`), `report` |
-| `agents/llm.py` | Shared Gemini client helper |
+| `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis JSON → human Markdown |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
@@ -56,10 +56,11 @@ Reader analysis (`state/chapter-NN-analysis.json`):
 
 ## LLM (current)
 
-- Provider: **Gemini** (`GEMINI_API_KEY`, optional `GEMINI_MODEL`)
-- Default model: `gemini-3.5-flash`
-- SDK: `google-genai` (`client.models.generate_content`)
-- Reader: JSON mode (`response_mime_type=application/json`)
+- Switch: `LLM_PROVIDER` = `gemini` (default) or `lmstudio`
+- Shared API: `agents/llm.py` → `generate_text(...)` (Reader / Editor unchanged)
+- **Gemini:** `GEMINI_API_KEY`, optional `GEMINI_MODEL` (default `gemini-3.5-flash`); SDK `google-genai`
+- **LM Studio:** OpenAI-compatible local server via `openai` SDK; `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `qwen/qwen3.5-9b`), optional `LMSTUDIO_API_KEY` (default `lm-studio`)
+- Reader: JSON mode (Gemini mime type / LM Studio `response_format=json_schema`; LM Studio rejects OpenAI’s `json_object`)
 - Editor: Markdown sections — plot summary, characters, themes/motifs, notable quotes
 - Full-book report: deterministic merge of chapter files (no extra LLM call)
 

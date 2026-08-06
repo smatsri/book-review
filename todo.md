@@ -5,10 +5,10 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Reader → Editor split done; next is Critic loop. LLM billing/model choice parked (deferred).
-- **Last success:** `summarize --chapter 1 --force` → `state/chapter-01-analysis.json` + `output/chapter-01-summary.md` (smoke).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split.
-- **Parked:** Free-tier Gemini 429 / paid vs stronger models / local or hybrid — see Later + `docs/decisions.md`.
+- **Stopped at:** Dual LLM providers (Gemini + LM Studio) done; next is Critic loop.
+- **Last success:** LM Studio smoke — `summarize --chapter 1 --force` with `LLM_PROVIDER=lmstudio` (~10 min on Qwen 3.5 9B); docs note `json_schema` + local timing.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers.
+- **Parked:** Paid Flash vs stronger models / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
 
@@ -20,10 +20,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Later
 
-- [ ] Decide LLM provider / billing / model strategy (paid Flash? Pro/Sonnet mix? local? hybrid?)
-  - Context: deferred note in `docs/decisions.md` (“LLM cost / model choice — deferred”)
-  - Trigger: free-tier 429s blocking map/Critic work; no decision yet
-  - Local is an open option (MacBook / Ollama-style) alongside paid cloud — not decided
+- [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
+  - Context: provider switch done (`LLM_PROVIDER=gemini|lmstudio`); hybrid map-local / Critic-cloud still open — see `docs/decisions.md`
+  - Trigger: quality or quota needs beyond one global provider
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent
@@ -43,3 +42,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Summarize all chapters (map) and merge into one Markdown report
 - [x] Split roles: Reader agent → Editor agent
 - [x] Persist per-chapter structured analysis in `state/`
+- [x] Dual LLM providers: Gemini + LM Studio (`LLM_PROVIDER`)
