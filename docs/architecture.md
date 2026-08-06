@@ -30,7 +30,7 @@ chapters.json
 | Path | Role |
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
-| `main.py` | CLI: `chapters`, `summarize --chapter N` |
+| `main.py` | CLI: `chapters`, `summarize --chapter N` (`--force` to overwrite existing output) |
 | `agents/summarizer.py` | Stage-1 single agent (Gemini generate_content → Markdown) |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Intermediate JSON (e.g. chapter metadata) |

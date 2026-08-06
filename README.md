@@ -35,7 +35,7 @@ Summarize one chapter:
 python main.py summarize --chapter 1
 ```
 
-Output is written to `output/chapter-01-summary.md`.
+Output is written to `output/chapter-01-summary.md`. Re-runs skip if that file exists; use `--force` to regenerate.
 
 ## Knowledge base
 

@@ -27,6 +27,12 @@ Summarize one chapter (needs API key; writes `output/chapter-NN-summary.md`):
 python main.py summarize --chapter 1
 ```
 
+Skips the LLM call if that output file already exists. Force a regenerate:
+
+```powershell
+python main.py summarize --chapter 1 --force
+```
+
 ## Smoke checks
 
 After changing the loader / splitter:
@@ -36,8 +42,13 @@ After changing the loader / splitter:
 
 After changing the summarizer / provider:
 
-1. `python main.py summarize --chapter 1`
+1. `python main.py summarize --chapter 1 --force`
 2. Open `output/chapter-01-summary.md` — expect Markdown with the section structure from the agent prompt.
+
+After changing skip/force behavior:
+
+1. With an existing `output/chapter-01-summary.md`, run `python main.py summarize --chapter 1` — expect a skip message and no API call.
+2. `python main.py summarize --chapter 1 --force` — expect a write.
 
 ## Notes
 

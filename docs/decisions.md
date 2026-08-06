@@ -37,3 +37,10 @@ Short records of choices that should stay true across sessions. Add a new entry 
 | `README.md` | Entry point + links |
 
 **Consequences:** Promote ideas into `docs/` only after they exist in code. Update the matching doc when finishing a task.
+
+## 2026-08 — Skip existing chapter summaries unless --force
+
+**Status:** current  
+**Context:** Full-book map and prompt iteration would re-call Gemini on chapters already summarized.  
+**Decision:** `summarize` skips when `output/chapter-NN-summary.md` exists; `--force` regenerates. No prompt-hash cache yet.  
+**Consequences:** Re-runs are cheap by default; prompt experiments use `--force` on a few chapters.

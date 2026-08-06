@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Gemini provider switch done; smoke-tested `summarize --chapter 1`.
-- **Last success:** Stage-1 summarizer on Gemini (`google-genai`, `GEMINI_API_KEY`).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini switch.
+- **Stopped at:** Skip-if-exists on `summarize` (+ `--force`); ready for full-book map.
+- **Last success:** `summarize` reuses `output/chapter-NN-summary.md` unless `--force`.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force policy.
 
 ## Now
 
@@ -35,3 +35,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Initial git commit
 - [x] Knowledge base: `docs/`, `AGENTS.md`, `.cursor/rules/knowledge-base.mdc`
 - [x] Switch LLM provider from OpenAI to Gemini
+- [x] Skip existing chapter summaries unless `--force`

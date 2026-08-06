@@ -45,10 +45,16 @@ def cmd_summarize(args: argparse.Namespace) -> None:
         available = ", ".join(str(c.number) for c in chapters)
         raise SystemExit(f"Chapter {args.chapter} not found. Available: {available}")
 
+    out_path = OUTPUT_DIR / f"chapter-{chapter.number:02d}-summary.md"
+    if out_path.exists() and not args.force:
+        print(
+            f"Skip {chapter.heading}: {out_path.relative_to(ROOT)} already exists "
+            "(use --force to regenerate)"
+        )
+        return
+
     print(f"Summarizing {chapter.heading} ...")
     markdown = summarize_chapter(chapter)
-
-    out_path = OUTPUT_DIR / f"chapter-{chapter.number:02d}-summary.md"
     out_path.write_text(markdown, encoding="utf-8")
     print(f"Wrote {out_path.relative_to(ROOT)}")
 
@@ -68,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="Chapter number to summarize (default: 1)",
+    )
+    summarize_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if output/chapter-NN-summary.md already exists",
     )
     summarize_parser.set_defaults(func=cmd_summarize)
 
