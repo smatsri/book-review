@@ -17,9 +17,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Add your API key to `.env`. Agents use **Gemini** (`GEMINI_API_KEY`).
-
-Full commands and smoke checks: [`docs/runbook.md`](docs/runbook.md).
+Add provider settings to `.env`. Default is **Gemini** (`GEMINI_API_KEY`); set `LLM_PROVIDER=lmstudio` for a local LM Studio server. Details: [`docs/runbook.md`](docs/runbook.md).
 
 ## Usage
 
