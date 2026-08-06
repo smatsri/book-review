@@ -5,30 +5,27 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Export shipped (`export` → `output/book-report.{html,pdf,epub}`). Promote Next from Later when ready.
+- **Stopped at:** Footnote in Now; Visual + LLM reduce in Next. Export still last shipped feature.
 - **Last success:** Pure-Python HTML/PDF/EPUB export from `book-report.md` (skip/`--force`).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now, alias merge CLI/agent, export CLI (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — revisit when quota or quality blocks local-only dev. See Later + `docs/decisions.md`.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI (see `docs/decisions.md`).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
 
-_(empty — promote from Later when ready)_
+- [ ] Footnote / research agent — historical notes, concepts, cultural links, sources (vision: `idea.md` § Footnote Agent)
 
 ## Next
 
-_(empty — promote from Later when ready)_
+- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
+- [ ] Visual / illustration agent (vision: `idea.md` + `idea/visual_bible_for_books.md`)
 
 ## Later
 
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
-  - Parked: local Qwen (`LLM_PROVIDER=lmstudio`) is enough for current dev
-  - Trigger: free-tier/quota pain returns, or quality needs beyond local 9B
-  - Context / lean notes: `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
-- [ ] Multi-round Critic (loop until ok / max N) — only if one-pass is insufficient
+  - Parked for now: local Qwen (`LLM_PROVIDER=lmstudio`) for feature work
+  - Counter: full-book latency + upcoming agents make mix a design choice, not just a bill
+  - Context: `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] RAG / embeddings over chapters
-- [ ] Footnote / research agent
-- [ ] Visual / illustration agent
-- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
 
 ## Done
 
