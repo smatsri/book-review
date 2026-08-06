@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Dual LLM providers (Gemini + LM Studio) done; next is Critic loop.
+- **Stopped at:** Dual LLM providers (Gemini + LM Studio) done; next is Critic loop. Qwen lean noted for Reader/dev fidelity.
 - **Last success:** LM Studio smoke — `summarize --chapter 1 --force` with `LLM_PROVIDER=lmstudio` (~10 min on Qwen 3.5 9B); docs note `json_schema` + local timing.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison (see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`).
 - **Parked:** Paid Flash vs stronger models / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
@@ -23,6 +23,8 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Context: provider switch done (`LLM_PROVIDER=gemini|lmstudio`); hybrid map-local / Critic-cloud still open — see `docs/decisions.md`
   - Trigger: quality or quota needs beyond one global provider
+  - Lean: local Qwen for Reader/dev fidelity; ~5–10 min/chapter on M2 → single-chapter smoke, not full-book thrash; hybrid still open
+  - Do not redo: chapter-1 Gemini vs Qwen comparison (notes in decisions + `idea/model_comparison_and_context_enrichment.md`)
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent

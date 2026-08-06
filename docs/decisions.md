@@ -78,8 +78,14 @@ Short records of choices that should stay true across sessions. Add a new entry 
 - Tradeoffs: slower full-book runs; weaker models often break Reader JSON; literary quality usually behind Flash/Pro unless the machine can run a strong quantized model.
 - Hybrid option: local for map/smoke, cloud for Critic/final edit (same idea as Flash-for-map / stronger-for-Critic).
 
-**Open choice:** stay free + wait; enable billing on Flash; Flash+Pro/Sonnet mix; local-only (e.g. Ollama/LM Studio); or local+cloud hybrid.  
-**Not decided:** do not change `GEMINI_MODEL` / provider / `agents/llm.py` until this is resolved.  
+**Working hypothesis (2026-08, chapter-1 smoke — quality lean, not billing):**
+
+- Local **Qwen-3.5-9B** stayed closer to the text (micro-plot, chapter ending) than **Gemini-3.5-Flash**, which compressed into a bird’s-eye summary with more abstract themes.
+- Cost: ~**5–10 min/chapter** on MacBook M2 for that local run → fine for single-chapter smoke; painful for full-book thrash (Reader+Editor already 2 calls; Critic adds more).
+- Lean for **dev**: local Qwen via LM Studio for Reader / fidelity iteration; keep hybrid open (local facts → cloud Editor/Critic) if latency blocks Critic work.
+- Essay / enrichment sketch (aspirational only): [`idea/model_comparison_and_context_enrichment.md`](../idea/model_comparison_and_context_enrichment.md).
+
+**Open (billing / quality mix):** paid Flash; Flash+Pro/Sonnet mix; per-agent hybrid. Provider plumbing is decided below.  
 **Tracked in:** `todo.md` Later.
 
 ## 2026-08 — Dual providers: Gemini + LM Studio
