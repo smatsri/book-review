@@ -92,12 +92,13 @@ Writes `output/book-synthesis.md` from compact Reader analyses plus `book-rollup
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
+python main.py footnotes
 python main.py footnotes --chapter 1
 python main.py footnotes --all
 python main.py footnotes --chapter 1 --force
 ```
 
-Writes `state/chapter-NN-footnotes.json` and `output/chapter-NN-enriched.md` (Editor summary stays pristine). Skips when the footnotes JSON already exists unless `--force`. `--all` also rebuilds `output/book-report.md` (prefers enriched chapter files when present).
+Writes `state/chapter-NN-footnotes.json` and `output/chapter-NN-enriched.md` (Editor summary stays pristine). With no `--chapter`, resumes at the first chapter missing footnotes JSON. Explicit `--chapter` skips when that file already exists unless `--force`. `--all` also rebuilds `output/book-report.md` (prefers enriched chapter files when present).
 
 Export the merged Markdown report to HTML, PDF, and/or EPUB (no LLM):
 
@@ -154,7 +155,8 @@ After changing footnotes:
 
 1. With chapter-1 analysis + summary present, `python main.py footnotes --chapter 1 --force` — expect `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md` with `[^ch01-…]` markers.
 2. Re-run `python main.py footnotes --chapter 1` — expect a skip message and no LLM call.
-3. `python main.py report` then `python main.py export --format html --force` — expect footnotes in HTML when the report includes enriched chapters.
+3. With ch.1 footnotes present and later chapters summarized, `python main.py footnotes` — expect resume at the first chapter without footnotes JSON (not a ch.1 skip).
+4. `python main.py report` then `python main.py export --format html --force` — expect footnotes in HTML when the report includes enriched chapters.
 
 After changing reduce / book synthesis:
 

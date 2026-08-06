@@ -38,10 +38,11 @@ Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/cha
 Optional footnotes (keeps summaries pristine; needs analysis + summary):
 
 ```powershell
+python main.py footnotes
 python main.py footnotes --chapter 1
 ```
 
-Writes `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md`. Then `report` prefers enriched files when present.
+Omitting `--chapter` resumes at the first chapter without footnotes. Writes `state/chapter-NN-footnotes.json` and `output/chapter-NN-enriched.md`. Then `report` prefers enriched files when present.
 
 Optional book-level synthesis (needs analyses + summaries + rollup):
 

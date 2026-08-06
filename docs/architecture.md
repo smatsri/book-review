@@ -139,7 +139,7 @@ Book synthesis (`output/book-synthesis.md`, from `reduce`):
 - `--from reader|draft|critic|revise` restarts at that stage (reuses earlier artifacts; requires them to exist); overrides skip when summary exists
 - `aliases` skips when `state/book-rollup-merged.json` exists unless `--force`
 - `reduce` skips when `output/book-synthesis.md` exists unless `--force`
-- `footnotes` skips when `state/chapter-NN-footnotes.json` exists unless `--force`
+- `footnotes` with no `--chapter` resumes at the first chapter missing footnotes JSON; with `--chapter` skips when that file exists unless `--force`
 - `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
 
 ## Not built yet

@@ -148,8 +148,8 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Status:** current  
 **Context:** Vision Footnote Agent (`idea.md`) needs historical/cultural notes without folding research into the Reader→Editor→Critic fidelity loop or mutating Editor summaries. Export already supports Markdown Extra footnotes.  
-**Decision:** Separate CLI `footnotes` (like `aliases`): Footnote LLM writes `state/chapter-NN-footnotes.json`; `footnotes.py` weaves into `output/chapter-NN-enriched.md` with chapter-namespaced `[^chNN-…]` IDs. Summaries stay pristine. `write_book_report` prefers enriched over summary. No web/RAG; no fabricated URLs. Not part of `summarize --all`. Skip unless `--force`.  
-**Consequences:** Opt-in LLM cost per chapter; stale enriched files possible after `--force` summarize until footnotes re-run; unplaceable anchors listed instead of inventing placement.  
+**Decision:** Separate CLI `footnotes` (like `aliases`): Footnote LLM writes `state/chapter-NN-footnotes.json`; `footnotes.py` weaves into `output/chapter-NN-enriched.md` with chapter-namespaced `[^chNN-…]` IDs. Summaries stay pristine. `write_book_report` prefers enriched over summary. No web/RAG; no fabricated URLs. Not part of `summarize --all`. Skip unless `--force`. Bare `footnotes` (no `--chapter`) resumes at the first chapter without footnotes JSON; `--chapter N` keeps the skip/force policy for that chapter.  
+**Consequences:** Opt-in LLM cost per chapter; stale enriched files possible after `--force` summarize until footnotes re-run; unplaceable anchors listed instead of inventing placement; one-chapter-at-a-time progress without remembering the next number.  
 **Extends:** “Export HTML / PDF / EPUB (pure Python)”.
 
 ## 2026-08 — LLM reduce / book-level synthesis

@@ -508,9 +508,21 @@ def cmd_footnotes(args: argparse.Namespace) -> None:
     chapters = load_chapters()
 
     if args.all:
-        if args.chapter != 1:
+        if args.chapter is not None:
             print("Note: --all ignores --chapter")
         targets = chapters
+    elif args.chapter is None:
+        chapter = next(
+            (c for c in chapters if not chapter_footnotes_path(c.number).exists()),
+            None,
+        )
+        if chapter is None:
+            raise SystemExit(
+                "All chapters already have footnotes "
+                "(use --chapter N --force to regenerate, or --all)"
+            )
+        print(f"Resuming at {chapter.heading} (no footnotes JSON yet)")
+        targets = [chapter]
     else:
         chapter = next((c for c in chapters if c.number == args.chapter), None)
         if chapter is None:
@@ -641,8 +653,11 @@ def build_parser() -> argparse.ArgumentParser:
     footnotes_parser.add_argument(
         "--chapter",
         type=int,
-        default=1,
-        help="Chapter number (default: 1; ignored with --all)",
+        default=None,
+        help=(
+            "Chapter number; omit to resume at the first chapter without "
+            "footnotes JSON (ignored with --all)"
+        ),
     )
     footnotes_parser.add_argument(
         "--all",
