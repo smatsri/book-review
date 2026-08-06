@@ -143,3 +143,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Add `export_book.py` + CLI `export` converting `output/book-report.md` with pip-only libs (`markdown`, `ebooklib`, `xhtml2pdf`). Default `--format all`; per-format skip unless `--force`. Not part of `summarize --all`. No Pandoc/LaTeX.  
 **Consequences:** One `pip install -r requirements.txt` path for all platforms; PDF styling is xhtml2pdf-limited; per-chapter export and enriched-book packaging stay Later.  
 **Extends:** “Full-book map + deterministic merge report”.
+
+## 2026-08 — Footnote agent + enriched report weave
+
+**Status:** current  
+**Context:** Vision Footnote Agent (`idea.md`) needs historical/cultural notes without folding research into the Reader→Editor→Critic fidelity loop or mutating Editor summaries. Export already supports Markdown Extra footnotes.  
+**Decision:** Separate CLI `footnotes` (like `aliases`): Footnote LLM writes `state/chapter-NN-footnotes.json`; `footnotes.py` weaves into `output/chapter-NN-enriched.md` with chapter-namespaced `[^chNN-…]` IDs. Summaries stay pristine. `write_book_report` prefers enriched over summary. No web/RAG; no fabricated URLs. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** Opt-in LLM cost per chapter; stale enriched files possible after `--force` summarize until footnotes re-run; unplaceable anchors listed instead of inventing placement.  
+**Extends:** “Export HTML / PDF / EPUB (pure Python)”.

@@ -80,6 +80,16 @@ python main.py aliases --force
 
 Requires `state/book-rollup.json`. Skips when the merged file already exists unless `--force`.
 
+Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
+
+```powershell
+python main.py footnotes --chapter 1
+python main.py footnotes --all
+python main.py footnotes --chapter 1 --force
+```
+
+Writes `state/chapter-NN-footnotes.json` and `output/chapter-NN-enriched.md` (Editor summary stays pristine). Skips when the footnotes JSON already exists unless `--force`. `--all` also rebuilds `output/book-report.md` (prefers enriched chapter files when present).
+
 Export the merged Markdown report to HTML, PDF, and/or EPUB (no LLM):
 
 ```powershell
@@ -130,6 +140,12 @@ After changing alias merge:
 1. With `state/book-rollup.json` present, `python main.py aliases --force` — expect `state/book-rollup-merged.json` with `source`, `characters` (`name` / `aliases` / `notes` / `chapters`), and `themes` (`theme` / `aliases` / `chapters`).
 2. Re-run `python main.py aliases` — expect a skip message and no LLM call.
 3. Prefer fewer character/theme rows than the baseline when the model merges aliases (e.g. Queen / Queen of Hearts).
+
+After changing footnotes:
+
+1. With chapter-1 analysis + summary present, `python main.py footnotes --chapter 1 --force` — expect `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md` with `[^ch01-…]` markers.
+2. Re-run `python main.py footnotes --chapter 1` — expect a skip message and no LLM call.
+3. `python main.py report` then `python main.py export --format html --force` — expect footnotes in HTML when the report includes enriched chapters.
 
 After changing export:
 

@@ -5,18 +5,17 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Footnote in Now; Visual + LLM reduce in Next. Export still last shipped feature.
-- **Last success:** Pure-Python HTML/PDF/EPUB export from `book-report.md` (skip/`--force`).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI (see `docs/decisions.md`).
+- **Stopped at:** Footnote agent shipped (enriched report). Next: LLM reduce / Visual.
+- **Last success:** Footnote CLI → `state/chapter-NN-footnotes.json` + `output/chapter-NN-enriched.md`; report prefers enriched; export picks up Markdown Extra footnotes.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`.
 
 ## Now
 
-- [ ] Footnote / research agent — historical notes, concepts, cultural links, sources (vision: `idea.md` § Footnote Agent)
+- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
 
 ## Next
 
-- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
 - [ ] Visual / illustration agent (vision: `idea.md` + `idea/visual_bible_for_books.md`)
 
 ## Later
@@ -46,3 +45,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Book-level structured rollup in `state/` (cross-chapter characters, themes)
 - [x] Fuzzy / LLM character–theme alias merge (`aliases` → `state/book-rollup-merged.json`)
 - [x] Export HTML / PDF / EPUB (`export` → `output/book-report.{html,pdf,epub}`)
+- [x] Footnote / research agent (`footnotes` → footnotes JSON + enriched MD; report prefers enriched)

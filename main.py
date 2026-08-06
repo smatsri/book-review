@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from book import Chapter, load_chapters
 from export_book import export_report
+from footnotes import weave_footnotes
 from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
@@ -39,13 +40,26 @@ def chapter_critique_path(number: int) -> Path:
     return STATE_DIR / f"chapter-{number:02d}-critique.json"
 
 
+def chapter_footnotes_path(number: int) -> Path:
+    return STATE_DIR / f"chapter-{number:02d}-footnotes.json"
+
+
+def chapter_enriched_path(number: int) -> Path:
+    return OUTPUT_DIR / f"chapter-{number:02d}-enriched.md"
+
+
 def write_book_report(chapters: list[Chapter]) -> Path:
-    """Merge existing chapter summaries into one Markdown report (no LLM)."""
+    """Merge chapter Markdown into one report (prefer enriched over summary)."""
     parts: list[str] = []
     missing: list[int] = []
     for ch in chapters:
-        path = chapter_summary_path(ch.number)
-        if not path.exists():
+        enriched = chapter_enriched_path(ch.number)
+        summary = chapter_summary_path(ch.number)
+        if enriched.exists():
+            path = enriched
+        elif summary.exists():
+            path = summary
+        else:
             missing.append(ch.number)
             continue
         parts.append(path.read_text(encoding="utf-8").strip())
@@ -360,6 +374,83 @@ def cmd_aliases(args: argparse.Namespace) -> None:
     )
 
 
+def footnotes_one(chapter: Chapter, *, force: bool) -> str:
+    """Research footnotes + weave enriched Markdown for one chapter.
+
+    Returns 'wrote' or 'skip'.
+    """
+    from agents.footnote import research_footnotes
+
+    notes_path = chapter_analysis_path(chapter.number)
+    summary_path = chapter_summary_path(chapter.number)
+    footnotes_path = chapter_footnotes_path(chapter.number)
+    enriched_path = chapter_enriched_path(chapter.number)
+
+    if not notes_path.exists():
+        raise SystemExit(
+            f"Missing {notes_path.relative_to(ROOT)}. "
+            "Run `python main.py summarize` for this chapter first."
+        )
+    if not summary_path.exists():
+        raise SystemExit(
+            f"Missing {summary_path.relative_to(ROOT)}. "
+            "Run `python main.py summarize` for this chapter first."
+        )
+
+    if footnotes_path.exists() and not force:
+        print(
+            f"Skip {chapter.heading}: {footnotes_path.relative_to(ROOT)} already exists "
+            "(use --force to regenerate)"
+        )
+        return "skip"
+
+    analysis = json.loads(notes_path.read_text(encoding="utf-8"))
+    print(f"Researching footnotes for {chapter.heading} ...")
+    payload = research_footnotes(chapter, analysis)
+    footnotes_path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"Wrote {footnotes_path.relative_to(ROOT)} "
+        f"({len(payload.get('footnotes') or [])} notes)"
+    )
+
+    summary_md = summary_path.read_text(encoding="utf-8")
+    enriched = weave_footnotes(summary_md, payload)
+    enriched_path.write_text(enriched, encoding="utf-8")
+    print(f"Wrote {enriched_path.relative_to(ROOT)}")
+    return "wrote"
+
+
+def cmd_footnotes(args: argparse.Namespace) -> None:
+    chapters = load_chapters()
+
+    if args.all:
+        if args.chapter != 1:
+            print("Note: --all ignores --chapter")
+        targets = chapters
+    else:
+        chapter = next((c for c in chapters if c.number == args.chapter), None)
+        if chapter is None:
+            available = ", ".join(str(c.number) for c in chapters)
+            raise SystemExit(f"Chapter {args.chapter} not found. Available: {available}")
+        targets = [chapter]
+
+    wrote = skipped = 0
+    for chapter in targets:
+        result = footnotes_one(chapter, force=args.force)
+        if result == "wrote":
+            wrote += 1
+        else:
+            skipped += 1
+
+    if args.all:
+        print(f"\nFootnotes done: {wrote} written, {skipped} skipped")
+        report_path = write_book_report(chapters)
+        print(f"Wrote {report_path.relative_to(ROOT)}")
+
+
 def cmd_export(args: argparse.Namespace) -> None:
     written = export_report(args.format, force=args.force)
     for path in written:
@@ -443,6 +534,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-rollup-merged.json already exists",
     )
     aliases_parser.set_defaults(func=cmd_aliases)
+
+    footnotes_parser = sub.add_parser(
+        "footnotes",
+        help=(
+            "Footnote/Research agent: write state footnotes JSON + enriched "
+            "chapter Markdown (keeps summaries pristine); --all also rebuilds "
+            "book-report.md"
+        ),
+    )
+    footnotes_parser.add_argument(
+        "--chapter",
+        type=int,
+        default=1,
+        help="Chapter number (default: 1; ignored with --all)",
+    )
+    footnotes_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Research every chapter, then rebuild output/book-report.md",
+    )
+    footnotes_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/chapter-NN-footnotes.json already exists",
+    )
+    footnotes_parser.set_defaults(func=cmd_footnotes)
 
     export_parser = sub.add_parser(
         "export",
