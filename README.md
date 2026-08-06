@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, and summarize one chapter with an LLM.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor per chapter, and merge a Markdown report.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -17,7 +17,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Add your API key to `.env`. The summarizer uses **Gemini** (`GEMINI_API_KEY`).
+Add your API key to `.env`. Agents use **Gemini** (`GEMINI_API_KEY`).
 
 Full commands and smoke checks: [`docs/runbook.md`](docs/runbook.md).
 
@@ -29,13 +29,13 @@ List chapters (no LLM call):
 python main.py chapters
 ```
 
-Summarize one chapter:
+Summarize one chapter (Reader → Editor):
 
 ```powershell
 python main.py summarize --chapter 1
 ```
 
-Output is written to `output/chapter-01-summary.md`. Re-runs skip if that file exists; use `--force` to regenerate.
+Writes `state/chapter-01-analysis.json` and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` to regenerate.
 
 ## Knowledge base
 
@@ -51,11 +51,11 @@ Output is written to `output/chapter-01-summary.md`. Re-runs skip if that file e
 ## Layout
 
 ```
-agents/          # LLM agents (stage-1 summarizer for now)
+agents/          # LLM agents (llm helper, reader, editor)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
 output/          # Generated Markdown
-state/           # Intermediate JSON / analysis state
+state/           # Intermediate JSON / Reader analysis
 book.py          # Load book + split chapters
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
@@ -65,8 +65,7 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Summarize all chapters and merge a full report  
-2. Reader → Critic → Editor agent loop  
-3. Later: RAG, footnotes, visuals, export formats  
+1. Critic loop (critique → revise → final)  
+2. Later: RAG, footnotes, visuals, export formats  
 
 Details: `todo.md` and `idea.md`.

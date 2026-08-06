@@ -21,11 +21,13 @@ List chapters (no LLM call; writes `state/chapters.json`):
 python main.py chapters
 ```
 
-Summarize one chapter (needs API key; writes `output/chapter-NN-summary.md`):
+Summarize one chapter (Reader → Editor; needs API key):
 
 ```powershell
 python main.py summarize --chapter 1
 ```
+
+Writes `state/chapter-01-analysis.json` then `output/chapter-01-summary.md`.
 
 Summarize every chapter, then merge into `output/book-report.md`:
 
@@ -33,7 +35,7 @@ Summarize every chapter, then merge into `output/book-report.md`:
 python main.py summarize --all
 ```
 
-Skips the LLM call for any chapter whose output file already exists. Force regenerates:
+Skips when the chapter summary file already exists. Force regenerates Reader notes and Editor summary:
 
 ```powershell
 python main.py summarize --chapter 1 --force
@@ -53,15 +55,16 @@ After changing the loader / splitter:
 1. `python main.py chapters` — expect a sensible chapter count and titles.
 2. Confirm `state/chapters.json` updated.
 
-After changing the summarizer / provider:
+After changing Reader / Editor:
 
 1. `python main.py summarize --chapter 1 --force`
-2. Open `output/chapter-01-summary.md` — expect Markdown with the section structure from the agent prompt.
+2. Open `state/chapter-01-analysis.json` — expect plot / characters / themes / quotes / events.
+3. Open `output/chapter-01-summary.md` — expect Markdown with the Editor section structure.
 
 After changing skip/force behavior:
 
 1. With an existing `output/chapter-01-summary.md`, run `python main.py summarize --chapter 1` — expect a skip message and no API call.
-2. `python main.py summarize --chapter 1 --force` — expect a write.
+2. `python main.py summarize --chapter 1 --force` — expect Reader + Editor writes.
 
 After changing map/merge:
 
@@ -73,4 +76,4 @@ After changing map/merge:
 
 - Sample book: *Alice’s Adventures in Wonderland* under `data/books/`.
 - Book text is excluded from Cursor indexing via `.cursorignore`; agents should use `book.py` / CLI rather than reading the full raw file when possible.
-- Full-book `--all` makes one Gemini call per missing chapter; expect several minutes for a fresh run.
+- Fresh `--all` makes up to two Gemini calls per missing chapter (Reader + Editor); expect several minutes.

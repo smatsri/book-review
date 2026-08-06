@@ -20,6 +20,10 @@ def chapter_summary_path(number: int) -> Path:
     return OUTPUT_DIR / f"chapter-{number:02d}-summary.md"
 
 
+def chapter_analysis_path(number: int) -> Path:
+    return STATE_DIR / f"chapter-{number:02d}-analysis.json"
+
+
 def write_book_report(chapters: list[Chapter]) -> Path:
     """Merge existing chapter summaries into one Markdown report (no LLM)."""
     parts: list[str] = []
@@ -48,10 +52,13 @@ def write_book_report(chapters: list[Chapter]) -> Path:
 
 
 def summarize_one(chapter: Chapter, *, force: bool) -> str:
-    """Summarize one chapter to disk. Returns 'wrote', 'skip', or raises."""
-    from agents.summarizer import summarize_chapter
+    """Reader → Editor for one chapter. Returns 'wrote', 'skip', or raises."""
+    from agents.editor import edit_analysis
+    from agents.reader import read_chapter
 
     out_path = chapter_summary_path(chapter.number)
+    notes_path = chapter_analysis_path(chapter.number)
+
     if out_path.exists() and not force:
         print(
             f"Skip {chapter.heading}: {out_path.relative_to(ROOT)} already exists "
@@ -59,8 +66,20 @@ def summarize_one(chapter: Chapter, *, force: bool) -> str:
         )
         return "skip"
 
-    print(f"Summarizing {chapter.heading} ...")
-    markdown = summarize_chapter(chapter)
+    if notes_path.exists() and not force:
+        print(f"Reusing Reader notes {notes_path.relative_to(ROOT)}")
+        analysis = json.loads(notes_path.read_text(encoding="utf-8"))
+    else:
+        print(f"Reading {chapter.heading} ...")
+        analysis = read_chapter(chapter)
+        notes_path.write_text(
+            json.dumps(analysis, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        print(f"Wrote {notes_path.relative_to(ROOT)}")
+
+    print(f"Editing {chapter.heading} ...")
+    markdown = edit_analysis(analysis)
     out_path.write_text(markdown, encoding="utf-8")
     print(f"Wrote {out_path.relative_to(ROOT)}")
     return "wrote"
@@ -129,7 +148,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     summarize_parser = sub.add_parser(
         "summarize",
-        help="Summarize chapter(s) with the LLM; --all also writes book-report.md",
+        help=(
+            "Reader→Editor for chapter(s); writes state analysis + output summary; "
+            "--all also writes book-report.md"
+        ),
     )
     summarize_parser.add_argument(
         "--chapter",
@@ -145,7 +167,9 @@ def build_parser() -> argparse.ArgumentParser:
     summarize_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if output/chapter-NN-summary.md already exists",
+        help=(
+            "Regenerate Reader notes and Editor summary even if output already exists"
+        ),
     )
     summarize_parser.set_defaults(func=cmd_summarize)
 
