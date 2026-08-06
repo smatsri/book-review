@@ -71,6 +71,13 @@ Short records of choices that should stay true across sessions. Add a new entry 
 - Dev thrash (`--force` full-book regen) dominates the bill more than one production run.
 - Likely pattern if upgrading quality: Flash for map/Reader, stronger model for Critic/Editor.
 
-**Open choice:** stay free + wait; enable billing on Flash; or Flash+Pro/Sonnet mix.  
-**Not decided:** do not change `GEMINI_MODEL` / provider until this is resolved.  
+**Local models (also open):**
+
+- Feasible for this repo: all LLM calls go through `agents/llm.py`; Alice chapter size is local-friendly.
+- Upside: no free-tier 429s, ~$0 API — useful for MacBook / offline Critic iteration.
+- Tradeoffs: slower full-book runs; weaker models often break Reader JSON; literary quality usually behind Flash/Pro unless the machine can run a strong quantized model.
+- Hybrid option: local for map/smoke, cloud for Critic/final edit (same idea as Flash-for-map / stronger-for-Critic).
+
+**Open choice:** stay free + wait; enable billing on Flash; Flash+Pro/Sonnet mix; local-only (e.g. Ollama/LM Studio); or local+cloud hybrid.  
+**Not decided:** do not change `GEMINI_MODEL` / provider / `agents/llm.py` until this is resolved.  
 **Tracked in:** `todo.md` Later.
