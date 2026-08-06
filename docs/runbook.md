@@ -80,6 +80,15 @@ python main.py aliases --force
 
 Requires `state/book-rollup.json`. Skips when the merged file already exists unless `--force`.
 
+LLM book-level synthesis (needs all chapter analyses + summaries + rollup; not part of `summarize --all`):
+
+```powershell
+python main.py reduce
+python main.py reduce --force
+```
+
+Writes `output/book-synthesis.md` from compact Reader analyses plus `book-rollup-merged.json` if present else `book-rollup.json`, then rebuilds `output/book-report.md` (synthesis woven after the header). Skips when the synthesis file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -146,6 +155,12 @@ After changing footnotes:
 1. With chapter-1 analysis + summary present, `python main.py footnotes --chapter 1 --force` — expect `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md` with `[^ch01-…]` markers.
 2. Re-run `python main.py footnotes --chapter 1` — expect a skip message and no LLM call.
 3. `python main.py report` then `python main.py export --format html --force` — expect footnotes in HTML when the report includes enriched chapters.
+
+After changing reduce / book synthesis:
+
+1. With all chapter analyses + summaries + `state/book-rollup.json` present, `python main.py reduce --force` — expect `output/book-synthesis.md` (overview / plot arc / characters / themes / closing note) and `book-report.md` with synthesis after the header.
+2. Re-run `python main.py reduce` — expect a skip message and no LLM call.
+3. `python main.py export --format html --force` — expect the book overview in HTML.
 
 After changing export:
 

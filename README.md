@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, roll up cross-chapter characters/themes into `state/book-rollup.json`, optionally LLM-merge aliases, optionally research footnotes into enriched chapter Markdown, and export the report to HTML/PDF/EPUB.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, roll up cross-chapter characters/themes into `state/book-rollup.json`, optionally LLM-merge aliases, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce a book-level synthesis into the report, and export the report to HTML/PDF/EPUB.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -43,6 +43,14 @@ python main.py footnotes --chapter 1
 
 Writes `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md`. Then `report` prefers enriched files when present.
 
+Optional book-level synthesis (needs analyses + summaries + rollup):
+
+```powershell
+python main.py reduce
+```
+
+Writes `output/book-synthesis.md` and rebuilds `book-report.md` with the overview woven in.
+
 Export the merged report (needs `output/book-report.md` from `report` or `summarize --all`):
 
 ```powershell
@@ -65,7 +73,7 @@ Writes `output/book-report.html`, `.pdf`, and `.epub`. Use `--format html|pdf|ep
 ## Layout
 
 ```
-agents/          # LLM agents (llm, reader, editor, critic, alias_merger, footnote)
+agents/          # LLM agents (llm, reader, editor, critic, alias_merger, reducer, footnote)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
 output/          # Generated Markdown + HTML/PDF/EPUB
@@ -82,6 +90,6 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Later: RAG, visuals, LLM book synthesis; billing/hybrid when needed  
+1. Later: RAG, visuals; billing/hybrid when needed  
 
 Details: `todo.md` and `idea.md`.

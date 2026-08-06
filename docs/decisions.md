@@ -151,3 +151,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `footnotes` (like `aliases`): Footnote LLM writes `state/chapter-NN-footnotes.json`; `footnotes.py` weaves into `output/chapter-NN-enriched.md` with chapter-namespaced `[^chNN-…]` IDs. Summaries stay pristine. `write_book_report` prefers enriched over summary. No web/RAG; no fabricated URLs. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** Opt-in LLM cost per chapter; stale enriched files possible after `--force` summarize until footnotes re-run; unplaceable anchors listed instead of inventing placement.  
 **Extends:** “Export HTML / PDF / EPUB (pure Python)”.
+
+## 2026-08 — LLM reduce / book-level synthesis
+
+**Status:** current  
+**Context:** `book-report.md` only concatenated chapter Markdown; rollup is structured index, not prose. Need whole-book overview without re-reading full text or folding synthesis into Reader→Editor→Critic.  
+**Decision:** Separate CLI `reduce` (like `aliases`): Reducer LLM writes `output/book-synthesis.md` from compact Reader analyses (truncated plot + themes) + slim rollup name lists (`book-rollup-merged.json` if present else `book-rollup.json`). Chapter summaries still required so the rebuilt report is complete, but full summary Markdown is not sent to the model (keeps Alice-sized reduce under ~8k local context). Fixed Markdown sections (overview, plot arc, characters, themes, closing note). No full book text; no author/genre external context. `write_book_report` weaves synthesis after the header when present; `reduce` rebuilds the report. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** One opt-in LLM call for book prose; stale synthesis possible after chapter regen until `reduce --force`; export picks up overview via rebuilt `book-report.md`.  
+**Extends:** “Full-book map + deterministic merge report”; distinct from rollup/aliases (structured) and footnotes (chapter enrichment).

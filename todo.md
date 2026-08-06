@@ -5,18 +5,18 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Footnote agent shipped (enriched report). Next: LLM reduce / Visual.
-- **Last success:** Footnote CLI → `state/chapter-NN-footnotes.json` + `output/chapter-NN-enriched.md`; report prefers enriched; export picks up Markdown Extra footnotes.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`.
+- **Stopped at:** LLM reduce shipped (book synthesis). Next: Visual.
+- **Last success:** Reduce CLI → `output/book-synthesis.md`; `write_book_report` weaves synthesis; rebuilds report after reduce.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis (see `docs/decisions.md`).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage).
 
 ## Now
 
-- [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
+- [ ] Visual / illustration agent (vision: `idea.md` + `idea/visual_bible_for_books.md`)
 
 ## Next
 
-- [ ] Visual / illustration agent (vision: `idea.md` + `idea/visual_bible_for_books.md`)
+_(none — Visual is Now)_
 
 ## Later
 
@@ -46,3 +46,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Fuzzy / LLM character–theme alias merge (`aliases` → `state/book-rollup-merged.json`)
 - [x] Export HTML / PDF / EPUB (`export` → `output/book-report.{html,pdf,epub}`)
 - [x] Footnote / research agent (`footnotes` → footnotes JSON + enriched MD; report prefers enriched)
+- [x] LLM reduce / book-level synthesis (`reduce` → `book-synthesis.md`; weave into report)

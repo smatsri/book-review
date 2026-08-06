@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "output"
 STATE_DIR = ROOT / "state"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
+BOOK_SYNTHESIS_PATH = OUTPUT_DIR / "book-synthesis.md"
 BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
 BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
 
@@ -75,8 +76,14 @@ def write_book_report(chapters: list[Chapter]) -> Path:
         f"# Book report\n\n"
         f"Merged chapter summaries ({len(parts)} chapters).\n"
     )
+    chunks: list[str] = [header.rstrip()]
+    if BOOK_SYNTHESIS_PATH.exists():
+        synthesis = BOOK_SYNTHESIS_PATH.read_text(encoding="utf-8").strip()
+        if synthesis:
+            chunks.append(synthesis)
     body = "\n\n---\n\n".join(parts)
-    BOOK_REPORT_PATH.write_text(f"{header}\n---\n\n{body}\n", encoding="utf-8")
+    chunks.append(body)
+    BOOK_REPORT_PATH.write_text("\n\n---\n\n".join(chunks) + "\n", encoding="utf-8")
     return BOOK_REPORT_PATH
 
 
@@ -374,6 +381,80 @@ def cmd_aliases(args: argparse.Namespace) -> None:
     )
 
 
+def write_book_synthesis(*, force: bool) -> Path | None:
+    """LLM reduce: compact analyses + rollup → output/book-synthesis.md.
+
+    Requires chapter summaries too so the rebuilt report can include them.
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            "Run `python main.py rollup` first."
+        )
+
+    if BOOK_SYNTHESIS_PATH.exists() and not force:
+        print(
+            f"Skip reduce: {BOOK_SYNTHESIS_PATH.relative_to(ROOT)} already exists "
+            "(use --force to regenerate)"
+        )
+        return None
+
+    chapters = load_chapters()
+    analyses: list[dict] = []
+    missing_analysis: list[int] = []
+    missing_summary: list[int] = []
+    for ch in chapters:
+        analysis_path = chapter_analysis_path(ch.number)
+        summary_path = chapter_summary_path(ch.number)
+        if not analysis_path.exists():
+            missing_analysis.append(ch.number)
+            continue
+        if not summary_path.exists():
+            missing_summary.append(ch.number)
+            continue
+        analyses.append(json.loads(analysis_path.read_text(encoding="utf-8")))
+
+    if missing_analysis:
+        available = ", ".join(str(n) for n in missing_analysis)
+        raise SystemExit(
+            f"Missing chapter analyses: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+    if missing_summary:
+        available = ", ".join(str(n) for n in missing_summary)
+        raise SystemExit(
+            f"Missing chapter summaries: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+
+    rollup_path = (
+        BOOK_ROLLUP_MERGED_PATH
+        if BOOK_ROLLUP_MERGED_PATH.exists()
+        else BOOK_ROLLUP_PATH
+    )
+    rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
+
+    from agents.reducer import synthesize_book
+
+    print(
+        f"Synthesizing book overview from {len(analyses)} compact analyses "
+        f"+ {rollup_path.relative_to(ROOT)} ..."
+    )
+    markdown = synthesize_book(analyses, rollup)
+    BOOK_SYNTHESIS_PATH.write_text(markdown, encoding="utf-8")
+    return BOOK_SYNTHESIS_PATH
+
+
+def cmd_reduce(args: argparse.Namespace) -> None:
+    synth_path = write_book_synthesis(force=args.force)
+    if synth_path is None:
+        return
+    print(f"Wrote {synth_path.relative_to(ROOT)}")
+    report_path = write_book_report(load_chapters())
+    print(f"Wrote {report_path.relative_to(ROOT)}")
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -534,6 +615,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-rollup-merged.json already exists",
     )
     aliases_parser.set_defaults(func=cmd_aliases)
+
+    reduce_parser = sub.add_parser(
+        "reduce",
+        help=(
+            "LLM book-level synthesis from compact analyses + rollup into "
+            "output/book-synthesis.md; rebuilds book-report.md"
+        ),
+    )
+    reduce_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if output/book-synthesis.md already exists",
+    )
+    reduce_parser.set_defaults(func=cmd_reduce)
 
     footnotes_parser = sub.add_parser(
         "footnotes",
