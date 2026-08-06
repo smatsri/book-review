@@ -80,6 +80,16 @@ python main.py aliases --force
 
 Requires `state/book-rollup.json`. Skips when the merged file already exists unless `--force`.
 
+Export the merged Markdown report to HTML, PDF, and/or EPUB (no LLM):
+
+```powershell
+python main.py export
+python main.py export --format html
+python main.py export --force
+```
+
+Requires `output/book-report.md` (run `report` or `summarize --all` first). Default `--format all` writes `output/book-report.html`, `.pdf`, and `.epub`. Skips each file that already exists unless `--force`.
+
 ## Smoke checks
 
 After changing the loader / splitter:
@@ -120,6 +130,12 @@ After changing alias merge:
 1. With `state/book-rollup.json` present, `python main.py aliases --force` — expect `state/book-rollup-merged.json` with `source`, `characters` (`name` / `aliases` / `notes` / `chapters`), and `themes` (`theme` / `aliases` / `chapters`).
 2. Re-run `python main.py aliases` — expect a skip message and no LLM call.
 3. Prefer fewer character/theme rows than the baseline when the model merges aliases (e.g. Queen / Queen of Hearts).
+
+After changing export:
+
+1. With `output/book-report.md` present, `python main.py export --force` — expect `output/book-report.html`, `.pdf`, and `.epub`.
+2. Re-run `python main.py export` — expect skip messages and no rewrite.
+3. `python main.py export --format html --force` — expect only the HTML file refreshed.
 
 ## Notes
 

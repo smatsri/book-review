@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, and roll up cross-chapter characters/themes into structured state.
+Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, and export the report to HTML/PDF/EPUB.
 
 ## Pipeline
 
@@ -22,12 +22,16 @@ chapters   summarize          report                      rollup     aliases
 (CLI)      (CLI → Reader →    (CLI, no LLM)               (CLI,      (CLI → Alias
            Editor → Critic →        |                      no LLM)    Merger LLM)
            revise)            output/book-report.md   book-rollup.json  |
-   |         |                                              |     book-rollup-
+   |         |                        |                     |     book-rollup-
 state/     state/chapter-NN-analysis.json                   |     merged.json
 chapters.json  state/chapter-NN-draft.md                    +----------+
                state/chapter-NN-critique.json
                → output/chapter-NN-summary.md
                (--all then report + rollup; aliases is separate)
+                                    |
+                                 export (CLI, no LLM)
+                                    |
+                         book-report.html / .pdf / .epub
 ```
 
 ## Main pieces
@@ -36,7 +40,8 @@ chapters.json  state/chapter-NN-draft.md                    +----------+
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
-| `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`, `--from STAGE`), `report`, `rollup`, `aliases` |
+| `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
+| `main.py` | CLI: `chapters`, `summarize` (`--chapter N` / `--all`, `--force`, `--from STAGE`), `report`, `rollup`, `aliases`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -44,7 +49,7 @@ chapters.json  state/chapter-NN-draft.md                    +----------+
 | `agents/alias_merger.py` | Alias Merger: rollup name lists → character/theme alias clusters (JSON) |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader JSON + Editor draft + Critic JSON + `book-rollup.json` + `book-rollup-merged.json` |
-| `output/` | Per-chapter summaries + merged `book-report.md` |
+| `output/` | Per-chapter summaries + merged `book-report.md` + HTML/PDF/EPUB exports |
 
 ## Data model
 
@@ -96,6 +101,7 @@ Merged rollup (`state/book-rollup-merged.json`, from `aliases`):
 - Full-book report: deterministic merge of chapter Markdown files (no LLM)
 - Book rollup: deterministic merge of Reader analyses into `state/book-rollup.json` (no LLM)
 - Alias merge: one LLM call over rollup name lists → `state/book-rollup-merged.json`
+- Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; not part of `summarize --all`)
 - Regenerating a chapter: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
 
 ## Skip / force / from
@@ -105,6 +111,7 @@ Merged rollup (`state/book-rollup-merged.json`, from `aliases`):
 - `--force` regenerates from Reader through summary (mutually exclusive with `--from`)
 - `--from reader|draft|critic|revise` restarts at that stage (reuses earlier artifacts; requires them to exist); overrides skip when summary exists
 - `aliases` skips when `state/book-rollup-merged.json` exists unless `--force`
+- `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
 
 ## Not built yet
 
@@ -113,6 +120,6 @@ Do not assume these exist in code:
 - Multi-round critique (only one Critic → revise pass)
 - LLM reduce / book-level synthesis beyond concatenated chapter reports
 - RAG / embeddings
-- Footnotes, visuals, export formats
+- Footnotes, visuals
 
 Those are roadmap items in `todo.md` / `idea.md`.

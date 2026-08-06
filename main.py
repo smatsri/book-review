@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from book import Chapter, load_chapters
+from export_book import export_report
 from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
@@ -359,6 +360,12 @@ def cmd_aliases(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_export(args: argparse.Namespace) -> None:
+    written = export_report(args.format, force=args.force)
+    for path in written:
+        print(f"Wrote {path.relative_to(ROOT)}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Book review MVP")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -436,6 +443,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-rollup-merged.json already exists",
     )
     aliases_parser.set_defaults(func=cmd_aliases)
+
+    export_parser = sub.add_parser(
+        "export",
+        help=(
+            "Export output/book-report.md to HTML, PDF, and/or EPUB "
+            "(no LLM)"
+        ),
+    )
+    export_parser.add_argument(
+        "--format",
+        choices=("html", "pdf", "epub", "all"),
+        default="all",
+        help="Output format (default: all)",
+    )
+    export_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if export files already exist",
+    )
+    export_parser.set_defaults(func=cmd_export)
 
     return parser
 

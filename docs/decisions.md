@@ -135,3 +135,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Add Alias Merger agent + CLI `aliases` writing `state/book-rollup-merged.json` from `book-rollup.json`. One LLM call proposes clusters (exact input strings only); `apply_alias_clusters` in `rollup.py` validates, fills singletons, unions chapters/notes, and picks display name/theme as longest alias. Skip unless `--force`. Not invoked by `summarize --all`. No fuzzy string library in v1.  
 **Consequences:** Enrichment is opt-in and provider-dependent; baseline rollup remains authoritative for exact-normalized merges. Bad LLM clusters fail closed (unknown/overlap dropped).  
 **Extends:** “Book-level structured rollup (deterministic)”.
+
+## 2026-08 — Export HTML / PDF / EPUB (pure Python)
+
+**Status:** current  
+**Context:** Pipeline stopped at Markdown; `idea.md` Layout Agent asks for HTML/PDF/EPUB without requiring another LLM role yet.  
+**Decision:** Add `export_book.py` + CLI `export` converting `output/book-report.md` with pip-only libs (`markdown`, `ebooklib`, `xhtml2pdf`). Default `--format all`; per-format skip unless `--force`. Not part of `summarize --all`. No Pandoc/LaTeX.  
+**Consequences:** One `pip install -r requirements.txt` path for all platforms; PDF styling is xhtml2pdf-limited; per-chapter export and enriched-book packaging stay Later.  
+**Extends:** “Full-book map + deterministic merge report”.

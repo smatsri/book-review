@@ -2,7 +2,7 @@
 
 Multi-agent pipeline for analyzing and enriching public-domain books.
 
-Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, roll up cross-chapter characters/themes into `state/book-rollup.json`, and optionally LLM-merge aliases into `state/book-rollup-merged.json`.
+Current MVP: load a Gutenberg plain-text book, split it into chapters, run Reader → Editor → Critic → revise per chapter, merge a Markdown report, roll up cross-chapter characters/themes into `state/book-rollup.json`, optionally LLM-merge aliases into `state/book-rollup-merged.json`, and export the report to HTML/PDF/EPUB.
 
 Sample book: *Alice’s Adventures in Wonderland* (Lewis Carroll) under `data/books/`.
 
@@ -35,6 +35,14 @@ python main.py summarize --chapter 1
 
 Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/chapter-01-critique.json`, and `output/chapter-01-summary.md`. Re-runs skip if the summary exists; use `--force` for a full regen or `--from draft|critic|revise` to restart mid-pipeline.
 
+Export the merged report (needs `output/book-report.md` from `report` or `summarize --all`):
+
+```powershell
+python main.py export
+```
+
+Writes `output/book-report.html`, `.pdf`, and `.epub`. Use `--format html|pdf|epub` for one format; `--force` to regenerate.
+
 ## Knowledge base
 
 | File | Purpose |
@@ -52,10 +60,11 @@ Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/cha
 agents/          # LLM agents (llm, reader, editor, critic, alias_merger)
 data/books/      # Source texts (ignored by Cursor via .cursorignore)
 docs/            # Current-truth documentation
-output/          # Generated Markdown
+output/          # Generated Markdown + HTML/PDF/EPUB
 state/           # Intermediate artifacts (Reader JSON, Editor draft, Critic JSON, rollups)
 book.py          # Load book + split chapters
 rollup.py        # Book-level character/theme merge + alias apply
+export_book.py   # Markdown report → HTML / PDF / EPUB
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
 idea.md          # Product / architecture vision
@@ -64,6 +73,6 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Later: RAG, footnotes, visuals, export, LLM book synthesis; billing/hybrid when needed  
+1. Later: RAG, footnotes, visuals, LLM book synthesis; billing/hybrid when needed  
 
 Details: `todo.md` and `idea.md`.

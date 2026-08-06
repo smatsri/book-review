@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Alias merge shipped (`aliases` → `state/book-rollup-merged.json`). Promote Next from Later when ready.
-- **Last success:** LLM character/theme alias merge on book rollup (baseline `book-rollup.json` unchanged).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now, alias merge CLI/agent (see `docs/decisions.md`).
+- **Stopped at:** Export shipped (`export` → `output/book-report.{html,pdf,epub}`). Promote Next from Later when ready.
+- **Last success:** Pure-Python HTML/PDF/EPUB export from `book-report.md` (skip/`--force`).
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop, draft persist + `--from`, book rollup normalize rules, billing decision for now, alias merge CLI/agent, export CLI (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — revisit when quota or quality blocks local-only dev. See Later + `docs/decisions.md`.
 
 ## Now
@@ -28,7 +28,6 @@ _(empty — promote from Later when ready)_
 - [ ] RAG / embeddings over chapters
 - [ ] Footnote / research agent
 - [ ] Visual / illustration agent
-- [ ] Export HTML / PDF / EPUB
 - [ ] LLM reduce / book-level synthesis (beyond concatenated chapter report)
 
 ## Done
@@ -49,3 +48,4 @@ _(empty — promote from Later when ready)_
 - [x] Persist Editor draft + `summarize --from` stage restart / soft resume
 - [x] Book-level structured rollup in `state/` (cross-chapter characters, themes)
 - [x] Fuzzy / LLM character–theme alias merge (`aliases` → `state/book-rollup-merged.json`)
+- [x] Export HTML / PDF / EPUB (`export` → `output/book-report.{html,pdf,epub}`)
