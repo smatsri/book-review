@@ -5,22 +5,16 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Knowledge base scaffolded (`docs/`, `AGENTS.md`, cursor rule). Next product work is still the Gemini switch.
-- **Last success:** MVP OpenAI summarizer + `python main.py chapters` / `summarize --chapter 1` (prior sessions).
-- **Do not redo:** Project skeleton, Alice loader/splitter, stage-1 OpenAI summarizer, initial git commit.
+- **Stopped at:** Gemini provider switch done; smoke-tested `summarize --chapter 1`.
+- **Last success:** Stage-1 summarizer on Gemini (`google-genai`, `GEMINI_API_KEY`).
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini switch.
 
 ## Now
 
-- [ ] Switch LLM provider from OpenAI to Gemini
-  - Update `requirements.txt` (`google-genai` or equivalent)
-  - Update `.env.example` (`GEMINI_API_KEY`, model name)
-  - Rewrite `agents/summarizer.py` to call Gemini
-  - Update `docs/architecture.md`, `docs/runbook.md`, and supersede the OpenAI decision in `docs/decisions.md`
-  - Smoke-test: `python main.py summarize --chapter 1`
+- [ ] Summarize all chapters (map) and merge into one Markdown report
 
 ## Next
 
-- [ ] Summarize all chapters (map) and merge into one Markdown report
 - [ ] Split roles: Reader agent → Editor agent
 - [ ] Add Critic loop (critique → revise → final)
 - [ ] Persist structured analysis in `state/` (characters, themes, etc.)
@@ -40,3 +34,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Stage-1 single-agent summarizer (OpenAI, temporary)
 - [x] Initial git commit
 - [x] Knowledge base: `docs/`, `AGENTS.md`, `.cursor/rules/knowledge-base.mdc`
+- [x] Switch LLM provider from OpenAI to Gemini

@@ -11,7 +11,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Put `OPENAI_API_KEY` in `.env`. Optional: `OPENAI_MODEL` (default `gpt-4o-mini`).
+Put `GEMINI_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.5-flash`).
 
 ## Commands
 

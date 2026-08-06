@@ -19,7 +19,7 @@ data/books/*.txt
    +----+----+
    |         |
 chapters   summarize
-(CLI)      (CLI → agents/summarizer.py → OpenAI)
+(CLI)      (CLI → agents/summarizer.py → Gemini)
    |         |
 state/     output/chapter-NN-summary.md
 chapters.json
@@ -31,7 +31,7 @@ chapters.json
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
 | `main.py` | CLI: `chapters`, `summarize --chapter N` |
-| `agents/summarizer.py` | Stage-1 single agent (OpenAI chat completion → Markdown) |
+| `agents/summarizer.py` | Stage-1 single agent (Gemini generate_content → Markdown) |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Intermediate JSON (e.g. chapter metadata) |
 | `output/` | Generated Markdown summaries |
@@ -48,11 +48,10 @@ chapters.json
 
 ## LLM (current)
 
-- Provider: **OpenAI** (`OPENAI_API_KEY`, optional `OPENAI_MODEL`)
-- Default model: `gpt-4o-mini`
+- Provider: **Gemini** (`GEMINI_API_KEY`, optional `GEMINI_MODEL`)
+- Default model: `gemini-3.5-flash`
+- SDK: `google-genai` (`client.models.generate_content`)
 - Output sections: plot summary, characters, themes/motifs, notable quotes
-
-Planned switch: Gemini — see [`todo.md`](../todo.md) and [`decisions.md`](decisions.md).
 
 ## Not built yet
 

@@ -17,7 +17,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Add your API key to `.env`. The summarizer currently uses **OpenAI** (`OPENAI_API_KEY`). Switching to **Gemini** is planned — see `todo.md`.
+Add your API key to `.env`. The summarizer uses **Gemini** (`GEMINI_API_KEY`).
 
 Full commands and smoke checks: [`docs/runbook.md`](docs/runbook.md).
 
@@ -65,9 +65,8 @@ todo.md          # Session + roadmap checklist
 
 ## Roadmap (short)
 
-1. Switch provider to Gemini  
-2. Summarize all chapters and merge a full report  
-3. Reader → Critic → Editor agent loop  
-4. Later: RAG, footnotes, visuals, export formats  
+1. Summarize all chapters and merge a full report  
+2. Reader → Critic → Editor agent loop  
+3. Later: RAG, footnotes, visuals, export formats  
 
 Details: `todo.md` and `idea.md`.

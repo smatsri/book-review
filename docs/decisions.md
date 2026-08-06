@@ -4,17 +4,23 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Start with a single OpenAI summarizer
 
-**Status:** current  
+**Status:** superseded by “Switch summarizer to Gemini”  
 **Context:** Need a working LLM path before multi-agent orchestration.  
 **Decision:** Stage-1 agent in `agents/summarizer.py` uses OpenAI chat completions.  
-**Consequences:** `.env` uses `OPENAI_API_KEY` / `OPENAI_MODEL`. Switching providers means changing this module, deps, and env docs together.
+**Consequences:** `.env` used `OPENAI_API_KEY` / `OPENAI_MODEL`.
 
 ## 2026-08 — Prefer Gemini next
 
-**Status:** planned (see `todo.md` Now)  
+**Status:** superseded by “Switch summarizer to Gemini” (implemented)  
 **Context:** Prefer Gemini for ongoing work.  
-**Decision:** Replace OpenAI with Gemini as the next implementation slice; keep the same CLI and Markdown output contract.  
-**Consequences:** Update `requirements.txt`, `.env.example`, `agents/summarizer.py`, README/runbook, then smoke-test `summarize --chapter 1`.
+**Decision:** Replace OpenAI with Gemini as the next implementation slice; keep the same CLI and Markdown output contract.
+
+## 2026-08 — Switch summarizer to Gemini
+
+**Status:** current  
+**Context:** OpenAI was a temporary stage-1 path; Gemini is the preferred provider.  
+**Decision:** `agents/summarizer.py` uses the `google-genai` SDK (`generate_content`) with `GEMINI_API_KEY` / optional `GEMINI_MODEL` (default `gemini-3.5-flash`). CLI and Markdown output sections unchanged.  
+**Consequences:** No OpenAI dependency; runbook and `.env.example` document Gemini only.
 
 ## 2026-08 — Docs split: session vs truth vs vision
 
