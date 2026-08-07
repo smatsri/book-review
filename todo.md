@@ -5,14 +5,14 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Visual Bible step 5 done (`visual-handoff` → `state/book-visual-handoff.json`). Next: wire bible into product.
-- **Last success:** `python main.py visual-handoff` writes open questions + consistency issues from the four bible JSON files (deterministic name/gap checks + one LLM pass); skip unless `--force`; does not rewrite steps 1–4.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff (see `docs/decisions.md`).
+- **Stopped at:** Local handoff viewer kept (`web/handoff.html` + `view-handoff` CLI / VS Code task). Next: continue wiring bible into product (report/export weave still later).
+- **Last success:** `python main.py view-handoff` serves `web/handoff.html` against `state/book-visual-handoff.json` on port 8765 (no LLM); Cursor task **Open visual handoff** wraps it.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff` (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until bible is wired into product.
 
 ## Now
 
-- [ ] Wire bible into product (CLI + state/output; report/export later if needed)
+- [ ] Wire bible into product (CLI + state/output; report/export later if needed) — handoff local viewer done; weave still open
 
 ## Next
 
@@ -56,3 +56,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Visual Bible step 3 — key places / settings (`visual-places` → `state/book-visual-places.json`)
 - [x] Visual Bible step 4 — scene briefs (`visual-scenes` → `state/book-visual-scenes.json`)
 - [x] Visual Bible step 5 — open questions + consistency pass (`visual-handoff` → `state/book-visual-handoff.json`)
+- [x] Visual handoff local viewer (`web/handoff.html` + `view-handoff` / VS Code task)

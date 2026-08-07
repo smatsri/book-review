@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visual Handoff</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --ink: #1c1a17;
+      --muted: #5c574f;
+      --line: #d9d2c6;
+      --card: #fffdf9;
+      --accent: #0f5c4c;
+      --warn: #8a4b12;
+      --warn-bg: #fff4e5;
+      --chip: #ebe6dc;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8dc 0%, transparent 45%),
+        linear-gradient(180deg, #faf7f2 0%, var(--bg) 100%);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+
+    header {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 1.25rem;
+    }
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.75rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .toolbar {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 1.25rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .toolbar label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    select, button, .file-btn {
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+    }
+    button:hover, .file-btn:hover, select:hover { border-color: var(--accent); }
+    .file-btn { display: inline-block; }
+    #file-input { display: none; }
+    .status {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .status.error { color: #8b1e1e; }
+
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 1.25rem 3rem;
+    }
+
+    .sources {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+    }
+    .sources span {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    section { margin-bottom: 2rem; }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .count {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, white);
+      border-radius: 999px;
+      padding: 0.1rem 0.5rem;
+    }
+
+    .list { display: grid; gap: 0.75rem; }
+    article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    article h3 {
+      margin: 0 0 0.45rem;
+      font-size: 1.05rem;
+      font-weight: 650;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.55rem;
+    }
+    .tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: var(--chip);
+      color: var(--muted);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .tag.topic-character { background: #e3eef8; color: #1a4a6e; }
+    .tag.topic-style { background: #e8f3ea; color: #1f5a2e; }
+    .tag.topic-scene { background: #f3e8f6; color: #5a2a6e; }
+    .tag.topic-place { background: #f8efe3; color: #6e4a1a; }
+    .tag.sev-name_mismatch,
+    .tag.sev-conflict { background: var(--warn-bg); color: var(--warn); }
+    .tag.sev-gap,
+    .tag.sev-ambiguity { background: #eef0f5; color: #3a4560; }
+
+    .note, .suggestion {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .suggestion strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .related {
+      margin: 0.55rem 0 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .related li {
+      font-size: 0.8rem;
+      border: 1px dashed var(--line);
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      color: var(--muted);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 1rem;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Visual Handoff</h1>
+    <p class="sub">Open questions and consistency issues from the Visual Bible.</p>
+  </header>
+
+  <div class="toolbar">
+    <label for="topic-filter">Topic</label>
+    <select id="topic-filter">
+      <option value="">All</option>
+    </select>
+    <label for="sev-filter">Severity</label>
+    <select id="sev-filter">
+      <option value="">All</option>
+    </select>
+    <label class="file-btn" for="file-input">Load JSON…</label>
+    <input id="file-input" type="file" accept="application/json,.json" />
+    <span class="status" id="status">Loading…</span>
+  </div>
+
+  <main id="app" hidden>
+    <div class="sources" id="sources"></div>
+
+    <section>
+      <h2>Open questions <span class="count" id="q-count">0</span></h2>
+      <div class="list" id="questions"></div>
+    </section>
+
+    <section>
+      <h2>Consistency issues <span class="count" id="i-count">0</span></h2>
+      <div class="list" id="issues"></div>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULT_URL = "../state/book-visual-handoff.json";
+    let data = null;
+
+    const el = {
+      status: document.getElementById("status"),
+      app: document.getElementById("app"),
+      sources: document.getElementById("sources"),
+      questions: document.getElementById("questions"),
+      issues: document.getElementById("issues"),
+      qCount: document.getElementById("q-count"),
+      iCount: document.getElementById("i-count"),
+      topic: document.getElementById("topic-filter"),
+      sev: document.getElementById("sev-filter"),
+      file: document.getElementById("file-input"),
+    };
+
+    function setStatus(msg, isError) {
+      el.status.textContent = msg;
+      el.status.classList.toggle("error", !!isError);
+    }
+
+    function uniq(values) {
+      return [...new Set(values.filter(Boolean))].sort();
+    }
+
+    function fillSelect(select, values, keepFirst) {
+      const first = select.options[0];
+      select.innerHTML = "";
+      select.appendChild(first);
+      for (const v of values) {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v.replace(/_/g, " ");
+        select.appendChild(opt);
+      }
+    }
+
+    function relatedList(items) {
+      if (!items || !items.length) return "";
+      return `<ul class="related">${items.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function render() {
+      if (!data) return;
+
+      const topic = el.topic.value;
+      const sev = el.sev.value;
+
+      const sources = [
+        data.source_identity,
+        data.source_characters,
+        data.source_places,
+        data.source_scenes,
+      ].filter(Boolean);
+      el.sources.innerHTML = sources.map((s) => `<span>${escapeHtml(s)}</span>`).join("");
+
+      const questions = (data.open_questions || []).filter(
+        (q) => !topic || q.topic === topic
+      );
+      const issues = (data.consistency_issues || []).filter(
+        (i) => !sev || i.severity === sev
+      );
+
+      el.qCount.textContent = String(questions.length);
+      el.iCount.textContent = String(issues.length);
+
+      if (!questions.length) {
+        el.questions.innerHTML = `<p class="empty">No open questions${topic ? " for this topic" : ""}.</p>`;
+      } else {
+        el.questions.innerHTML = questions
+          .map(
+            (q) => `
+          <article>
+            <div class="meta">
+              <span class="tag topic-${escapeHtml(q.topic || "other")}">${escapeHtml(q.topic || "other")}</span>
+            </div>
+            <h3>${escapeHtml(q.question || "")}</h3>
+            ${q.note ? `<p class="note">${escapeHtml(q.note)}</p>` : ""}
+            ${relatedList(q.related)}
+          </article>`
+          )
+          .join("");
+      }
+
+      if (!issues.length) {
+        el.issues.innerHTML = `<p class="empty">No consistency issues${sev ? " for this severity" : ""}.</p>`;
+      } else {
+        el.issues.innerHTML = issues
+          .map(
+            (i) => `
+          <article>
+            <div class="meta">
+              <span class="tag sev-${escapeHtml(i.severity || "")}">${escapeHtml((i.severity || "").replace(/_/g, " "))}</span>
+            </div>
+            <h3>${escapeHtml(i.summary || "")}</h3>
+            ${
+              i.suggestion
+                ? `<p class="suggestion"><strong>Suggestion:</strong> ${escapeHtml(i.suggestion)}</p>`
+                : ""
+            }
+            ${relatedList(i.related)}
+          </article>`
+          )
+          .join("");
+      }
+
+      el.app.hidden = false;
+    }
+
+    function useData(parsed, label) {
+      data = parsed;
+      const topics = uniq((parsed.open_questions || []).map((q) => q.topic));
+      const sevs = uniq((parsed.consistency_issues || []).map((i) => i.severity));
+      fillSelect(el.topic, topics);
+      fillSelect(el.sev, sevs);
+      setStatus(label);
+      render();
+    }
+
+    async function loadDefault() {
+      try {
+        const res = await fetch(DEFAULT_URL);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const json = await res.json();
+        useData(json, DEFAULT_URL);
+      } catch (err) {
+        setStatus(
+          `Could not load ${DEFAULT_URL} (${err.message}). Use “Load JSON…” or serve from repo root.`,
+          true
+        );
+      }
+    }
+
+    el.topic.addEventListener("change", render);
+    el.sev.addEventListener("change", render);
+    el.file.addEventListener("change", async () => {
+      const file = el.file.files && el.file.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        useData(JSON.parse(text), file.name);
+      } catch (err) {
+        setStatus(`Invalid JSON: ${err.message}`, true);
+      }
+    });
+
+    loadDefault();
+  </script>
+</body>
+</html>

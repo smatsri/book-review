@@ -200,3 +200,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `visual-handoff` (like `visual-scenes`): hybrid pass writes `state/book-visual-handoff.json` from the four bible JSON files only (no chapter analyses). Deterministic checks flag scene cast/location name mismatches vs sheets, empty trait lists, and duplicate scene titles. One LLM call over slim identity / character / place / scene summaries adds `open_questions` (`question` / `topic` / `related` / `note`; topic allowlist style|character|place|scene|other) and soft `consistency_issues` (`summary` / `severity` / `related` / `suggestion`; severity allowlist conflict|gap|name_mismatch|ambiguity). Merge + dedupe; cap ~12 each. Sized for ~8k local context with capped output tokens. Requires all four bible files first; does not mutate them. Malformed rows dropped; missing top-level keys fail. No report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** One opt-in LLM call closes the Visual Bible as a handoff artifact; product weave / image gen stay later.  
 **Extends:** Visual Bible step 4 (scene briefs).
+
+## 2026-08 — Visual handoff local viewer
+
+**Status:** current  
+**Context:** `state/book-visual-handoff.json` is useful to skim in a browser, but `tmp/` is gitignored and `output/` is for generated exports — the static UI should be committed and easy to open.  
+**Decision:** Keep `web/handoff.html` (committed static viewer fetching `../state/book-visual-handoff.json`). CLI `view-handoff` serves the repo root on `127.0.0.1:8765`, opens the page, and blocks until Ctrl+C (no LLM; requires handoff JSON first). Cursor/VS Code task **Open visual handoff** wraps the same CLI. Not woven into report/export.  
+**Consequences:** Illustrators can review open questions / consistency issues locally without copying JSON into chat; fuller bible browse / report weave stay later.  
+**Extends:** Visual Bible step 5 (handoff).

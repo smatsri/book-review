@@ -50,7 +50,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
 | `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `footnotes`, `export` |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `view-handoff`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -67,6 +67,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
 | `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` + HTML/PDF/EPUB |
+| `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`) |
 
 ## Data model
 
@@ -218,6 +219,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual Bible product weave / image generation (handoff exists; report/export weave and image gen later)
+- Visual Bible product weave / image generation (handoff JSON + local `view-handoff` UI exist; report/export weave and image gen later)
 
 Those are roadmap items in `todo.md` / `idea.md`.
