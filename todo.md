@@ -5,22 +5,21 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Handoff viewer downloads answers JSON. Next: resolve/apply CLI from that file into a resolved bible.
-- **Last success:** `web/handoff.html` radios + notes → download `book-visual-handoff-answers.json` (place under `state/`).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until handoff answers are applied into a resolved bible.
+- **Stopped at:** Handoff answers resolve/apply CLI done. Next: image generation from resolved bible + scene briefs.
+- **Last success:** `visual-resolve` → `state/book-visual-resolved.json` (deep-copy + `art_decision` patches; no LLM).
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve (see `docs/decisions.md`).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until resolved bible exists (now ready).
 
 ## Now
 
-- [ ] Handoff answers → resolve/apply CLI: accept answers JSON and fold into bible state (new resolved artifact and/or patched sheets) — see `docs/decisions.md`
+- [ ] Image generation from resolved bible + scene briefs
 
 ## Next
 
-- [ ] Image generation from resolved bible + scene briefs
+- [ ] Consistency review of generated art vs bible
 
 ## Later
 
-- [ ] Consistency review of generated art vs bible
 - [ ] Wire / weave illustrations into enriched MD / report / export
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Parked for now: local Qwen (`LLM_PROVIDER=lmstudio`) for feature work
@@ -59,3 +58,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Visual handoff local viewer (`web/handoff.html` + `view-handoff` / VS Code task)
 - [x] Handoff open questions carry `options` (+ optional `suggested`); viewer renders them
 - [x] Handoff viewer → answers JSON (`web/handoff.html` download → `state/book-visual-handoff-answers.json`)
+- [x] Handoff answers → resolve/apply CLI (`visual-resolve` → `state/book-visual-resolved.json`)

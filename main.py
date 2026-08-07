@@ -25,6 +25,8 @@ BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
 BOOK_VISUAL_PLACES_PATH = STATE_DIR / "book-visual-places.json"
 BOOK_VISUAL_SCENES_PATH = STATE_DIR / "book-visual-scenes.json"
 BOOK_VISUAL_HANDOFF_PATH = STATE_DIR / "book-visual-handoff.json"
+BOOK_VISUAL_ANSWERS_PATH = STATE_DIR / "book-visual-handoff-answers.json"
+BOOK_VISUAL_RESOLVED_PATH = STATE_DIR / "book-visual-resolved.json"
 WEB_HANDOFF_HTML_PATH = ROOT / "web" / "handoff.html"
 VIEW_HANDOFF_PORT = 8765
 
@@ -871,6 +873,107 @@ def cmd_visual_handoff(args: argparse.Namespace) -> None:
     print(f"  {len(questions)} open_questions, {len(issues)} consistency_issues")
 
 
+def write_book_visual_resolved(*, force: bool) -> Path | None:
+    """Apply handoff answers into a locked resolved bible → state JSON.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-identity` first."
+        )
+    if not BOOK_VISUAL_CHARACTERS_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-characters` first."
+        )
+    if not BOOK_VISUAL_PLACES_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-places` first."
+        )
+    if not BOOK_VISUAL_SCENES_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-scenes` first."
+        )
+    if not BOOK_VISUAL_HANDOFF_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-handoff` first."
+        )
+    if not BOOK_VISUAL_ANSWERS_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_ANSWERS_PATH.relative_to(ROOT)}. "
+            "Download answers from `python main.py view-handoff` and place "
+            "the file under state/."
+        )
+
+    if BOOK_VISUAL_RESOLVED_PATH.exists() and not force:
+        print(
+            f"Skip visual-resolve: {BOOK_VISUAL_RESOLVED_PATH.relative_to(ROOT)} "
+            "already exists (use --force to regenerate)"
+        )
+        return None
+
+    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+    characters_payload = json.loads(
+        BOOK_VISUAL_CHARACTERS_PATH.read_text(encoding="utf-8")
+    )
+    places_payload = json.loads(BOOK_VISUAL_PLACES_PATH.read_text(encoding="utf-8"))
+    scenes_payload = json.loads(BOOK_VISUAL_SCENES_PATH.read_text(encoding="utf-8"))
+    handoff = json.loads(BOOK_VISUAL_HANDOFF_PATH.read_text(encoding="utf-8"))
+    answers = json.loads(BOOK_VISUAL_ANSWERS_PATH.read_text(encoding="utf-8"))
+
+    from agents.visual_resolve import build_visual_resolved
+
+    print(
+        f"Resolving visual bible from "
+        f"{BOOK_VISUAL_ANSWERS_PATH.relative_to(ROOT)} "
+        f"+ {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)} "
+        f"+ bible sheets ..."
+    )
+    try:
+        payload = build_visual_resolved(
+            identity,
+            characters_payload,
+            places_payload,
+            scenes_payload,
+            handoff,
+            answers,
+            source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+            source_characters=BOOK_VISUAL_CHARACTERS_PATH.name,
+            source_places=BOOK_VISUAL_PLACES_PATH.name,
+            source_scenes=BOOK_VISUAL_SCENES_PATH.name,
+            source_handoff=BOOK_VISUAL_HANDOFF_PATH.name,
+            source_answers=BOOK_VISUAL_ANSWERS_PATH.name,
+        )
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    BOOK_VISUAL_RESOLVED_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_VISUAL_RESOLVED_PATH
+
+
+def cmd_visual_resolve(args: argparse.Namespace) -> None:
+    path = write_book_visual_resolved(force=args.force)
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    resolutions = payload.get("resolutions") or []
+    unresolved = payload.get("unresolved") or []
+    applied = sum(1 for r in resolutions if r.get("applied"))
+    print(f"Wrote {path.relative_to(ROOT)}")
+    print(
+        f"  {applied}/{len(resolutions)} resolutions applied, "
+        f"{len(unresolved)} unresolved"
+    )
+
+
 def cmd_view_handoff(args: argparse.Namespace) -> None:
     """Serve web/handoff.html against state JSON and open a browser (no LLM)."""
     import functools
@@ -1166,6 +1269,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-visual-handoff.json already exists",
     )
     visual_handoff_parser.set_defaults(func=cmd_visual_handoff)
+
+    visual_resolve_parser = sub.add_parser(
+        "visual-resolve",
+        help=(
+            "Apply state/book-visual-handoff-answers.json into a locked "
+            "resolved bible (state/book-visual-resolved.json; no LLM)"
+        ),
+    )
+    visual_resolve_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-visual-resolved.json already exists",
+    )
+    visual_resolve_parser.set_defaults(func=cmd_visual_resolve)
 
     view_handoff_parser = sub.add_parser(
         "view-handoff",

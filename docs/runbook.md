@@ -140,7 +140,16 @@ Open the Visual Handoff HTML viewer (needs `state/book-visual-handoff.json`; no 
 python main.py view-handoff
 ```
 
-Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/book-visual-handoff-answers.json` for the later resolve/apply step. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+
+Apply handoff answers into a locked resolved bible (needs four bible files + handoff + answers; no LLM):
+
+```powershell
+python main.py visual-resolve
+python main.py visual-resolve --force
+```
+
+Writes `state/book-visual-resolved.json` (deep-copied identity / characters / places / scenes with answered options as `art_decision` traits, plus `resolutions` / `unresolved`). Does not rewrite steps 1–4 or rebuild the report. Skips when the resolved file already exists unless `--force`.
 
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
@@ -248,6 +257,12 @@ After changing visual handoff:
 3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
 4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765 and the browser page listing open questions (with selectable options / suggested pre-selected when present) and consistency issues (Ctrl+C to stop).
 5. Pick options, add a note, **Download answers** — expect `book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`); place it at `state/book-visual-handoff-answers.json`.
+
+After changing visual resolve:
+
+1. With four bible JSON files + `state/book-visual-handoff.json` + `state/book-visual-handoff-answers.json` present, `python main.py visual-resolve --force` — expect `state/book-visual-resolved.json` with deep-copied sheets, `resolutions` (`applied` / `targets`), and `unresolved`.
+2. Re-run `python main.py visual-resolve` — expect a skip message and no rewrite.
+3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
 
 After changing export:
 

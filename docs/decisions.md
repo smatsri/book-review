@@ -219,7 +219,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Visual handoff answers → resolve (next)
 
-**Status:** superseded in part by “Visual handoff answers download (viewer)” for slice (1); slice (2) still planned  
+**Status:** superseded (slice 1 → “Visual handoff answers download (viewer)”; slice 2 → “Visual handoff answers resolve/apply CLI”)  
 **Context:** Handoff + options/viewer close the agent side of the Visual Bible, but choices stay proposals — steps 1–4 are not mutated, and image gen should not guess open questions.  
 **Decision:** Split into two slices: (1) viewer writes `state/book-visual-handoff-answers.json` (chosen `options` index per open question, optional notes); (2) resolve/apply CLI consumes that file and produces a resolved bible for image gen. Prefer a new state artifact and/or deterministic patches over re-running identity→scenes; LLM only if soft merge is needed. Report/export weave stays later. Answers live under `state/` (already gitignored).  
 **Consequences:** Image generation waits on resolved bible; handoff remains the questionnaire, not the final art direction.  
@@ -230,5 +230,13 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Status:** current  
 **Context:** Slice (1) of handoff answers → resolve: humans need to pick from question `options` without a resolve CLI yet; browsers cannot write into `state/` from static HTML.  
 **Decision:** `web/handoff.html` makes open-question options radio picks (pre-select `suggested` when present) plus optional per-question notes. Selection state is keyed by `open_questions` index and survives topic filter re-renders. **Download answers** emits `book-visual-handoff-answers.json`: `{source_handoff, answers[{index, question, chosen, chosen_text, note}]}` — one row per question (`chosen` null if unanswered / no options). User places the file at `state/book-visual-handoff-answers.json`. No new CLI, no LLM, no server POST; consistency issues stay read-only.  
-**Consequences:** Answers artifact is ready for the resolve/apply CLI; image gen still waits on that slice.  
+**Consequences:** Answers artifact feeds `visual-resolve`; image gen waits on the resolved bible.  
 **Extends / implements slice (1) of:** Visual handoff answers → resolve (next).
+
+## 2026-08 — Visual handoff answers resolve/apply CLI
+
+**Status:** current  
+**Context:** Slice (2) of handoff answers → resolve: answers JSON exists, but image gen must not guess open questions or mutate steps 1–4.  
+**Decision:** Separate CLI `visual-resolve` (no LLM): join `state/book-visual-handoff-answers.json` to handoff `open_questions` by index + exact `question` text; deep-copy the four bible sheets into `state/book-visual-resolved.json`; append each answered option as `{value, kind: art_decision, confidence: 1.0, note}` using authoritative `handoff.options[chosen]`. Topic routing: `style` → `identity.artistic_style`; `character` → matched `characters[].visual_language` via `related` names; `place` → `places[].atmosphere`; `scene` → `scenes[].title` → `composition`; `other` → `identity.motifs`. Name match exact then casefold. Unanswered → `unresolved` only; failed matches stay in `resolutions` with `applied: false`. Audit trail: `resolutions` + `unresolved`. Hard-fail on length/index/question/`chosen` range mismatches. Does not rewrite steps 1–4, ignore consistency issues, no report/export weave. Skip unless `--force`.  
+**Consequences:** Image gen can consume one locked bible; handoff + answers remain the questionnaire trail.  
+**Extends / implements slice (2) of:** Visual handoff answers → resolve (next).

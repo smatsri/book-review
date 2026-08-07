@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff) into structured state, and export the report to HTML/PDF/EPUB.
+Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff, answers → resolved bible) into structured state, and export the report to HTML/PDF/EPUB.
 
 ## Pipeline
 
@@ -16,21 +16,21 @@ data/books/*.txt
         |
    list[Chapter]
         |
-   +----+----+--------+--------+--------+-----------+----------+----------------+------------------+---------------+---------------+---------------+
-   |         |        |        |        |           |          |                |                  |               |               |               |
-chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters visual-places visual-scenes visual-handoff
-(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual     (CLI → Visual (CLI → Visual (CLI → Visual
-         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)   Places LLM)   Scenes LLM)   Handoff LLM +
-         Editor →     |       |    Merger) LLM +     LLM)          |                  |               |               |             deterministic)
-         Critic →     |       |      |     weave)      |           |                  |               |               |               |
-         revise)      |       |      |       |         |           |                  |               |               |               |
-   |         |        |       |      |       |         |           |                  |               |               |               |
-state/   state/     prefers book-  book-  state/   output/   state/book-      state/book-      state/book-    state/book-    state/book-
-chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         visual-         visual-        visual-        visual-
-.json    analysis   else    .json  merged  NN-      synthesis identity.json  characters.json places.json   scenes.json   handoff.json
-         + draft +  summary        .json   footnotes.md →     (no report      (needs identity;(needs identity;(needs identity (needs all four
-         critique → → book-                + enriched weave)  weave yet)      no report weave) no report weave)+ characters   bible files; no
-         summary.md report.md              (--all then                                         + places; no    report weave)
+   +----+----+--------+--------+--------+-----------+----------+----------------+------------------+---------------+---------------+---------------+----------------+
+   |         |        |        |        |           |          |                |                  |               |               |               |                |
+chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters visual-places visual-scenes visual-handoff visual-resolve
+(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual     (CLI → Visual (CLI → Visual (CLI → Visual (CLI, no LLM;
+         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)   Places LLM)   Scenes LLM)   Handoff LLM +  deep-copy +
+         Editor →     |       |    Merger) LLM +     LLM)          |                  |               |               |             deterministic) apply answers)
+         Critic →     |       |      |     weave)      |           |                  |               |               |               |                |
+         revise)      |       |      |       |         |           |                  |               |               |               |                |
+   |         |        |       |      |       |         |           |                  |               |               |               |                |
+state/   state/     prefers book-  book-  state/   output/   state/book-      state/book-      state/book-    state/book-    state/book-    state/book-
+chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         visual-         visual-        visual-        visual-        visual-
+.json    analysis   else    .json  merged  NN-      synthesis identity.json  characters.json places.json   scenes.json   handoff.json   resolved.json
+         + draft +  summary        .json   footnotes.md →     (no report      (needs identity;(needs identity;(needs identity (needs all four (+ answers;
+         critique → → book-                + enriched weave)  weave yet)      no report weave) no report weave)+ characters   bible files; no  does not mutate
+         summary.md report.md              (--all then                                         + places; no    report weave)  steps 1–4)
          (--all →   (weaves                 report)                                            report weave)
           report +  synthesis if
           rollup;   present)
@@ -50,7 +50,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
 | `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `view-handoff`, `footnotes`, `export` |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -62,6 +62,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_places.py` | Visual Places agent: analyses + identity → place / setting visual sheets JSON |
 | `agents/visual_scenes.py` | Visual Scenes agent: analyses + identity + character/place sheets → scene briefs JSON |
 | `agents/visual_handoff.py` | Visual Handoff agent: four bible JSONs → open questions + consistency issues |
+| `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
@@ -180,9 +181,18 @@ Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/hand
 
 - `source_handoff` — `book-visual-handoff.json`
 - `answers` — one row per handoff `open_questions` entry: `{index, question, chosen, chosen_text, note}`
-- `index` — 0-based into that handoff’s `open_questions`; `chosen` — 0-based into that question’s `options`, or `null` if unanswered / no options; `chosen_text` / `question` denormalized for humans + later resolve validation; `note` optional free text (empty string when unused)
+- `index` — 0-based into that handoff’s `open_questions`; `chosen` — 0-based into that question’s `options`, or `null` if unanswered / no options; `chosen_text` / `question` denormalized for humans + resolve validation; `note` optional free text (empty string when unused)
 - Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; Download answers saves the file (place under `state/` manually)
-- No CLI / LLM; consistency issues are not answered here; resolve/apply into a locked bible is not built yet
+- No CLI / LLM; consistency issues are not answered here
+
+Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`):
+
+- `source_identity` / `source_characters` / `source_places` / `source_scenes` / `source_handoff` / `source_answers` — input filenames
+- `identity` / `characters` / `places` / `scenes` — deep copies of steps 1–4 with answered options appended as `art_decision` traits (`confidence` 1.0)
+- Topic routing: `style` → `identity.artistic_style`; `character` → `characters[].visual_language` (match `related` names); `place` → `places[].atmosphere`; `scene` → `scenes[].composition` (match titles); `other` → `identity.motifs`
+- `resolutions` — per answered question: `{index, topic, related, question, chosen, chosen_text, note, applied, targets, reason}`
+- `unresolved` — unanswered or failed applies: `{index, question, reason}`
+- Requires four bible files + handoff + answers; does not mutate steps 1–4; ignores consistency issues; no LLM; no report weave; skip unless `--force`
 
 ## LLM (current)
 
@@ -201,6 +211,7 @@ Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/hand
 - Visual places: one LLM call over compact analyses (plot + events) + slim identity → `state/book-visual-places.json` (no report weave)
 - Visual scenes: one LLM call over compact analyses (plot + events + cast names) + slim identity + character/place sheet names → `state/book-visual-scenes.json` (no report weave)
 - Visual handoff: deterministic consistency checks + one LLM call over slim bible sheets → `state/book-visual-handoff.json` (no report weave)
+- Visual resolve: deterministic apply of handoff answers → `state/book-visual-resolved.json` (no LLM; no report weave)
 - Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD
 - Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes supported via `extra`)
 - Regenerating a chapter summary: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
@@ -218,6 +229,7 @@ Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/hand
 - `visual-places` skips when `state/book-visual-places.json` exists unless `--force`
 - `visual-scenes` skips when `state/book-visual-scenes.json` exists unless `--force`
 - `visual-handoff` skips when `state/book-visual-handoff.json` exists unless `--force`
+- `visual-resolve` skips when `state/book-visual-resolved.json` exists unless `--force`
 - `footnotes` with no `--chapter` resumes at the first chapter missing footnotes JSON; with `--chapter` skips when that file exists unless `--force`
 - `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
 
@@ -227,7 +239,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual handoff answers → resolve/apply CLI into a locked bible — see `todo.md` / `docs/decisions.md`
-- Visual Bible image generation / report–export weave (handoff + answers download exist; gen after resolve)
+- Visual Bible image generation / report–export weave (resolved bible exists; gen next)
 
 Those are roadmap items in `todo.md` / `idea.md`.
