@@ -5,27 +5,35 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Manual scene images + human consistency pass done. Next: weave illustrations into enriched MD / report / export.
+- **Stopped at:** Planning first-draft illustrated product (EPUB/HTML). Tomorrow: finish footnotes for ch.6–12, then weave scenes → export.
 - **Last success:** 8 Bing scene JPGs in `output/illustrations/` (named to resolved scene briefs); human consistency vs `book-visual-resolved.json` accepted.
 - **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve, manual Bing scene images + human art consistency pass (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now). Perfect layout / full-novel packaging (draft-1 is illustrated companion report).
 
 ## Now
 
-- [ ] Wire / weave illustrations into enriched MD / report / export
+- [ ] Finish footnotes for remaining chapters (6–12) — existing CLI only: `python main.py footnotes` (resumes at first gap); then `report` if needed so enriched files land in `book-report.md`
+- [ ] Draft-1 step 1 — Weave scene illustrations into `book-report.md`
+  - Deterministic: `book-visual-resolved.json` `scenes[]` → `output/illustrations/scene-NN-chNN-*.jpg`
+  - Insert per matching chapter (caption = scene title); no LLM
+  - Prefer rebuilding via `report` (or a thin weave helper) so regen stays skip/force-friendly
 
 ## Next
 
-- (empty — pick from Later when weave lands)
+- [ ] Draft-1 step 2 — Teach `export` to embed those images (EPUB + HTML first; PDF best-effort / xhtml2pdf limits OK)
+- [ ] Draft-1 step 3 — Smoke `export --force`; open EPUB (and HTML) as the product check
+- [ ] Draft-1 step 4 — Human iterate from the draft (placement, captions, missing bits) — small follow-ups only
 
 ## Later
 
-- [ ] Vision-LLM (or hybrid) art consistency review vs resolved bible — optional later; human pass is enough for current Alice set
+- [ ] PDF image/layout polish (or alternate PDF path) if EPUB/HTML isn’t enough
+- [ ] Vision-LLM (or hybrid) art consistency review vs resolved bible — optional; human pass is enough for current Alice set
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Parked for now: local Qwen (`LLM_PROVIDER=lmstudio`) for feature work
   - Counter: full-book latency + upcoming agents make mix a design choice, not just a bill
   - Context: `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] RAG / embeddings over chapters
+- [ ] Full illustrated book packaging (Gutenberg text + images) — beyond companion report
 
 ## Done
 
