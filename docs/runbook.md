@@ -116,6 +116,15 @@ python main.py visual-places --force
 
 Writes `state/book-visual-places.json` (per-place `architecture` / `climate` / `atmosphere` / `symbols` trait arrays with `kind` + `confidence`). Uses `state/book-visual-identity.json` plus compact chapter plot/events (LLM selects up to ~8 key places; no rollup required). Does not rebuild the report. Skips when the places file already exists unless `--force`.
 
+LLM scene briefs (needs all chapter analyses + `visual-identity` + `visual-characters` + `visual-places`; not part of `summarize --all`):
+
+```powershell
+python main.py visual-scenes
+python main.py visual-scenes --force
+```
+
+Writes `state/book-visual-scenes.json` (per-scene `title` / `chapter` / `characters` / `location` plus `emotional_focus` / `composition` trait arrays with `kind` + `confidence`). Uses identity + character sheets + place sheets plus compact chapter plot/events/cast (LLM selects up to ~8 illustration-worthy moments). Does not rebuild the report. Skips when the scenes file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -207,6 +216,12 @@ After changing visual places:
 
 1. With all chapter analyses + `state/book-visual-identity.json` present, `python main.py visual-places --force` — expect `state/book-visual-places.json` with `places` sheets (`architecture` / `climate` / `atmosphere` / `symbols` trait objects).
 2. Re-run `python main.py visual-places` — expect a skip message and no LLM call.
+3. Confirm `output/book-report.md` is unchanged by this command.
+
+After changing visual scenes:
+
+1. With all chapter analyses + `state/book-visual-identity.json` + `state/book-visual-characters.json` + `state/book-visual-places.json` present, `python main.py visual-scenes --force` — expect `state/book-visual-scenes.json` with `scenes` briefs (`title` / `chapter` / `characters` / `location` / `emotional_focus` / `composition`).
+2. Re-run `python main.py visual-scenes` — expect a skip message and no LLM call.
 3. Confirm `output/book-report.md` is unchanged by this command.
 
 After changing export:
