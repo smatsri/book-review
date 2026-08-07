@@ -132,7 +132,15 @@ python main.py visual-handoff
 python main.py visual-handoff --force
 ```
 
-Writes `state/book-visual-handoff.json` (`open_questions` + `consistency_issues`). Uses the four bible JSON files only (no chapter analyses). Deterministic name/gap checks merge with one LLM pass for soft issues and open questions. Does not rewrite steps 1–4 or rebuild the report. Skips when the handoff file already exists unless `--force`.
+Writes `state/book-visual-handoff.json` (`open_questions` + `consistency_issues`). Uses the four bible JSON files only (no chapter analyses). Deterministic name/gap checks merge with one LLM pass for soft issues and open questions (each question includes up to 3 `options` and optional `suggested` index). Does not rewrite steps 1–4 or rebuild the report. Skips when the handoff file already exists unless `--force`.
+
+Open the Visual Handoff HTML viewer (needs `state/book-visual-handoff.json`; no LLM):
+
+```powershell
+python main.py view-handoff
+```
+
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
 
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
@@ -235,9 +243,10 @@ After changing visual scenes:
 
 After changing visual handoff:
 
-1. With `state/book-visual-identity.json` + `book-visual-characters.json` + `book-visual-places.json` + `book-visual-scenes.json` present, `python main.py visual-handoff --force` — expect `state/book-visual-handoff.json` with `open_questions` (`question` / `topic` / `related` / `note`) and `consistency_issues` (`summary` / `severity` / `related` / `suggestion`).
+1. With `state/book-visual-identity.json` + `book-visual-characters.json` + `book-visual-places.json` + `book-visual-scenes.json` present, `python main.py visual-handoff --force` — expect `state/book-visual-handoff.json` with `open_questions` (`question` / `topic` / `related` / `note` / `options` / optional `suggested`) and `consistency_issues` (`summary` / `severity` / `related` / `suggestion`).
 2. Re-run `python main.py visual-handoff` — expect a skip message and no LLM call.
 3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
+4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765 and the browser page listing open questions (with options / suggested when present) and consistency issues (Ctrl+C to stop).
 
 After changing export:
 

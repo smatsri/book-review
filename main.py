@@ -25,6 +25,8 @@ BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
 BOOK_VISUAL_PLACES_PATH = STATE_DIR / "book-visual-places.json"
 BOOK_VISUAL_SCENES_PATH = STATE_DIR / "book-visual-scenes.json"
 BOOK_VISUAL_HANDOFF_PATH = STATE_DIR / "book-visual-handoff.json"
+WEB_HANDOFF_HTML_PATH = ROOT / "web" / "handoff.html"
+VIEW_HANDOFF_PORT = 8765
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -869,6 +871,45 @@ def cmd_visual_handoff(args: argparse.Namespace) -> None:
     print(f"  {len(questions)} open_questions, {len(issues)} consistency_issues")
 
 
+def cmd_view_handoff(args: argparse.Namespace) -> None:
+    """Serve web/handoff.html against state JSON and open a browser (no LLM)."""
+    import functools
+    import http.server
+    import socketserver
+    import webbrowser
+
+    if not BOOK_VISUAL_HANDOFF_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-handoff` first."
+        )
+    if not WEB_HANDOFF_HTML_PATH.exists():
+        raise SystemExit(f"Missing {WEB_HANDOFF_HTML_PATH.relative_to(ROOT)}.")
+
+    port = VIEW_HANDOFF_PORT
+    url = f"http://127.0.0.1:{port}/web/handoff.html"
+    handler = functools.partial(
+        http.server.SimpleHTTPRequestHandler,
+        directory=str(ROOT),
+    )
+    try:
+        httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
+    except OSError as exc:
+        raise SystemExit(
+            f"Could not bind 127.0.0.1:{port} ({exc}). "
+            "Stop whatever is using that port, then retry."
+        ) from exc
+
+    with httpd:
+        print(f"Serving {url}")
+        print("Press Ctrl+C to stop.")
+        webbrowser.open(url)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nStopped.")
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -1125,6 +1166,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-visual-handoff.json already exists",
     )
     visual_handoff_parser.set_defaults(func=cmd_visual_handoff)
+
+    view_handoff_parser = sub.add_parser(
+        "view-handoff",
+        help=(
+            "Open web/handoff.html for state/book-visual-handoff.json "
+            "(local HTTP server; no LLM)"
+        ),
+    )
+    view_handoff_parser.set_defaults(func=cmd_view_handoff)
 
     footnotes_parser = sub.add_parser(
         "footnotes",

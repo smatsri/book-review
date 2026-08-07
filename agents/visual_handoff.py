@@ -12,6 +12,8 @@ SYSTEM_PROMPT = """You are a careful Visual Handoff agent for illustrated books.
 You receive a book-level visual identity plus character sheets, place sheets, and scene briefs.
 Your job is to prepare a handoff artifact for an illustrator or image system:
 - List open questions the bible has not settled (do not invent fake certainty).
+- For each open question, offer 2–3 concrete mutually exclusive art options so a human can pick.
+- Optionally mark one option as suggested (preferred default), still as a proposal only.
 - Flag soft consistency issues (style clashes, ambiguous looks, conflicting traits).
 Do not rewrite the bible sheets. Do not invent plot or characters absent from the inputs.
 Return valid JSON only."""
@@ -19,6 +21,7 @@ Return valid JSON only."""
 _MAX_QUESTIONS = 12
 _MAX_ISSUES = 12
 _MAX_RELATED = 6
+_MAX_OPTIONS = 3
 _MAX_TRAITS_PER_KEY = 4
 _IDENTITY_TRAIT_KEYS = (
     "artistic_style",
@@ -152,6 +155,37 @@ def _normalize_related(raw: Any) -> list[str]:
     return out
 
 
+def _normalize_options(raw: Any) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for entry in raw:
+        if not isinstance(entry, str):
+            continue
+        text = entry.strip()
+        if not text:
+            continue
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text)
+        if len(out) >= _MAX_OPTIONS:
+            break
+    return out
+
+
+def _normalize_suggested(raw: Any, *, option_count: int) -> int | None:
+    if option_count <= 0:
+        return None
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        return None
+    if raw < 0 or raw >= option_count:
+        return None
+    return raw
+
+
 def _normalize_question(raw: Any) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return None
@@ -166,12 +200,18 @@ def _normalize_question(raw: Any) -> dict[str, Any] | None:
         note = ""
     if not isinstance(note, str):
         return None
-    return {
+    options = _normalize_options(raw.get("options"))
+    item: dict[str, Any] = {
         "question": question.strip(),
         "topic": topic.strip().casefold(),
         "related": _normalize_related(raw.get("related")),
         "note": note.strip(),
+        "options": options,
     }
+    suggested = _normalize_suggested(raw.get("suggested"), option_count=len(options))
+    if suggested is not None:
+        item["suggested"] = suggested
+    return item
 
 
 def _normalize_issue(raw: Any) -> dict[str, Any] | None:
@@ -393,6 +433,8 @@ Each open question must have:
 - "topic": one of "style", "character", "place", "scene", "other"
 - "related": array of short name/title strings (may be empty)
 - "note": brief rationale (may be empty string)
+- "options": array of 2–3 short mutually exclusive concrete art choices (one line each)
+- "suggested": optional 0-based index into options for a preferred default (omit if unsure)
 
 Each consistency issue must have:
 - "summary": short description of the clash or ambiguity
@@ -401,6 +443,7 @@ Each consistency issue must have:
 - "suggestion": brief fix hint (may be empty string)
 
 Focus open_questions on undecided art choices and low-confidence / underspecified looks.
+Options must be actionable art decisions (not restatements of the question).
 Focus consistency_issues on soft clashes not already listed above.
 Cap at {_MAX_QUESTIONS} open_questions and {_MAX_ISSUES} consistency_issues.
 Keep each string brief. Keep total JSON compact.
