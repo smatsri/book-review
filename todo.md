@@ -5,18 +5,17 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Split handoff answers work into two slices. Next: viewer → answers JSON, then resolve/apply CLI.
-- **Last success:** `visual-handoff --force` wrote `state/book-visual-handoff.json` with options on all open questions; viewer renders options + suggested.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options (see `docs/decisions.md`).
+- **Stopped at:** Handoff viewer downloads answers JSON. Next: resolve/apply CLI from that file into a resolved bible.
+- **Last success:** `web/handoff.html` radios + notes → download `book-visual-handoff-answers.json` (place under `state/`).
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until handoff answers are applied into a resolved bible.
 
 ## Now
 
-- [ ] Handoff viewer → answers JSON: pick options in `web/handoff.html`, download `state/book-visual-handoff-answers.json` (chosen option index per open question ± notes)
+- [ ] Handoff answers → resolve/apply CLI: accept answers JSON and fold into bible state (new resolved artifact and/or patched sheets) — see `docs/decisions.md`
 
 ## Next
 
-- [ ] Handoff answers → resolve/apply CLI: accept answers JSON and fold into bible state (new resolved artifact and/or patched sheets) — see `docs/decisions.md`
 - [ ] Image generation from resolved bible + scene briefs
 
 ## Later
@@ -59,3 +58,4 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Visual Bible step 5 — open questions + consistency pass (`visual-handoff` → `state/book-visual-handoff.json`)
 - [x] Visual handoff local viewer (`web/handoff.html` + `view-handoff` / VS Code task)
 - [x] Handoff open questions carry `options` (+ optional `suggested`); viewer renders them
+- [x] Handoff viewer → answers JSON (`web/handoff.html` download → `state/book-visual-handoff-answers.json`)

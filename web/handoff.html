@@ -67,9 +67,20 @@
       color: var(--ink);
       border-radius: 6px;
       padding: 0.4rem 0.7rem;
-      cursor: pointer;
     }
     button:hover, .file-btn:hover, select:hover { border-color: var(--accent); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fffdf9;
+      border-color: var(--accent);
+    }
+    button.primary:hover:not(:disabled) {
+      filter: brightness(1.05);
+    }
     .file-btn { display: inline-block; }
     #file-input { display: none; }
     .status {
@@ -173,16 +184,39 @@
     }
     .options li {
       margin: 0;
+    }
+    .options label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      margin: 0;
       padding: 0.45rem 0.65rem;
       border: 1px solid var(--line);
       border-radius: 6px;
       font-size: 0.92rem;
       color: var(--ink);
       background: color-mix(in srgb, var(--chip) 55%, white);
+      cursor: pointer;
     }
-    .options li.suggested {
+    .options label:hover {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+    }
+    .options label.suggested {
       border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
       background: color-mix(in srgb, var(--accent) 10%, white);
+    }
+    .options label:has(input:checked) {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, white);
+    }
+    .options input {
+      margin: 0.2rem 0 0;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+    }
+    .options .opt-body {
+      flex: 1;
+      min-width: 0;
     }
     .options .opt-label {
       display: inline-block;
@@ -193,6 +227,32 @@
       font-family: ui-sans-serif, system-ui, sans-serif;
       font-weight: 650;
       margin-right: 0.4rem;
+    }
+    .answer-note {
+      margin: 0.65rem 0 0;
+      display: grid;
+      gap: 0.25rem;
+    }
+    .answer-note label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .answer-note textarea {
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      background: #fff;
+      color: var(--ink);
+      resize: vertical;
+      min-height: 2.6rem;
+      width: 100%;
+    }
+    .answer-note textarea:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      border-color: var(--accent);
     }
     .related {
       margin: 0.55rem 0 0;
@@ -222,7 +282,7 @@
 <body>
   <header>
     <h1>Visual Handoff</h1>
-    <p class="sub">Open questions and consistency issues from the Visual Bible.</p>
+    <p class="sub">Pick art options for open questions, then download answers for resolve.</p>
   </header>
 
   <div class="toolbar">
@@ -236,6 +296,7 @@
     </select>
     <label class="file-btn" for="file-input">Load JSON…</label>
     <input id="file-input" type="file" accept="application/json,.json" />
+    <button type="button" class="primary" id="download-answers" disabled>Download answers</button>
     <span class="status" id="status">Loading…</span>
   </div>
 
@@ -255,7 +316,10 @@
 
   <script>
     const DEFAULT_URL = "../state/book-visual-handoff.json";
+    const ANSWERS_FILENAME = "book-visual-handoff-answers.json";
     let data = null;
+    /** @type {Map<number, {chosen: number|null, note: string}>} */
+    let answers = new Map();
 
     const el = {
       status: document.getElementById("status"),
@@ -268,6 +332,7 @@
       topic: document.getElementById("topic-filter"),
       sev: document.getElementById("sev-filter"),
       file: document.getElementById("file-input"),
+      download: document.getElementById("download-answers"),
     };
 
     function setStatus(msg, isError) {
@@ -279,7 +344,7 @@
       return [...new Set(values.filter(Boolean))].sort();
     }
 
-    function fillSelect(select, values, keepFirst) {
+    function fillSelect(select, values) {
       const first = select.options[0];
       select.innerHTML = "";
       select.appendChild(first);
@@ -291,33 +356,86 @@
       }
     }
 
-    function relatedList(items) {
-      if (!items || !items.length) return "";
-      return `<ul class="related">${items.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
-    }
-
-    function optionsList(options, suggested) {
-      if (!options || !options.length) return "";
-      const sug =
-        Number.isInteger(suggested) && suggested >= 0 && suggested < options.length
-          ? suggested
-          : null;
-      return `<ul class="options">${options
-        .map((opt, i) => {
-          const isSug = sug === i;
-          return `<li class="${isSug ? "suggested" : ""}">${
-            isSug ? `<span class="opt-label">Suggested</span>` : ""
-          }${escapeHtml(opt)}</li>`;
-        })
-        .join("")}</ul>`;
-    }
-
     function escapeHtml(s) {
       return String(s)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    function relatedList(items) {
+      if (!items || !items.length) return "";
+      return `<ul class="related">${items.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
+    }
+
+    function suggestedIndex(options, suggested) {
+      if (!options || !options.length) return null;
+      return Number.isInteger(suggested) && suggested >= 0 && suggested < options.length
+        ? suggested
+        : null;
+    }
+
+    function ensureAnswer(index, question) {
+      if (answers.has(index)) return answers.get(index);
+      const sug = suggestedIndex(question.options, question.suggested);
+      const entry = { chosen: sug, note: "" };
+      answers.set(index, entry);
+      return entry;
+    }
+
+    function initAnswers(parsed) {
+      answers = new Map();
+      (parsed.open_questions || []).forEach((q, index) => {
+        ensureAnswer(index, q);
+      });
+    }
+
+    function progressText() {
+      const questions = data && data.open_questions ? data.open_questions : [];
+      const total = questions.length;
+      let chosen = 0;
+      for (let i = 0; i < total; i++) {
+        const entry = answers.get(i);
+        if (entry && entry.chosen !== null && entry.chosen !== undefined) chosen += 1;
+      }
+      return `${chosen}/${total} chosen`;
+    }
+
+    function updateStatusBar(label) {
+      if (!data) {
+        setStatus(label || "Loading…");
+        return;
+      }
+      const base = label || DEFAULT_URL;
+      setStatus(`${base} · ${progressText()}`);
+    }
+
+    function optionsRadios(qIndex, options, suggested, chosen) {
+      if (!options || !options.length) return "";
+      const sug = suggestedIndex(options, suggested);
+      return `<ul class="options" role="radiogroup" aria-label="Options">${options
+        .map((opt, i) => {
+          const isSug = sug === i;
+          const checked = chosen === i ? " checked" : "";
+          const id = `q${qIndex}-opt${i}`;
+          return `<li>
+            <label class="${isSug ? "suggested" : ""}" for="${id}">
+              <input type="radio" name="q-${qIndex}" id="${id}" value="${i}" data-q-index="${qIndex}"${checked} />
+              <span class="opt-body">${
+                isSug ? `<span class="opt-label">Suggested</span>` : ""
+              }${escapeHtml(opt)}</span>
+            </label>
+          </li>`;
+        })
+        .join("")}</ul>`;
+    }
+
+    function noteField(qIndex, note) {
+      return `<div class="answer-note">
+        <label for="note-${qIndex}">Your note (optional)</label>
+        <textarea id="note-${qIndex}" data-q-index="${qIndex}" rows="2" placeholder="Extra direction for resolve…">${escapeHtml(note || "")}</textarea>
+      </div>`;
     }
 
     function render() {
@@ -334,9 +452,10 @@
       ].filter(Boolean);
       el.sources.innerHTML = sources.map((s) => `<span>${escapeHtml(s)}</span>`).join("");
 
-      const questions = (data.open_questions || []).filter(
-        (q) => !topic || q.topic === topic
-      );
+      const allQuestions = data.open_questions || [];
+      const questions = allQuestions
+        .map((q, index) => ({ q, index }))
+        .filter(({ q }) => !topic || q.topic === topic);
       const issues = (data.consistency_issues || []).filter(
         (i) => !sev || i.severity === sev
       );
@@ -348,18 +467,20 @@
         el.questions.innerHTML = `<p class="empty">No open questions${topic ? " for this topic" : ""}.</p>`;
       } else {
         el.questions.innerHTML = questions
-          .map(
-            (q) => `
-          <article>
+          .map(({ q, index }) => {
+            const entry = ensureAnswer(index, q);
+            return `
+          <article data-q-index="${index}">
             <div class="meta">
               <span class="tag topic-${escapeHtml(q.topic || "other")}">${escapeHtml(q.topic || "other")}</span>
             </div>
             <h3>${escapeHtml(q.question || "")}</h3>
             ${q.note ? `<p class="note">${escapeHtml(q.note)}</p>` : ""}
-            ${optionsList(q.options, q.suggested)}
+            ${optionsRadios(index, q.options, q.suggested, entry.chosen)}
+            ${noteField(index, entry.note)}
             ${relatedList(q.related)}
-          </article>`
-          )
+          </article>`;
+          })
           .join("");
       }
 
@@ -386,15 +507,62 @@
       }
 
       el.app.hidden = false;
+      el.download.disabled = !allQuestions.length;
+      updateStatusBar(el.status.dataset.label || undefined);
+    }
+
+    function buildAnswersPayload() {
+      const questions = data.open_questions || [];
+      return {
+        source_handoff: "book-visual-handoff.json",
+        answers: questions.map((q, index) => {
+          const entry = ensureAnswer(index, q);
+          const options = Array.isArray(q.options) ? q.options : [];
+          const chosen =
+            Number.isInteger(entry.chosen) &&
+            entry.chosen >= 0 &&
+            entry.chosen < options.length
+              ? entry.chosen
+              : null;
+          return {
+            index,
+            question: q.question || "",
+            chosen,
+            chosen_text: chosen === null ? "" : String(options[chosen] || ""),
+            note: entry.note || "",
+          };
+        }),
+      };
+    }
+
+    function downloadAnswers() {
+      if (!data) return;
+      const payload = buildAnswersPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2) + "\n"], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = ANSWERS_FILENAME;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      updateStatusBar(el.status.dataset.label || undefined);
+      setStatus(
+        `${el.status.dataset.label || DEFAULT_URL} · ${progressText()} · downloaded ${ANSWERS_FILENAME}`
+      );
     }
 
     function useData(parsed, label) {
       data = parsed;
+      initAnswers(parsed);
       const topics = uniq((parsed.open_questions || []).map((q) => q.topic));
       const sevs = uniq((parsed.consistency_issues || []).map((i) => i.severity));
       fillSelect(el.topic, topics);
       fillSelect(el.sev, sevs);
-      setStatus(label);
+      el.status.dataset.label = label;
       render();
     }
 
@@ -409,11 +577,36 @@
           `Could not load ${DEFAULT_URL} (${err.message}). Use “Load JSON…” or serve from repo root.`,
           true
         );
+        el.download.disabled = true;
       }
     }
 
     el.topic.addEventListener("change", render);
     el.sev.addEventListener("change", render);
+    el.download.addEventListener("click", downloadAnswers);
+
+    el.questions.addEventListener("change", (ev) => {
+      const t = ev.target;
+      if (!(t instanceof HTMLInputElement) || t.type !== "radio") return;
+      const index = Number(t.dataset.qIndex);
+      if (!Number.isInteger(index)) return;
+      const entry = answers.get(index) || { chosen: null, note: "" };
+      entry.chosen = Number(t.value);
+      answers.set(index, entry);
+      updateStatusBar(el.status.dataset.label || undefined);
+    });
+
+    el.questions.addEventListener("input", (ev) => {
+      const t = ev.target;
+      if (!(t instanceof HTMLTextAreaElement)) return;
+      const index = Number(t.dataset.qIndex);
+      if (!Number.isInteger(index)) return;
+      const q = (data.open_questions || [])[index] || {};
+      const entry = ensureAnswer(index, q);
+      entry.note = t.value;
+      answers.set(index, entry);
+    });
+
     el.file.addEventListener("change", async () => {
       const file = el.file.files && el.file.files[0];
       if (!file) return;

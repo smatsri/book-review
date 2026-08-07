@@ -140,7 +140,7 @@ Open the Visual Handoff HTML viewer (needs `state/book-visual-handoff.json`; no 
 python main.py view-handoff
 ```
 
-Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/book-visual-handoff-answers.json` for the later resolve/apply step. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
 
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
@@ -246,7 +246,8 @@ After changing visual handoff:
 1. With `state/book-visual-identity.json` + `book-visual-characters.json` + `book-visual-places.json` + `book-visual-scenes.json` present, `python main.py visual-handoff --force` — expect `state/book-visual-handoff.json` with `open_questions` (`question` / `topic` / `related` / `note` / `options` / optional `suggested`) and `consistency_issues` (`summary` / `severity` / `related` / `suggestion`).
 2. Re-run `python main.py visual-handoff` — expect a skip message and no LLM call.
 3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
-4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765 and the browser page listing open questions (with options / suggested when present) and consistency issues (Ctrl+C to stop).
+4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765 and the browser page listing open questions (with selectable options / suggested pre-selected when present) and consistency issues (Ctrl+C to stop).
+5. Pick options, add a note, **Download answers** — expect `book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`); place it at `state/book-visual-handoff-answers.json`.
 
 After changing export:
 
