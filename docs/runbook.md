@@ -89,6 +89,15 @@ python main.py reduce --force
 
 Writes `output/book-synthesis.md` from compact Reader analyses plus `book-rollup-merged.json` if present else `book-rollup.json`, then rebuilds `output/book-report.md` (synthesis woven after the header). Skips when the synthesis file already exists unless `--force`.
 
+LLM book-level visual identity (needs all chapter analyses + rollup; not part of `summarize --all`):
+
+```powershell
+python main.py visual-identity
+python main.py visual-identity --force
+```
+
+Writes `state/book-visual-identity.json` (style / palette / atmosphere / period / motifs with `kind` + `confidence`). Uses `book-rollup-merged.json` if present else `book-rollup.json`. Does not rebuild the report. Skips when the identity file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -163,6 +172,12 @@ After changing reduce / book synthesis:
 1. With all chapter analyses + summaries + `state/book-rollup.json` present, `python main.py reduce --force` — expect `output/book-synthesis.md` (overview / plot arc / characters / themes / closing note) and `book-report.md` with synthesis after the header.
 2. Re-run `python main.py reduce` — expect a skip message and no LLM call.
 3. `python main.py export --format html --force` — expect the book overview in HTML.
+
+After changing visual identity:
+
+1. With all chapter analyses + `state/book-rollup.json` present, `python main.py visual-identity --force` — expect `state/book-visual-identity.json` with `artistic_style` / `color_palette` / `atmosphere` / `period` / `motifs` trait objects (`value` / `kind` / `confidence` / `note`).
+2. Re-run `python main.py visual-identity` — expect a skip message and no LLM call.
+3. Confirm `output/book-report.md` is unchanged by this command.
 
 After changing export:
 

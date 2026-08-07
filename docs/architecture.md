@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, and export the report to HTML/PDF/EPUB.
+Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a book-level visual identity into structured state, and export the report to HTML/PDF/EPUB.
 
 ## Pipeline
 
@@ -16,22 +16,26 @@ data/books/*.txt
         |
    list[Chapter]
         |
-   +----+----+------------------+-----------+----------+-----------+----------+
-   |         |                  |           |          |           |          |
-chapters   summarize          report      rollup     aliases   footnotes  reduce
-(CLI)      (CLI → Reader →    (CLI,       (CLI,      (CLI →    (CLI →     (CLI →
-           Editor → Critic →  no LLM)     no LLM)    Alias      Footnote   Reducer
-           revise)               |           |        Merger)    LLM +     LLM)
-   |         |                   |           |          |        weave)      |
-state/     state/chapter-NN-   prefers     book-     book-      state/    output/
-chapters.  analysis.json       enriched    rollup.   rollup-    chapter-  book-
-json       draft + critique    else        json      merged.    NN-       synthesis.md
-           → chapter-NN-       summary               json       footnotes → weave
-           summary.md          → book-                          + enriched into
-           (--all → report +   report.md                        (--all    report
-            rollup; aliases /  (weaves                              then
-            footnotes / reduce synthesis if                         report)
-            separate)          present)
+   +----+----+--------+--------+--------+-----------+----------+----------------+
+   |         |        |        |        |           |          |                |
+chapters summarize report  rollup  aliases footnotes  reduce  visual-identity
+(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual
+         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)
+         Editor →     |       |    Merger) LLM +     LLM)          |
+         Critic →     |       |      |     weave)      |           |
+         revise)      |       |      |       |         |           |
+   |         |        |       |      |       |         |           |
+state/   state/     prefers book-  book-  state/   output/   state/book-
+chapters chapter-NN enriched rollup rollup- chapter- book-    visual-
+.json    analysis   else    .json  merged  NN-      synthesis identity.json
+         + draft +  summary        .json   footnotes.md →     (no report
+         critique → → book-                + enriched weave)  weave yet)
+         summary.md report.md              (--all then
+         (--all →   (weaves                 report)
+          report +  synthesis if
+          rollup;   present)
+          others
+          separate)
                                     |
                                  export (CLI, no LLM)
                                     |
@@ -46,13 +50,14 @@ json       draft + critique    else        json      merged.    NN-       synthe
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
 | `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `footnotes`, `export` |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
 | `agents/critic.py` | Critic agent: chapter + analysis + draft → structured critique JSON |
 | `agents/alias_merger.py` | Alias Merger: rollup name lists → character/theme alias clusters (JSON) |
 | `agents/reducer.py` | Reducer agent: chapter summaries + rollup → book-level Markdown synthesis |
+| `agents/visual_identity.py` | Visual Identity agent: compact analyses + rollup → book-level visual identity JSON |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
@@ -115,6 +120,16 @@ Book synthesis (`output/book-synthesis.md`, from `reduce`):
 - `write_book_report` inserts synthesis after the report header when the file exists
 - Not run by `summarize --all`; skip unless `--force`
 
+Book visual identity (`state/book-visual-identity.json`, from `visual-identity`):
+
+- `source_rollup` — which rollup file fed the prompt
+- `chapters_included` — chapter numbers from the analyses
+- `artistic_style`, `color_palette`, `atmosphere`, `period`, `motifs` — arrays of `{value, kind, confidence, note}`
+- `kind`: `fact` | `interpretation` | `art_decision`; `confidence` 0.0–1.0 (vision scale)
+- LLM inputs: same compact analyses + slim rollup as reduce; no full book text; no chapter summaries required
+- Bad trait rows dropped; missing top-level keys fail
+- Not woven into `book-report.md` yet; not run by `summarize --all`; skip unless `--force`
+
 ## LLM (current)
 
 - Switch: `LLM_PROVIDER` = `gemini` (default) or `lmstudio`
@@ -127,6 +142,7 @@ Book synthesis (`output/book-synthesis.md`, from `reduce`):
 - Book rollup: deterministic merge of Reader analyses into `state/book-rollup.json` (no LLM)
 - Alias merge: one LLM call over rollup name lists → `state/book-rollup-merged.json`
 - Reduce: one LLM call over compact analyses + slim rollup → `output/book-synthesis.md`; rebuilds report
+- Visual identity: one LLM call over compact analyses + slim rollup → `state/book-visual-identity.json` (no report weave)
 - Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD
 - Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes supported via `extra`)
 - Regenerating a chapter summary: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
@@ -139,6 +155,7 @@ Book synthesis (`output/book-synthesis.md`, from `reduce`):
 - `--from reader|draft|critic|revise` restarts at that stage (reuses earlier artifacts; requires them to exist); overrides skip when summary exists
 - `aliases` skips when `state/book-rollup-merged.json` exists unless `--force`
 - `reduce` skips when `output/book-synthesis.md` exists unless `--force`
+- `visual-identity` skips when `state/book-visual-identity.json` exists unless `--force`
 - `footnotes` with no `--chapter` resumes at the first chapter missing footnotes JSON; with `--chapter` skips when that file exists unless `--force`
 - `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
 
@@ -148,6 +165,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visuals
+- Visual Bible beyond book-level identity (character sheets, places, scene briefs, image gen, report weave)
 
 Those are roadmap items in `todo.md` / `idea.md`.

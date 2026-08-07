@@ -20,6 +20,7 @@ BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
 BOOK_SYNTHESIS_PATH = OUTPUT_DIR / "book-synthesis.md"
 BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
 BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
+BOOK_VISUAL_IDENTITY_PATH = STATE_DIR / "book-visual-identity.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -455,6 +456,82 @@ def cmd_reduce(args: argparse.Namespace) -> None:
     print(f"Wrote {report_path.relative_to(ROOT)}")
 
 
+def write_book_visual_identity(*, force: bool) -> Path | None:
+    """LLM visual identity from compact analyses + rollup → state JSON.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            "Run `python main.py rollup` first."
+        )
+
+    if BOOK_VISUAL_IDENTITY_PATH.exists() and not force:
+        print(
+            f"Skip visual-identity: {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} "
+            "already exists (use --force to regenerate)"
+        )
+        return None
+
+    chapters = load_chapters()
+    analyses: list[dict] = []
+    missing_analysis: list[int] = []
+    for ch in chapters:
+        analysis_path = chapter_analysis_path(ch.number)
+        if not analysis_path.exists():
+            missing_analysis.append(ch.number)
+            continue
+        analyses.append(json.loads(analysis_path.read_text(encoding="utf-8")))
+
+    if missing_analysis:
+        available = ", ".join(str(n) for n in missing_analysis)
+        raise SystemExit(
+            f"Missing chapter analyses: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+
+    rollup_path = (
+        BOOK_ROLLUP_MERGED_PATH
+        if BOOK_ROLLUP_MERGED_PATH.exists()
+        else BOOK_ROLLUP_PATH
+    )
+    rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
+
+    from agents.visual_identity import build_visual_identity
+
+    print(
+        f"Building visual identity from {len(analyses)} compact analyses "
+        f"+ {rollup_path.relative_to(ROOT)} ..."
+    )
+    payload = build_visual_identity(
+        analyses,
+        rollup,
+        source_rollup=rollup_path.name,
+    )
+    BOOK_VISUAL_IDENTITY_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_VISUAL_IDENTITY_PATH
+
+
+def cmd_visual_identity(args: argparse.Namespace) -> None:
+    path = write_book_visual_identity(force=args.force)
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    print(f"Wrote {path.relative_to(ROOT)}")
+    print(
+        f"  {len(payload.get('chapters_included') or [])} chapters, "
+        f"{len(payload.get('artistic_style') or [])} style, "
+        f"{len(payload.get('color_palette') or [])} palette, "
+        f"{len(payload.get('atmosphere') or [])} atmosphere, "
+        f"{len(payload.get('period') or [])} period, "
+        f"{len(payload.get('motifs') or [])} motifs"
+    )
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -641,6 +718,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if output/book-synthesis.md already exists",
     )
     reduce_parser.set_defaults(func=cmd_reduce)
+
+    visual_identity_parser = sub.add_parser(
+        "visual-identity",
+        help=(
+            "LLM book-level visual identity (style / palette / atmosphere / "
+            "period / motifs) into state/book-visual-identity.json"
+        ),
+    )
+    visual_identity_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-visual-identity.json already exists",
+    )
+    visual_identity_parser.set_defaults(func=cmd_visual_identity)
 
     footnotes_parser = sub.add_parser(
         "footnotes",

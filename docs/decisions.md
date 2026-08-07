@@ -159,3 +159,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `reduce` (like `aliases`): Reducer LLM writes `output/book-synthesis.md` from compact Reader analyses (truncated plot + themes) + slim rollup name lists (`book-rollup-merged.json` if present else `book-rollup.json`). Chapter summaries still required so the rebuilt report is complete, but full summary Markdown is not sent to the model (keeps Alice-sized reduce under ~8k local context). Fixed Markdown sections (overview, plot arc, characters, themes, closing note). No full book text; no author/genre external context. `write_book_report` weaves synthesis after the header when present; `reduce` rebuilds the report. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** One opt-in LLM call for book prose; stale synthesis possible after chapter regen until `reduce --force`; export picks up overview via rebuilt `book-report.md`.  
 **Extends:** “Full-book map + deterministic merge report”; distinct from rollup/aliases (structured) and footnotes (chapter enrichment).
+
+## 2026-08 — Visual Bible step 1 (book-level visual identity)
+
+**Status:** current  
+**Context:** Vision Visual Bible (`idea/visual_bible_for_books.md`) needs a consistent style handoff before character sheets / scenes / image generation. Literary analyses and rollup already exist; no new Reader pass.  
+**Decision:** Separate CLI `visual-identity` (like `reduce` / `aliases`): Visual Identity LLM writes `state/book-visual-identity.json` from compact Reader analyses + slim rollup (`book-rollup-merged.json` if present else `book-rollup.json`). Trait arrays: `artistic_style`, `color_palette`, `atmosphere`, `period`, `motifs`, each `{value, kind, confidence, note}` with `kind` in `fact` | `interpretation` | `art_decision`. No full book text; no report/export weave yet. Not part of `summarize --all`. Skip unless `--force`. Bad trait rows dropped; missing keys fail.  
+**Consequences:** One opt-in LLM call for book visual identity; later bible steps (characters / places / scenes) and product weave stay separate.  
+**Extends:** bible-first Visual split in `todo.md`; distinct from reduce (prose) and rollup (literary index).
