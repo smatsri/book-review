@@ -125,6 +125,15 @@ python main.py visual-scenes --force
 
 Writes `state/book-visual-scenes.json` (per-scene `title` / `chapter` / `characters` / `location` plus `emotional_focus` / `composition` trait arrays with `kind` + `confidence`). Uses identity + character sheets + place sheets plus compact chapter plot/events/cast (LLM selects up to ~8 illustration-worthy moments). Does not rebuild the report. Skips when the scenes file already exists unless `--force`.
 
+Visual Bible handoff — open questions + consistency (needs identity + characters + places + scenes; not part of `summarize --all`):
+
+```powershell
+python main.py visual-handoff
+python main.py visual-handoff --force
+```
+
+Writes `state/book-visual-handoff.json` (`open_questions` + `consistency_issues`). Uses the four bible JSON files only (no chapter analyses). Deterministic name/gap checks merge with one LLM pass for soft issues and open questions. Does not rewrite steps 1–4 or rebuild the report. Skips when the handoff file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -223,6 +232,12 @@ After changing visual scenes:
 1. With all chapter analyses + `state/book-visual-identity.json` + `state/book-visual-characters.json` + `state/book-visual-places.json` present, `python main.py visual-scenes --force` — expect `state/book-visual-scenes.json` with `scenes` briefs (`title` / `chapter` / `characters` / `location` / `emotional_focus` / `composition`).
 2. Re-run `python main.py visual-scenes` — expect a skip message and no LLM call.
 3. Confirm `output/book-report.md` is unchanged by this command.
+
+After changing visual handoff:
+
+1. With `state/book-visual-identity.json` + `book-visual-characters.json` + `book-visual-places.json` + `book-visual-scenes.json` present, `python main.py visual-handoff --force` — expect `state/book-visual-handoff.json` with `open_questions` (`question` / `topic` / `related` / `note`) and `consistency_issues` (`summary` / `severity` / `related` / `suggestion`).
+2. Re-run `python main.py visual-handoff` — expect a skip message and no LLM call.
+3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
 
 After changing export:
 

@@ -24,6 +24,7 @@ BOOK_VISUAL_IDENTITY_PATH = STATE_DIR / "book-visual-identity.json"
 BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
 BOOK_VISUAL_PLACES_PATH = STATE_DIR / "book-visual-places.json"
 BOOK_VISUAL_SCENES_PATH = STATE_DIR / "book-visual-scenes.json"
+BOOK_VISUAL_HANDOFF_PATH = STATE_DIR / "book-visual-handoff.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -791,6 +792,83 @@ def cmd_visual_scenes(args: argparse.Namespace) -> None:
     )
 
 
+def write_book_visual_handoff(*, force: bool) -> Path | None:
+    """LLM handoff: open questions + consistency over bible sheets → state JSON.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-identity` first."
+        )
+    if not BOOK_VISUAL_CHARACTERS_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-characters` first."
+        )
+    if not BOOK_VISUAL_PLACES_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-places` first."
+        )
+    if not BOOK_VISUAL_SCENES_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-scenes` first."
+        )
+
+    if BOOK_VISUAL_HANDOFF_PATH.exists() and not force:
+        print(
+            f"Skip visual-handoff: {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)} "
+            "already exists (use --force to regenerate)"
+        )
+        return None
+
+    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+    characters_payload = json.loads(
+        BOOK_VISUAL_CHARACTERS_PATH.read_text(encoding="utf-8")
+    )
+    places_payload = json.loads(BOOK_VISUAL_PLACES_PATH.read_text(encoding="utf-8"))
+    scenes_payload = json.loads(BOOK_VISUAL_SCENES_PATH.read_text(encoding="utf-8"))
+
+    from agents.visual_handoff import build_visual_handoff
+
+    print(
+        f"Building visual handoff from "
+        f"{BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} "
+        f"+ {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)} "
+        f"+ {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)} "
+        f"+ {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)} ..."
+    )
+    payload = build_visual_handoff(
+        identity,
+        characters_payload,
+        places_payload,
+        scenes_payload,
+        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+        source_characters=BOOK_VISUAL_CHARACTERS_PATH.name,
+        source_places=BOOK_VISUAL_PLACES_PATH.name,
+        source_scenes=BOOK_VISUAL_SCENES_PATH.name,
+    )
+    BOOK_VISUAL_HANDOFF_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_VISUAL_HANDOFF_PATH
+
+
+def cmd_visual_handoff(args: argparse.Namespace) -> None:
+    path = write_book_visual_handoff(force=args.force)
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    questions = payload.get("open_questions") or []
+    issues = payload.get("consistency_issues") or []
+    print(f"Wrote {path.relative_to(ROOT)}")
+    print(f"  {len(questions)} open_questions, {len(issues)} consistency_issues")
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -1033,6 +1111,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-visual-scenes.json already exists",
     )
     visual_scenes_parser.set_defaults(func=cmd_visual_scenes)
+
+    visual_handoff_parser = sub.add_parser(
+        "visual-handoff",
+        help=(
+            "LLM Visual Bible handoff (open questions + consistency issues) "
+            "into state/book-visual-handoff.json"
+        ),
+    )
+    visual_handoff_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-visual-handoff.json already exists",
+    )
+    visual_handoff_parser.set_defaults(func=cmd_visual_handoff)
 
     footnotes_parser = sub.add_parser(
         "footnotes",

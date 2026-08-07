@@ -189,5 +189,14 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Status:** current  
 **Context:** After identity + character + place sheets, illustrators need capped illustration-worthy scene briefs (composition / emotional focus) before consistency handoff / image gen.  
 **Decision:** Separate CLI `visual-scenes` (like `visual-places`): Visual Scenes LLM writes `state/book-visual-scenes.json` from compact Reader analyses (truncated plot + capped events + light cast names) + slim `book-visual-identity.json` trait values + character/place sheet **names**. LLM selects up to ~8 scenes (no Reader/rollup schema change). Sized for ~8k local context with capped output tokens. Each scene: `title`, `chapter`, `characters` / `location` string lists, plus `emotional_focus` / `composition` trait arrays (`value` / `kind` / `confidence` / `note`; vision camera/focus flattened into `composition`). Requires identity + character sheets + place sheets first. Soft preference for sheet names (no hard allowlist); duplicate/malformed scene rows dropped; missing `scenes` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
-**Consequences:** One opt-in LLM call for scene briefs; consistency handoff / product weave / image gen stay later.  
-**Extends:** Visual Bible step 3 (key places / settings).
+**Consequences:** One opt-in LLM call for scene briefs; product weave / image gen stay later.  
+**Extends:** Visual Bible step 3 (key places / settings).  
+**Superseded in part by:** Visual Bible step 5 (handoff) for the consistency handoff slice.
+
+## 2026-08 — Visual Bible step 5 (handoff)
+
+**Status:** current  
+**Context:** After identity + character + place + scene sheets, illustrators need a single handoff artifact: unresolved art questions plus consistency issues — without rewriting the four bible files or generating images.  
+**Decision:** Separate CLI `visual-handoff` (like `visual-scenes`): hybrid pass writes `state/book-visual-handoff.json` from the four bible JSON files only (no chapter analyses). Deterministic checks flag scene cast/location name mismatches vs sheets, empty trait lists, and duplicate scene titles. One LLM call over slim identity / character / place / scene summaries adds `open_questions` (`question` / `topic` / `related` / `note`; topic allowlist style|character|place|scene|other) and soft `consistency_issues` (`summary` / `severity` / `related` / `suggestion`; severity allowlist conflict|gap|name_mismatch|ambiguity). Merge + dedupe; cap ~12 each. Sized for ~8k local context with capped output tokens. Requires all four bible files first; does not mutate them. Malformed rows dropped; missing top-level keys fail. No report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** One opt-in LLM call closes the Visual Bible as a handoff artifact; product weave / image gen stay later.  
+**Extends:** Visual Bible step 4 (scene briefs).
