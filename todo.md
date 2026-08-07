@@ -5,23 +5,23 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Handoff open questions now include `options` (+ optional `suggested`); viewer lists them. Next: continue wiring bible into product (report/export weave still later).
+- **Stopped at:** Visual Bible agents + handoff options/viewer done. Next work is human answers → resolve/apply into a locked bible (not report weave yet).
 - **Last success:** `visual-handoff --force` wrote `state/book-visual-handoff.json` with options on all open questions; viewer renders options + suggested.
 - **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until bible is wired into product.
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until handoff answers are applied into a resolved bible.
 
 ## Now
 
-- [ ] Wire bible into product (CLI + state/output; report/export later if needed) — handoff local viewer + question options done; weave still open
+- [ ] Handoff answers → resolve/apply: accept user JSON (chosen option per open question ± notes) and fold into bible state (new resolved artifact and/or patched sheets) — see `docs/decisions.md`
 
 ## Next
 
-- [ ] Image generation from bible + scene briefs
+- [ ] Image generation from resolved bible + scene briefs
 
 ## Later
 
 - [ ] Consistency review of generated art vs bible
-- [ ] Weave illustrations into enriched MD / report / export
+- [ ] Wire / weave illustrations into enriched MD / report / export
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Parked for now: local Qwen (`LLM_PROVIDER=lmstudio`) for feature work
   - Counter: full-book latency + upcoming agents make mix a design choice, not just a bill

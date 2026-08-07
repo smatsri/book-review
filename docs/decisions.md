@@ -216,3 +216,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Keep `web/handoff.html` (committed static viewer fetching `../state/book-visual-handoff.json`). CLI `view-handoff` serves the repo root on `127.0.0.1:8765`, opens the page, and blocks until Ctrl+C (no LLM; requires handoff JSON first). Cursor/VS Code task **Open visual handoff** wraps the same CLI. Not woven into report/export.  
 **Consequences:** Illustrators can review open questions / consistency issues locally without copying JSON into chat; fuller bible browse / report weave stay later.  
 **Extends:** Visual Bible step 5 (handoff).
+
+## 2026-08 — Visual handoff answers → resolve (next)
+
+**Status:** planned  
+**Context:** Handoff + options/viewer close the agent side of the Visual Bible, but choices stay proposals — steps 1–4 are not mutated, and image gen should not guess open questions.  
+**Decision:** Next slice is a resolve/apply path: accept a user answers JSON (chosen `options` index per open question, optional free-text notes) and produce a resolved bible for downstream image gen. Prefer a new state artifact and/or deterministic patches over re-running identity→scenes; LLM only if soft merge is needed. Report/export weave stays later.  
+**Consequences:** Image generation waits on resolved bible; handoff remains the questionnaire, not the final art direction.  
+**Extends:** Visual handoff question options.
