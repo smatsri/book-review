@@ -169,7 +169,7 @@ Scene briefs (`state/book-visual-scenes.json`, from `visual-scenes`):
 Visual Bible handoff (`state/book-visual-handoff.json`, from `visual-handoff`):
 
 - `source_identity`, `source_characters`, `source_places`, `source_scenes` — which bible files fed the pass
-- `open_questions` — array of `{question, topic, related, note}` (`topic`: style/character/place/scene/other)
+- `open_questions` — array of `{question, topic, related, note, options, suggested?}` (`topic`: style/character/place/scene/other; `options`: up to 3 short art choices; optional `suggested` 0-based index)
 - `consistency_issues` — array of `{summary, severity, related, suggestion}` (`severity`: conflict/gap/name_mismatch/ambiguity)
 - Requires all four bible JSON files; does not load chapter analyses; does not rewrite steps 1–4
 - Hybrid: deterministic name/gap checks (scene cast/location vs sheets, empty trait lists, duplicate scene titles) plus one LLM call over slim bible sheets for open questions + soft issues; merge/dedupe; cap ~12 each

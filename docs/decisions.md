@@ -197,9 +197,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Status:** current  
 **Context:** After identity + character + place + scene sheets, illustrators need a single handoff artifact: unresolved art questions plus consistency issues — without rewriting the four bible files or generating images.  
-**Decision:** Separate CLI `visual-handoff` (like `visual-scenes`): hybrid pass writes `state/book-visual-handoff.json` from the four bible JSON files only (no chapter analyses). Deterministic checks flag scene cast/location name mismatches vs sheets, empty trait lists, and duplicate scene titles. One LLM call over slim identity / character / place / scene summaries adds `open_questions` (`question` / `topic` / `related` / `note`; topic allowlist style|character|place|scene|other) and soft `consistency_issues` (`summary` / `severity` / `related` / `suggestion`; severity allowlist conflict|gap|name_mismatch|ambiguity). Merge + dedupe; cap ~12 each. Sized for ~8k local context with capped output tokens. Requires all four bible files first; does not mutate them. Malformed rows dropped; missing top-level keys fail. No report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
+**Decision:** Separate CLI `visual-handoff` (like `visual-scenes`): hybrid pass writes `state/book-visual-handoff.json` from the four bible JSON files only (no chapter analyses). Deterministic checks flag scene cast/location name mismatches vs sheets, empty trait lists, and duplicate scene titles. One LLM call over slim identity / character / place / scene summaries adds `open_questions` (`question` / `topic` / `related` / `note` / `options` [2–3 concrete art choices] / optional `suggested` 0-based index; topic allowlist style|character|place|scene|other) and soft `consistency_issues` (`summary` / `severity` / `related` / `suggestion`; severity allowlist conflict|gap|name_mismatch|ambiguity). Merge + dedupe; cap ~12 each. Sized for ~8k local context with capped output tokens. Requires all four bible files first; does not mutate them. Malformed rows dropped; missing top-level keys fail. No report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** One opt-in LLM call closes the Visual Bible as a handoff artifact; product weave / image gen stay later.  
 **Extends:** Visual Bible step 4 (scene briefs).
+
+## 2026-08 — Visual handoff question options
+
+**Status:** current  
+**Context:** Open questions alone are hard for a human to answer; consistency issues already carry a `suggestion`, but questions had no menus.  
+**Decision:** Each `open_questions` row may include `options` (normalized string list, cap 3) and optional `suggested` (0-based index into `options`, dropped if out of range). Prompt asks for 2–3 mutually exclusive concrete art choices; empty/malformed options kept as `[]` without dropping the question. Viewer (`web/handoff.html`) lists options and highlights the suggested pick. Still proposals only — does not write back into bible sheets.  
+**Consequences:** Handoff stays one LLM call; humans pick from menus instead of inventing art direction from scratch.  
+**Extends:** Visual Bible step 5 (handoff).
 
 ## 2026-08 — Visual handoff local viewer
 

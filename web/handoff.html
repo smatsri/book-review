@@ -164,6 +164,36 @@
       color: var(--ink);
       font-weight: 600;
     }
+    .options {
+      margin: 0.65rem 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.35rem;
+    }
+    .options li {
+      margin: 0;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 0.92rem;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--chip) 55%, white);
+    }
+    .options li.suggested {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+      background: color-mix(in srgb, var(--accent) 10%, white);
+    }
+    .options .opt-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-weight: 650;
+      margin-right: 0.4rem;
+    }
     .related {
       margin: 0.55rem 0 0;
       padding: 0;
@@ -266,6 +296,22 @@
       return `<ul class="related">${items.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
     }
 
+    function optionsList(options, suggested) {
+      if (!options || !options.length) return "";
+      const sug =
+        Number.isInteger(suggested) && suggested >= 0 && suggested < options.length
+          ? suggested
+          : null;
+      return `<ul class="options">${options
+        .map((opt, i) => {
+          const isSug = sug === i;
+          return `<li class="${isSug ? "suggested" : ""}">${
+            isSug ? `<span class="opt-label">Suggested</span>` : ""
+          }${escapeHtml(opt)}</li>`;
+        })
+        .join("")}</ul>`;
+    }
+
     function escapeHtml(s) {
       return String(s)
         .replace(/&/g, "&amp;")
@@ -310,6 +356,7 @@
             </div>
             <h3>${escapeHtml(q.question || "")}</h3>
             ${q.note ? `<p class="note">${escapeHtml(q.note)}</p>` : ""}
+            ${optionsList(q.options, q.suggested)}
             ${relatedList(q.related)}
           </article>`
           )
