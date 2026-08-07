@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive book-level visual identity and character visual sheets into structured state, and export the report to HTML/PDF/EPUB.
+Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive book-level visual identity, character visual sheets, and place / setting sheets into structured state, and export the report to HTML/PDF/EPUB.
 
 ## Pipeline
 
@@ -16,20 +16,20 @@ data/books/*.txt
         |
    list[Chapter]
         |
-   +----+----+--------+--------+--------+-----------+----------+----------------+------------------+
-   |         |        |        |        |           |          |                |                  |
-chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters
-(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual
-         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)
-         Editor →     |       |    Merger) LLM +     LLM)          |                  |
-         Critic →     |       |      |     weave)      |           |                  |
-         revise)      |       |      |       |         |           |                  |
-   |         |        |       |      |       |         |           |                  |
-state/   state/     prefers book-  book-  state/   output/   state/book-      state/book-
-chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         visual-
-.json    analysis   else    .json  merged  NN-      synthesis identity.json  characters.json
-         + draft +  summary        .json   footnotes.md →     (no report      (needs identity;
-         critique → → book-                + enriched weave)  weave yet)      no report weave)
+   +----+----+--------+--------+--------+-----------+----------+----------------+------------------+---------------+
+   |         |        |        |        |           |          |                |                  |               |
+chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters visual-places
+(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual     (CLI → Visual
+         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)   Places LLM)
+         Editor →     |       |    Merger) LLM +     LLM)          |                  |               |
+         Critic →     |       |      |     weave)      |           |                  |               |
+         revise)      |       |      |       |         |           |                  |               |
+   |         |        |       |      |       |         |           |                  |               |
+state/   state/     prefers book-  book-  state/   output/   state/book-      state/book-      state/book-
+chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         visual-         visual-
+.json    analysis   else    .json  merged  NN-      synthesis identity.json  characters.json places.json
+         + draft +  summary        .json   footnotes.md →     (no report      (needs identity;(needs identity;
+         critique → → book-                + enriched weave)  weave yet)      no report weave) no report weave)
          summary.md report.md              (--all then
          (--all →   (weaves                 report)
           report +  synthesis if
@@ -50,7 +50,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
 | `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `footnotes`, `export` |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -59,6 +59,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/reducer.py` | Reducer agent: chapter summaries + rollup → book-level Markdown synthesis |
 | `agents/visual_identity.py` | Visual Identity agent: compact analyses + rollup → book-level visual identity JSON |
 | `agents/visual_characters.py` | Visual Characters agent: analyses + rollup + identity → character visual sheets JSON |
+| `agents/visual_places.py` | Visual Places agent: analyses + identity → place / setting visual sheets JSON |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
@@ -142,6 +143,16 @@ Character visual sheets (`state/book-visual-characters.json`, from `visual-chara
 - Names must match the cast index; unknown / malformed character rows dropped; missing `characters` key fails
 - Not woven into `book-report.md` yet; not run by `summarize --all`; skip unless `--force`
 
+Place / setting sheets (`state/book-visual-places.json`, from `visual-places`):
+
+- `source_identity` — which identity file fed the prompt
+- `chapters_included` — chapter numbers from the analyses
+- `places` — array of `{name, architecture, climate, atmosphere, symbols}` where each sheet array is `{value, kind, confidence, note}` traits
+- Requires `book-visual-identity.json` plus all chapter analyses (no rollup / character sheets)
+- LLM inputs: slim identity trait values + compact analyses (truncated plot + capped events); LLM selects up to ~8 key places; sized for ~8k local context; no full book text
+- Malformed / duplicate place rows dropped; missing `places` key fails
+- Not woven into `book-report.md` yet; not run by `summarize --all`; skip unless `--force`
+
 ## LLM (current)
 
 - Switch: `LLM_PROVIDER` = `gemini` (default) or `lmstudio`
@@ -156,6 +167,7 @@ Character visual sheets (`state/book-visual-characters.json`, from `visual-chara
 - Reduce: one LLM call over compact analyses + slim rollup → `output/book-synthesis.md`; rebuilds report
 - Visual identity: one LLM call over compact analyses + slim rollup → `state/book-visual-identity.json` (no report weave)
 - Visual characters: one LLM call over compact analyses + enriched rollup cast + slim identity → `state/book-visual-characters.json` (no report weave)
+- Visual places: one LLM call over compact analyses (plot + events) + slim identity → `state/book-visual-places.json` (no report weave)
 - Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD
 - Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes supported via `extra`)
 - Regenerating a chapter summary: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
@@ -170,6 +182,7 @@ Character visual sheets (`state/book-visual-characters.json`, from `visual-chara
 - `reduce` skips when `output/book-synthesis.md` exists unless `--force`
 - `visual-identity` skips when `state/book-visual-identity.json` exists unless `--force`
 - `visual-characters` skips when `state/book-visual-characters.json` exists unless `--force`
+- `visual-places` skips when `state/book-visual-places.json` exists unless `--force`
 - `footnotes` with no `--chapter` resumes at the first chapter missing footnotes JSON; with `--chapter` skips when that file exists unless `--force`
 - `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
 
@@ -179,6 +192,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual Bible beyond character sheets (places, scene briefs, consistency handoff, image gen, report weave)
+- Visual Bible beyond place sheets (scene briefs, consistency handoff, image gen, report weave)
 
 Those are roadmap items in `todo.md` / `idea.md`.

@@ -22,6 +22,7 @@ BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
 BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
 BOOK_VISUAL_IDENTITY_PATH = STATE_DIR / "book-visual-identity.json"
 BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
+BOOK_VISUAL_PLACES_PATH = STATE_DIR / "book-visual-places.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -621,6 +622,82 @@ def cmd_visual_characters(args: argparse.Namespace) -> None:
     )
 
 
+def write_book_visual_places(*, force: bool) -> Path | None:
+    """LLM place / setting sheets from analyses + identity → state JSON.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-identity` first."
+        )
+
+    if BOOK_VISUAL_PLACES_PATH.exists() and not force:
+        print(
+            f"Skip visual-places: {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)} "
+            "already exists (use --force to regenerate)"
+        )
+        return None
+
+    chapters = load_chapters()
+    analyses: list[dict] = []
+    missing_analysis: list[int] = []
+    for ch in chapters:
+        analysis_path = chapter_analysis_path(ch.number)
+        if not analysis_path.exists():
+            missing_analysis.append(ch.number)
+            continue
+        analyses.append(json.loads(analysis_path.read_text(encoding="utf-8")))
+
+    if missing_analysis:
+        available = ", ".join(str(n) for n in missing_analysis)
+        raise SystemExit(
+            f"Missing chapter analyses: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+
+    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+
+    from agents.visual_places import build_visual_places
+
+    print(
+        f"Building visual places from {len(analyses)} compact analyses "
+        f"+ {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} ..."
+    )
+    payload = build_visual_places(
+        analyses,
+        identity,
+        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+    )
+    BOOK_VISUAL_PLACES_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_VISUAL_PLACES_PATH
+
+
+def cmd_visual_places(args: argparse.Namespace) -> None:
+    path = write_book_visual_places(force=args.force)
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    places = payload.get("places") or []
+    architecture = sum(len(p.get("architecture") or []) for p in places)
+    climate = sum(len(p.get("climate") or []) for p in places)
+    atmosphere = sum(len(p.get("atmosphere") or []) for p in places)
+    symbols = sum(len(p.get("symbols") or []) for p in places)
+    print(f"Wrote {path.relative_to(ROOT)}")
+    print(
+        f"  {len(payload.get('chapters_included') or [])} chapters, "
+        f"{len(places)} places, "
+        f"{architecture} architecture, "
+        f"{climate} climate, "
+        f"{atmosphere} atmosphere, "
+        f"{symbols} symbols"
+    )
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -835,6 +912,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-visual-characters.json already exists",
     )
     visual_characters_parser.set_defaults(func=cmd_visual_characters)
+
+    visual_places_parser = sub.add_parser(
+        "visual-places",
+        help=(
+            "LLM place / setting sheets (architecture / climate / "
+            "atmosphere / symbols) into state/book-visual-places.json"
+        ),
+    )
+    visual_places_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-visual-places.json already exists",
+    )
+    visual_places_parser.set_defaults(func=cmd_visual_places)
 
     footnotes_parser = sub.add_parser(
         "footnotes",

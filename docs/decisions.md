@@ -175,3 +175,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `visual-characters` (like `visual-identity`): Visual Characters LLM writes `state/book-visual-characters.json` from compact Reader analyses (per-chapter character name/note only; no plot) + enriched rollup cast (top ~8 by chapter count; `book-rollup-merged.json` if present else `book-rollup.json`) + slim `book-visual-identity.json` trait values. Sized for ~8k local context (LM Studio / Qwen) with capped output tokens. Each character: `physical` / `personality` / `visual_language` trait arrays (`value` / `kind` / `confidence` / `note`). Requires identity file first. Names must match cast index; unknown/malformed rows dropped; missing `characters` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** One opt-in LLM call for character sheets; places / scenes / handoff / product weave stay later.  
 **Extends:** Visual Bible step 1 (book-level visual identity).
+
+## 2026-08 — Visual Bible step 3 (key places / settings)
+
+**Status:** current  
+**Context:** After identity + character sheets, illustrators need stable looks for recurring / illustration-worthy places before scene briefs / image gen. No places index exists in Reader/rollup.  
+**Decision:** Separate CLI `visual-places` (like `visual-characters`): Visual Places LLM writes `state/book-visual-places.json` from compact Reader analyses (truncated plot + capped events) + slim `book-visual-identity.json` trait values. LLM selects up to ~8 key places (no Reader/rollup schema change). Sized for ~8k local context with capped output tokens. Each place: `architecture` / `climate` / `atmosphere` / `symbols` trait arrays (`value` / `kind` / `confidence` / `note`). Requires identity file first; does not require rollup or character sheets. Duplicate/malformed place rows dropped; missing `places` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** One opt-in LLM call for place sheets; scene briefs / handoff / product weave stay later.  
+**Extends:** Visual Bible step 2 (character visual sheets).

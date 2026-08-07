@@ -107,6 +107,15 @@ python main.py visual-characters --force
 
 Writes `state/book-visual-characters.json` (per-character `physical` / `personality` / `visual_language` trait arrays with `kind` + `confidence`). Uses `book-rollup-merged.json` if present else `book-rollup.json`, plus `state/book-visual-identity.json`. Does not rebuild the report. Skips when the characters file already exists unless `--force`.
 
+LLM place / setting sheets (needs all chapter analyses + `visual-identity`; not part of `summarize --all`):
+
+```powershell
+python main.py visual-places
+python main.py visual-places --force
+```
+
+Writes `state/book-visual-places.json` (per-place `architecture` / `climate` / `atmosphere` / `symbols` trait arrays with `kind` + `confidence`). Uses `state/book-visual-identity.json` plus compact chapter plot/events (LLM selects up to ~8 key places; no rollup required). Does not rebuild the report. Skips when the places file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -193,6 +202,12 @@ After changing visual characters:
 1. With all chapter analyses + rollup + `state/book-visual-identity.json` present, `python main.py visual-characters --force` — expect `state/book-visual-characters.json` with `characters` sheets (`physical` / `personality` / `visual_language` trait objects).
 2. Re-run `python main.py visual-characters` — expect a skip message and no LLM call.
 3. Confirm character names match the rollup cast and `output/book-report.md` is unchanged by this command.
+
+After changing visual places:
+
+1. With all chapter analyses + `state/book-visual-identity.json` present, `python main.py visual-places --force` — expect `state/book-visual-places.json` with `places` sheets (`architecture` / `climate` / `atmosphere` / `symbols` trait objects).
+2. Re-run `python main.py visual-places` — expect a skip message and no LLM call.
+3. Confirm `output/book-report.md` is unchanged by this command.
 
 After changing export:
 
