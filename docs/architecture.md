@@ -219,7 +219,7 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual handoff answers → resolve/apply (user picks from `options`; fold into a resolved bible — see `todo.md` / `docs/decisions.md`)
+- Visual handoff viewer → answers JSON (`state/book-visual-handoff-answers.json`), then resolve/apply CLI into a locked bible — see `todo.md` / `docs/decisions.md`
 - Visual Bible image generation / report–export weave (handoff JSON + local `view-handoff` UI exist; gen after resolve)
 
 Those are roadmap items in `todo.md` / `idea.md`.

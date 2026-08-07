@@ -221,6 +221,6 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Status:** planned  
 **Context:** Handoff + options/viewer close the agent side of the Visual Bible, but choices stay proposals — steps 1–4 are not mutated, and image gen should not guess open questions.  
-**Decision:** Next slice is a resolve/apply path: accept a user answers JSON (chosen `options` index per open question, optional free-text notes) and produce a resolved bible for downstream image gen. Prefer a new state artifact and/or deterministic patches over re-running identity→scenes; LLM only if soft merge is needed. Report/export weave stays later.  
+**Decision:** Split into two slices: (1) viewer writes `state/book-visual-handoff-answers.json` (chosen `options` index per open question, optional notes); (2) resolve/apply CLI consumes that file and produces a resolved bible for image gen. Prefer a new state artifact and/or deterministic patches over re-running identity→scenes; LLM only if soft merge is needed. Report/export weave stays later. Answers live under `state/` (already gitignored).  
 **Consequences:** Image generation waits on resolved bible; handoff remains the questionnaire, not the final art direction.  
 **Extends:** Visual handoff question options.
