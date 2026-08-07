@@ -67,7 +67,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
-| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` + HTML/PDF/EPUB |
+| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` + HTML/PDF/EPUB + `illustrations/` scene JPGs (manual for now; not woven yet) |
 | `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model
@@ -239,6 +239,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual Bible image generation / report–export weave (resolved bible exists; gen next)
+- Visual Bible report–export weave of `output/illustrations/` (manual Bing scenes + human art pass done; Vision-LLM QA parked — see `docs/decisions.md`)
 
 Those are roadmap items in `todo.md` / `idea.md`.

@@ -5,22 +5,22 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Handoff answers resolve/apply CLI done. Next: image generation from resolved bible + scene briefs.
-- **Last success:** `visual-resolve` → `state/book-visual-resolved.json` (deep-copy + `art_decision` patches; no LLM).
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Image generation until resolved bible exists (now ready).
+- **Stopped at:** Manual scene images + human consistency pass done. Next: weave illustrations into enriched MD / report / export.
+- **Last success:** 8 Bing scene JPGs in `output/illustrations/` (named to resolved scene briefs); human consistency vs `book-visual-resolved.json` accepted.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve, manual Bing scene images + human art consistency pass (see `docs/decisions.md`).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now).
 
 ## Now
 
-- [ ] Image generation from resolved bible + scene briefs
+- [ ] Wire / weave illustrations into enriched MD / report / export
 
 ## Next
 
-- [ ] Consistency review of generated art vs bible
+- (empty — pick from Later when weave lands)
 
 ## Later
 
-- [ ] Wire / weave illustrations into enriched MD / report / export
+- [ ] Vision-LLM (or hybrid) art consistency review vs resolved bible — optional later; human pass is enough for current Alice set
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
   - Parked for now: local Qwen (`LLM_PROVIDER=lmstudio`) for feature work
   - Counter: full-book latency + upcoming agents make mix a design choice, not just a bill
@@ -59,3 +59,5 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Handoff open questions carry `options` (+ optional `suggested`); viewer renders them
 - [x] Handoff viewer → answers JSON (`web/handoff.html` download → `state/book-visual-handoff-answers.json`)
 - [x] Handoff answers → resolve/apply CLI (`visual-resolve` → `state/book-visual-resolved.json`)
+- [x] Scene image generation (manual Bing → `output/illustrations/scene-NN-chNN-*.jpg`, mapped to resolved scene briefs)
+- [x] Art consistency review vs resolved bible — human pass for now; current 8 images accepted (Vision LLM parked)

@@ -240,3 +240,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `visual-resolve` (no LLM): join `state/book-visual-handoff-answers.json` to handoff `open_questions` by index + exact `question` text; deep-copy the four bible sheets into `state/book-visual-resolved.json`; append each answered option as `{value, kind: art_decision, confidence: 1.0, note}` using authoritative `handoff.options[chosen]`. Topic routing: `style` → `identity.artistic_style`; `character` → matched `characters[].visual_language` via `related` names; `place` → `places[].atmosphere`; `scene` → `scenes[].title` → `composition`; `other` → `identity.motifs`. Name match exact then casefold. Unanswered → `unresolved` only; failed matches stay in `resolutions` with `applied: false`. Audit trail: `resolutions` + `unresolved`. Hard-fail on length/index/question/`chosen` range mismatches. Does not rewrite steps 1–4, ignore consistency issues, no report/export weave. Skip unless `--force`.  
 **Consequences:** Image gen can consume one locked bible; handoff + answers remain the questionnaire trail.  
 **Extends / implements slice (2) of:** Visual handoff answers → resolve (next).
+
+## 2026-08 — Scene images manual; art consistency is human for now
+
+**Status:** current  
+**Context:** Resolved bible is ready; automated image gen and Vision-LLM consistency review are not built. Eight scene illustrations were produced externally (Bing) from the resolved scene briefs.  
+**Decision:** Store accepted scene art under `output/illustrations/` as `scene-NN-chNN-<slug>.jpg`, ordered to match `state/book-visual-resolved.json` `scenes[]`. Treat post-gen consistency review as a **human pass** for now (no Vision CLI / multimodal `llm.py` path). Current Alice set: human-accepted. Vision-LLM or hybrid review stays Later if regen loops or multi-book scale need it. Report/export weave is the next product slice.  
+**Consequences:** No new agent for gen or art QA yet; weave can assume files in `output/illustrations/` match the resolved scene list.  
+**Extends:** Visual handoff answers resolve/apply CLI (locked bible for image gen).
