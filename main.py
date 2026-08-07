@@ -21,6 +21,7 @@ BOOK_SYNTHESIS_PATH = OUTPUT_DIR / "book-synthesis.md"
 BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
 BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
 BOOK_VISUAL_IDENTITY_PATH = STATE_DIR / "book-visual-identity.json"
+BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -532,6 +533,94 @@ def cmd_visual_identity(args: argparse.Namespace) -> None:
     )
 
 
+def write_book_visual_characters(*, force: bool) -> Path | None:
+    """LLM character visual sheets from analyses + rollup + identity → state JSON.
+
+    Returns the path written, or None if skipped.
+    """
+    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            "Run `python main.py rollup` first."
+        )
+    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+        raise SystemExit(
+            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            "Run `python main.py visual-identity` first."
+        )
+
+    if BOOK_VISUAL_CHARACTERS_PATH.exists() and not force:
+        print(
+            f"Skip visual-characters: {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)} "
+            "already exists (use --force to regenerate)"
+        )
+        return None
+
+    chapters = load_chapters()
+    analyses: list[dict] = []
+    missing_analysis: list[int] = []
+    for ch in chapters:
+        analysis_path = chapter_analysis_path(ch.number)
+        if not analysis_path.exists():
+            missing_analysis.append(ch.number)
+            continue
+        analyses.append(json.loads(analysis_path.read_text(encoding="utf-8")))
+
+    if missing_analysis:
+        available = ", ".join(str(n) for n in missing_analysis)
+        raise SystemExit(
+            f"Missing chapter analyses: {available}. "
+            "Run `python main.py summarize --all` first."
+        )
+
+    rollup_path = (
+        BOOK_ROLLUP_MERGED_PATH
+        if BOOK_ROLLUP_MERGED_PATH.exists()
+        else BOOK_ROLLUP_PATH
+    )
+    rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
+    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+
+    from agents.visual_characters import build_visual_characters
+
+    print(
+        f"Building visual characters from {len(analyses)} compact analyses "
+        f"+ {rollup_path.relative_to(ROOT)} "
+        f"+ {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} ..."
+    )
+    payload = build_visual_characters(
+        analyses,
+        rollup,
+        identity,
+        source_rollup=rollup_path.name,
+        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+    )
+    BOOK_VISUAL_CHARACTERS_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return BOOK_VISUAL_CHARACTERS_PATH
+
+
+def cmd_visual_characters(args: argparse.Namespace) -> None:
+    path = write_book_visual_characters(force=args.force)
+    if path is None:
+        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    characters = payload.get("characters") or []
+    physical = sum(len(c.get("physical") or []) for c in characters)
+    personality = sum(len(c.get("personality") or []) for c in characters)
+    visual_language = sum(len(c.get("visual_language") or []) for c in characters)
+    print(f"Wrote {path.relative_to(ROOT)}")
+    print(
+        f"  {len(payload.get('chapters_included') or [])} chapters, "
+        f"{len(characters)} characters, "
+        f"{physical} physical, "
+        f"{personality} personality, "
+        f"{visual_language} visual_language"
+    )
+
+
 def footnotes_one(chapter: Chapter, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
@@ -732,6 +821,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Regenerate even if state/book-visual-identity.json already exists",
     )
     visual_identity_parser.set_defaults(func=cmd_visual_identity)
+
+    visual_characters_parser = sub.add_parser(
+        "visual-characters",
+        help=(
+            "LLM character visual sheets (physical / personality / "
+            "visual_language) into state/book-visual-characters.json"
+        ),
+    )
+    visual_characters_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate even if state/book-visual-characters.json already exists",
+    )
+    visual_characters_parser.set_defaults(func=cmd_visual_characters)
 
     footnotes_parser = sub.add_parser(
         "footnotes",

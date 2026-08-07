@@ -6,6 +6,8 @@ import json
 from typing import Any
 
 from agents.llm import generate_text
+from agents.visual_traits import normalize_trait_list
+
 
 SYSTEM_PROMPT = """You are a careful Visual Identity agent for illustrated books.
 You receive compact per-chapter Reader notes and a book-level character/theme index.
@@ -31,7 +33,6 @@ _TRAIT_KEYS = (
     "period",
     "motifs",
 )
-_KINDS = frozenset({"fact", "interpretation", "art_decision"})
 
 
 def _compact_chapters(
@@ -89,43 +90,6 @@ def _slim_rollup(rollup: dict[str, Any]) -> dict[str, list[str]]:
     theme_labels = [t["theme"].strip() for t in theme_rows[:_MAX_ROLLUP_THEMES]]
 
     return {"characters": char_names, "themes": theme_labels}
-
-
-def _normalize_trait_list(raw: Any, *, label: str) -> list[dict[str, Any]]:
-    """Keep well-formed trait rows; drop bad entries (fail closed per row)."""
-    if not isinstance(raw, list):
-        raise RuntimeError(f"Visual identity JSON '{label}' must be an array")
-
-    items: list[dict[str, Any]] = []
-    for entry in raw:
-        if not isinstance(entry, dict):
-            continue
-        value = entry.get("value")
-        if not isinstance(value, str) or not value.strip():
-            continue
-        kind = entry.get("kind")
-        if not isinstance(kind, str) or kind.strip() not in _KINDS:
-            continue
-        confidence = entry.get("confidence")
-        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
-            continue
-        conf = float(confidence)
-        if conf < 0.0:
-            conf = 0.0
-        elif conf > 1.0:
-            conf = 1.0
-        note = entry.get("note")
-        if not isinstance(note, str):
-            note = ""
-        items.append(
-            {
-                "value": value.strip(),
-                "kind": kind.strip(),
-                "confidence": conf,
-                "note": note.strip(),
-            }
-        )
-    return items
 
 
 def build_visual_identity(
@@ -204,7 +168,7 @@ Prefer a small coherent set (roughly 2–6 items per key). Do not add other top-
     for key in _TRAIT_KEYS:
         if key not in data:
             raise RuntimeError(f"Visual identity JSON missing required key '{key}'")
-        payload[key] = _normalize_trait_list(data[key], label=key)
+        payload[key] = normalize_trait_list(data[key], label=key)
 
     return payload
 

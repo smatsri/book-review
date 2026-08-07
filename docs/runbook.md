@@ -98,6 +98,15 @@ python main.py visual-identity --force
 
 Writes `state/book-visual-identity.json` (style / palette / atmosphere / period / motifs with `kind` + `confidence`). Uses `book-rollup-merged.json` if present else `book-rollup.json`. Does not rebuild the report. Skips when the identity file already exists unless `--force`.
 
+LLM character visual sheets (needs all chapter analyses + rollup + `visual-identity`; not part of `summarize --all`):
+
+```powershell
+python main.py visual-characters
+python main.py visual-characters --force
+```
+
+Writes `state/book-visual-characters.json` (per-character `physical` / `personality` / `visual_language` trait arrays with `kind` + `confidence`). Uses `book-rollup-merged.json` if present else `book-rollup.json`, plus `state/book-visual-identity.json`. Does not rebuild the report. Skips when the characters file already exists unless `--force`.
+
 Research footnotes for a chapter (needs analysis + summary; not part of `summarize --all`):
 
 ```powershell
@@ -178,6 +187,12 @@ After changing visual identity:
 1. With all chapter analyses + `state/book-rollup.json` present, `python main.py visual-identity --force` — expect `state/book-visual-identity.json` with `artistic_style` / `color_palette` / `atmosphere` / `period` / `motifs` trait objects (`value` / `kind` / `confidence` / `note`).
 2. Re-run `python main.py visual-identity` — expect a skip message and no LLM call.
 3. Confirm `output/book-report.md` is unchanged by this command.
+
+After changing visual characters:
+
+1. With all chapter analyses + rollup + `state/book-visual-identity.json` present, `python main.py visual-characters --force` — expect `state/book-visual-characters.json` with `characters` sheets (`physical` / `personality` / `visual_language` trait objects).
+2. Re-run `python main.py visual-characters` — expect a skip message and no LLM call.
+3. Confirm character names match the rollup cast and `output/book-report.md` is unchanged by this command.
 
 After changing export:
 

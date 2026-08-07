@@ -167,3 +167,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Separate CLI `visual-identity` (like `reduce` / `aliases`): Visual Identity LLM writes `state/book-visual-identity.json` from compact Reader analyses + slim rollup (`book-rollup-merged.json` if present else `book-rollup.json`). Trait arrays: `artistic_style`, `color_palette`, `atmosphere`, `period`, `motifs`, each `{value, kind, confidence, note}` with `kind` in `fact` | `interpretation` | `art_decision`. No full book text; no report/export weave yet. Not part of `summarize --all`. Skip unless `--force`. Bad trait rows dropped; missing keys fail.  
 **Consequences:** One opt-in LLM call for book visual identity; later bible steps (characters / places / scenes) and product weave stay separate.  
 **Extends:** bible-first Visual split in `todo.md`; distinct from reduce (prose) and rollup (literary index).
+
+## 2026-08 — Visual Bible step 2 (character visual sheets)
+
+**Status:** current  
+**Context:** After book-level identity, illustrators need stable per-character looks with fact vs interpretation vs art_decision, before places/scenes/image gen.  
+**Decision:** Separate CLI `visual-characters` (like `visual-identity`): Visual Characters LLM writes `state/book-visual-characters.json` from compact Reader analyses (per-chapter character name/note only; no plot) + enriched rollup cast (top ~8 by chapter count; `book-rollup-merged.json` if present else `book-rollup.json`) + slim `book-visual-identity.json` trait values. Sized for ~8k local context (LM Studio / Qwen) with capped output tokens. Each character: `physical` / `personality` / `visual_language` trait arrays (`value` / `kind` / `confidence` / `note`). Requires identity file first. Names must match cast index; unknown/malformed rows dropped; missing `characters` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** One opt-in LLM call for character sheets; places / scenes / handoff / product weave stay later.  
+**Extends:** Visual Bible step 1 (book-level visual identity).

@@ -48,6 +48,7 @@ def _generate_gemini(
     model: str | None,
     temperature: float,
     json_mode: bool,
+    max_output_tokens: int | None,
 ) -> str:
     client = genai.Client(api_key=require_gemini_api_key())
     config_kwargs: dict = {
@@ -56,6 +57,8 @@ def _generate_gemini(
     }
     if json_mode:
         config_kwargs["response_mime_type"] = "application/json"
+    if max_output_tokens is not None:
+        config_kwargs["max_output_tokens"] = max_output_tokens
 
     response = client.models.generate_content(
         model=resolve_gemini_model(model),
@@ -75,6 +78,7 @@ def _generate_lmstudio(
     model: str | None,
     temperature: float,
     json_mode: bool,
+    max_output_tokens: int | None,
 ) -> str:
     base_url = os.getenv("LMSTUDIO_BASE_URL", DEFAULT_LMSTUDIO_BASE_URL)
     api_key = os.getenv("LMSTUDIO_API_KEY", DEFAULT_LMSTUDIO_API_KEY)
@@ -88,6 +92,8 @@ def _generate_lmstudio(
         ],
         "temperature": temperature,
     }
+    if max_output_tokens is not None:
+        kwargs["max_tokens"] = max_output_tokens
     if json_mode:
         # LM Studio accepts json_schema / text, not OpenAI's json_object.
         kwargs["response_format"] = {
@@ -112,6 +118,7 @@ def generate_text(
     model: str | None = None,
     temperature: float = 0.3,
     json_mode: bool = False,
+    max_output_tokens: int | None = None,
 ) -> str:
     provider = resolve_provider()
     if provider == "gemini":
@@ -121,6 +128,7 @@ def generate_text(
             model=model,
             temperature=temperature,
             json_mode=json_mode,
+            max_output_tokens=max_output_tokens,
         )
     return _generate_lmstudio(
         system=system,
@@ -128,4 +136,5 @@ def generate_text(
         model=model,
         temperature=temperature,
         json_mode=json_mode,
+        max_output_tokens=max_output_tokens,
     )
