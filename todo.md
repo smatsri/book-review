@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Critic JSON resilience shipped; Naked Sun ch15 summary written via `--from critic`.
-- **Last success:** `parse_json_object` + Critic `max_output_tokens=4096` / one retry; smoke `summarize --book asimov-naked-sun --chapter 15 --from critic`.
-- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Critic JSON harden; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Critic ~8k prompt fit; Naked Sun ch18 summary written via `--from critic`.
+- **Last success:** Smoke `summarize --book asimov-naked-sun --chapter 18 --from critic` → critique + summary.
+- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
@@ -18,6 +18,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 After multi-book foundation:
 
+- [ ] Optional: Naked Sun rollup / report / reduce after full summarize (ch1–18 summaries present)
 - [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
@@ -38,6 +39,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Critic ~8k prompt fit** — head+tail chapter truncate + compact notes; Naked Sun ch18 `--from critic` smoke
 - [x] **Critic JSON resilience** — `agents/json_util.py`; Critic max tokens + one retry; Naked Sun ch15 `--from critic` smoke
 - [x] **Pipeline UI-2 — Run one CLI step** — `pipeline_run.py` + `POST/GET /api/run`; allowlist; one job; poll log + status; Run button in `web/pipeline.html`
 - [x] **Pipeline UI-1 — Status board** — `pipeline_status.py` + `view-pipeline` (port 8766) + `web/pipeline.html`; pick book, show done/partial/missing, copy CLI (no run)

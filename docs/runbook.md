@@ -330,3 +330,4 @@ After changing the enriched binder:
 - Book text is excluded from Cursor indexing via `.cursorignore`; agents should use `book.py` / CLI rather than reading the full raw file when possible.
 - Fresh `--all` makes up to four LLM calls per missing chapter (Reader + Editor draft + Critic + revise); expect several minutes (longer on local models). Use `--from` to avoid replaying earlier stages while iterating on Critic/revise.
 - Local Qwen (e.g. `qwen/qwen3.5-9b` in LM Studio) can take ~10 minutes per LLM call on a MacBook when reasoning is on, and will warm the machine; prefer Gemini for fast iteration. Thinking helps Critic most; keep it off for full-book thrash.
+- Critic packs chapter + notes + draft; on ~8k local context it may head+tail-truncate long chapters (see `docs/decisions.md`). Raise LM Studio context if you want full-text critique. After an `exceed_context_size_error`, resume with `summarize --book <id> --chapter N --from critic`.

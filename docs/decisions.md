@@ -434,7 +434,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Critic JSON resilience for local models
 
-**Status:** current  
+**Status:** superseded by “Critic prompt fit for ~8k local context”  
 **Context:** Naked Sun ch15 Critic failed with `JSONDecodeError: Unterminated string` from local Qwen; chapters 1–14 already had valid critiques. Same flaky truncation/escape pattern as other LM Studio JSON stages.  
 **Decision:**
 1. Shared `agents/json_util.parse_json_object` strips optional \`\`\`json fences and requires a top-level object.
@@ -443,3 +443,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Resume mid-pipeline with `summarize --from critic` after a Critic JSON blip without `--force`. Does not fix weak literary critique quality on 9B models.  
 **Extends:** Dual LLM providers (LM Studio `json_schema`); Critic one-pass.
+
+## 2026-08 — Critic prompt fit for ~8k local context
+
+**Status:** current  
+**Context:** Naked Sun ch18 Critic failed under LM Studio with `exceed_context_size_error` (prompt ~8479 tokens vs `n_ctx` 8192). Critic is the heaviest summarize stage (full chapter + Reader notes + draft). Reader alone fit; ch16–17 Critic fit; ch18 chapter body is the longest in the book.  
+**Decision:** Size Critic for ~8k local context like visual-* agents: compact notes JSON (no indent), reserve headroom for chat template + output, and when chapter + fixed prompt parts exceed the budget, truncate chapter text with a clear marker keeping **head + tail** (openings and endings stay available). Prefer raising LM Studio context for full-text critique when possible; code path must not hard-fail long EPUB chapters on 8k defaults. JSON resilience (`parse_json_object`, `max_output_tokens=4096`, one retry) unchanged.  
+**Consequences:** Long chapters may lose mid-body evidence in the Critic prompt; draft + Reader notes still present. Resume with `summarize --book … --chapter N --from critic`.  
+**Extends / supersedes:** Critic JSON resilience point 3 (“full chapter text” always).

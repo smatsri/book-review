@@ -20,6 +20,36 @@ Do not nest quotes, markdown fences, or multi-line strings inside JSON values.""
 _MAX_OUTPUT_TOKENS = 4096
 _RAW_SNIPPET = 400
 
+# Sized for ~8k local contexts (LM Studio / Qwen): Critic sends chapter + notes + draft.
+_APPROX_CHARS_PER_TOKEN = 4
+_TARGET_CTX_TOKENS = 8192
+_OUTPUT_RESERVE_TOKENS = 1024
+_TEMPLATE_OVERHEAD_TOKENS = 256
+_TRUNCATION_MARKER = "\n\n[...truncated for model context...]\n\n"
+
+
+def _truncate_for_budget(text: str, max_chars: int) -> str:
+    """Keep head + tail when truncating so openings and endings stay available."""
+    if max_chars <= 0:
+        return ""
+    if len(text) <= max_chars:
+        return text
+    marker = _TRUNCATION_MARKER
+    if max_chars <= len(marker) + 40:
+        return text[:max_chars]
+    keep = max_chars - len(marker)
+    head = (keep * 2) // 3
+    tail = keep - head
+    return text[:head].rstrip() + marker + text[-tail:].lstrip()
+
+
+def _chapter_budget_chars(*, overhead_chars: int) -> int:
+    prompt_token_budget = (
+        _TARGET_CTX_TOKENS - _OUTPUT_RESERVE_TOKENS - _TEMPLATE_OVERHEAD_TOKENS
+    )
+    budget_chars = prompt_token_budget * _APPROX_CHARS_PER_TOKEN - overhead_chars
+    return max(0, budget_chars)
+
 
 def critique_draft(
     chapter: Chapter,
@@ -37,15 +67,26 @@ def critique_draft(
             "quotes": analysis.get("quotes", []),
             "events": analysis.get("events", []),
         },
-        indent=2,
         ensure_ascii=False,
+        separators=(",", ":"),
     )
 
-    user_prompt = f"""Chapter: {chapter.heading}
+    instruction = """Return a JSON object with exactly these keys:
+- "verdict": string — one of "ok", "needs_fixes" (use needs_fixes if any must_fix item exists)
+- "issues": array of objects, each with:
+  - "severity": string — one of "plot", "characters", "themes", "quotes", "events", "other"
+  - "severity": string — one of "missing", "unsupported", "wrong_order", "weak", "other"
+  - "detail": string — what is wrong and where evidence is in the chapter (one short sentence)
+- "must_fix": array of strings — concrete changes required before publishing (short single-line strings)
+- "optional_improve": array of strings — nice-to-have improvements (short single-line strings)
+"""
+
+    prefix = f"""Chapter: {chapter.heading}
 
 Chapter text:
 ---
-{chapter.text}
+"""
+    suffix = f"""
 ---
 
 Reader analysis (JSON):
@@ -56,15 +97,13 @@ Draft summary (Markdown):
 {draft_markdown}
 ---
 
-Return a JSON object with exactly these keys:
-- "verdict": string — one of "ok", "needs_fixes" (use needs_fixes if any must_fix item exists)
-- "issues": array of objects, each with:
-  - "severity": string — one of "plot", "characters", "themes", "quotes", "events", "other"
-  - "severity": string — one of "missing", "unsupported", "wrong_order", "weak", "other"
-  - "detail": string — what is wrong and where evidence is in the chapter (one short sentence)
-- "must_fix": array of strings — concrete changes required before publishing (short single-line strings)
-- "optional_improve": array of strings — nice-to-have improvements (short single-line strings)
-"""
+{instruction}"""
+    overhead = len(SYSTEM_PROMPT) + len(prefix) + len(suffix)
+    chapter_text = _truncate_for_budget(
+        chapter.text,
+        _chapter_budget_chars(overhead_chars=overhead),
+    )
+    user_prompt = f"{prefix}{chapter_text}{suffix}"
 
     data: dict[str, Any] | None = None
     last_raw = ""

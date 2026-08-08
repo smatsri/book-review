@@ -58,7 +58,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
-| `agents/critic.py` | Critic agent: chapter + analysis + draft → structured critique JSON |
+| `agents/critic.py` | Critic agent: chapter + analysis + draft → structured critique JSON (chapter may be head+tail truncated to fit ~8k local context) |
 | `agents/alias_merger.py` | Alias Merger: rollup name lists → character/theme alias clusters (JSON) |
 | `agents/reducer.py` | Reducer agent: chapter summaries + rollup → book-level Markdown synthesis |
 | `agents/visual_identity.py` | Visual Identity agent: compact analyses + rollup → book-level visual identity JSON |
