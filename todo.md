@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Pipeline UI-2 Run shipped (`POST/GET /api/run` + allowlisted subprocess + poll in `web/pipeline.html`).
-- **Last success:** Status board can start one CLI stage; log + badges poll; illustrations / handoff-answers not runnable.
-- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Critic JSON resilience shipped; Naked Sun ch15 summary written via `--from critic`.
+- **Last success:** `parse_json_object` + Critic `max_output_tokens=4096` / one retry; smoke `summarize --book asimov-naked-sun --chapter 15 --from critic`.
+- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Critic JSON harden; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
@@ -38,6 +38,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Critic JSON resilience** — `agents/json_util.py`; Critic max tokens + one retry; Naked Sun ch15 `--from critic` smoke
 - [x] **Pipeline UI-2 — Run one CLI step** — `pipeline_run.py` + `POST/GET /api/run`; allowlist; one job; poll log + status; Run button in `web/pipeline.html`
 - [x] **Pipeline UI-1 — Status board** — `pipeline_status.py` + `view-pipeline` (port 8766) + `web/pipeline.html`; pick book, show done/partial/missing, copy CLI (no run)
 - [x] **EPUB ingest** — `source_kind: epub` via ebooklib numbered TOC → `Chapter` list; smoke `chapters --book asimov-naked-sun` (18 chapters)

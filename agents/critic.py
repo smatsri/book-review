@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from agents.json_util import parse_json_object
 from agents.llm import generate_text
 from book import Chapter
 
@@ -12,7 +13,12 @@ SYSTEM_PROMPT = """You are a careful literary Critic agent.
 You review a draft chapter summary against the chapter text and Reader notes.
 Find gaps, unsupported claims, wrong order, weak or invented quotes/themes.
 Be concrete and evidence-based. Do not rewrite the summary — that is the Editor's job.
-Return valid JSON only."""
+Return valid JSON only.
+Keep detail, must_fix, and optional_improve strings short (one sentence each, single line).
+Do not nest quotes, markdown fences, or multi-line strings inside JSON values."""
+
+_MAX_OUTPUT_TOKENS = 4096
+_RAW_SNIPPET = 400
 
 
 def critique_draft(
@@ -55,25 +61,35 @@ Return a JSON object with exactly these keys:
 - "issues": array of objects, each with:
   - "severity": string — one of "plot", "characters", "themes", "quotes", "events", "other"
   - "severity": string — one of "missing", "unsupported", "wrong_order", "weak", "other"
-  - "detail": string — what is wrong and where evidence is in the chapter
-- "must_fix": array of strings — concrete changes required before publishing
-- "optional_improve": array of strings — nice-to-have improvements
+  - "detail": string — what is wrong and where evidence is in the chapter (one short sentence)
+- "must_fix": array of strings — concrete changes required before publishing (short single-line strings)
+- "optional_improve": array of strings — nice-to-have improvements (short single-line strings)
 """
 
-    raw = generate_text(
-        system=SYSTEM_PROMPT,
-        user=user_prompt,
-        model=model,
-        temperature=0.2,
-        json_mode=True,
-    )
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Critic returned invalid JSON: {exc}") from exc
+    data: dict[str, Any] | None = None
+    last_raw = ""
+    last_exc: Exception | None = None
+    for _attempt in range(2):
+        last_raw = generate_text(
+            system=SYSTEM_PROMPT,
+            user=user_prompt,
+            model=model,
+            temperature=0.2,
+            json_mode=True,
+            max_output_tokens=_MAX_OUTPUT_TOKENS,
+        )
+        try:
+            data = parse_json_object(last_raw)
+            break
+        except (json.JSONDecodeError, ValueError) as exc:
+            last_exc = exc
 
-    if not isinstance(data, dict):
-        raise RuntimeError("Critic JSON must be an object")
+    if data is None:
+        snippet = last_raw[:_RAW_SNIPPET].replace("\n", "\\n")
+        raise RuntimeError(
+            f"Critic returned invalid JSON: {last_exc}; "
+            f"raw snippet: {snippet!r}"
+        ) from last_exc
 
     must_fix = data.get("must_fix") or []
     if not isinstance(must_fix, list):

@@ -431,3 +431,15 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** UI-3 (handoff integrated in the console) is Next. Architecture / runbook document Run APIs and smoke.  
 **Extends:** Pipeline UI-1 status board.
+
+## 2026-08 — Critic JSON resilience for local models
+
+**Status:** current  
+**Context:** Naked Sun ch15 Critic failed with `JSONDecodeError: Unterminated string` from local Qwen; chapters 1–14 already had valid critiques. Same flaky truncation/escape pattern as other LM Studio JSON stages.  
+**Decision:**
+1. Shared `agents/json_util.parse_json_object` strips optional \`\`\`json fences and requires a top-level object.
+2. Critic uses it, sets `max_output_tokens=4096` (like visual-* agents), prompts for short single-line string fields, and retries the LLM **once** on parse failure; second failure includes a short raw snippet.
+3. Critic still receives full chapter text (quality gate unchanged). Other agents may adopt `json_util` later; out of this change.
+
+**Consequences:** Resume mid-pipeline with `summarize --from critic` after a Critic JSON blip without `--force`. Does not fix weak literary critique quality on 9B models.  
+**Extends:** Dual LLM providers (LM Studio `json_schema`); Critic one-pass.
