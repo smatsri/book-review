@@ -46,13 +46,13 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book` |
+| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json` |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
 | `enriched_book.py` | Deterministic binder: Gutenberg `Chapter` body + scene JPGs + footnote endnotes → `book-enriched.md` |
 | `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export`; every command accepts `--book` (default `alice-wonderland`) and resolves all artifacts via `args.paths` (`BookPaths`). |
+| `main.py` | CLI: `books`, `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export`; every book-scoped command accepts `--book` (default `alice-wonderland`, must be in catalog) and resolves artifacts via `args.paths` (`BookPaths`). |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -67,7 +67,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
-| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/<book-id>.txt` (Alice: `alice-wonderland/alice-wonderland.txt`) |
+| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/<book-id>.txt` plus `meta.json` (`id`, `title`, `author`, `source_kind`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
 | `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
 | `web/` | Committed static viewers (e.g. `handoff.html` fetches `state/alice-wonderland/book-visual-handoff.json` until MB5; downloads `book-visual-handoff-answers.json`) |
@@ -75,6 +75,13 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 ## Data model
 
 Artifact paths below are under `state/<book-id>/` or `output/<book-id>/` (via `BookPaths`).
+
+Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / CLI `books`):
+
+- `id` — stable slug (must match directory name)
+- `title`, `author` — display fields
+- `source_kind` — `gutenberg_txt` \| `pdf` (PDF ingest not built yet)
+- `catalog.json` — derived snapshot of all metas (not the source of truth)
 
 `Chapter` (`book.py`):
 
@@ -246,7 +253,6 @@ Do not assume these exist in code:
 - Enriched v2+ (inline footnote markers in body, mid-chapter scene placement, character plates, chapter openers) — v1 binder is shipped; see [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Light book catalog (`meta.json` / `catalog.json`) — MB4
 - Book-scoped handoff viewer (`view-handoff --book` + dynamic fetch) — MB5; Alice DEFAULT_URL is hardcoded for now
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls

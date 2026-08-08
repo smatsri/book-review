@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 DEFAULT_BOOK_ID = "alice-wonderland"
@@ -16,6 +17,18 @@ DEFAULT_BOOK = (
 START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
 CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
+
+SOURCE_KINDS = frozenset({"gutenberg_txt", "pdf"})
+
+
+@dataclass(frozen=True)
+class BookMeta:
+    """Light registry fields for one book (see data/books/<id>/meta.json)."""
+
+    id: str
+    title: str
+    author: str
+    source_kind: str
 
 
 @dataclass(frozen=True)
@@ -36,6 +49,14 @@ class BookPaths:
     @property
     def illustrations_dir(self) -> Path:
         return self.output_dir / "illustrations"
+
+    @property
+    def books_dir(self) -> Path:
+        return self.root / "data" / "books"
+
+    @property
+    def meta_path(self) -> Path:
+        return self.books_dir / self.book_id / "meta.json"
 
     @property
     def source_path(self) -> Path:
@@ -99,6 +120,113 @@ class BookPaths:
 
     def book_visual_resolved_path(self) -> Path:
         return self.state_dir / "book-visual-resolved.json"
+
+
+def books_dir(root: Path = ROOT) -> Path:
+    return root / "data" / "books"
+
+
+def catalog_path(root: Path = ROOT) -> Path:
+    return books_dir(root) / "catalog.json"
+
+
+def _parse_book_meta(raw: object, *, expected_id: str | None = None) -> BookMeta:
+    if not isinstance(raw, dict):
+        raise ValueError("Book meta must be a JSON object")
+    missing = [k for k in ("id", "title", "author", "source_kind") if k not in raw]
+    if missing:
+        raise ValueError(f"Book meta missing fields: {', '.join(missing)}")
+    book_id = raw["id"]
+    title = raw["title"]
+    author = raw["author"]
+    source_kind = raw["source_kind"]
+    if not isinstance(book_id, str) or not book_id.strip():
+        raise ValueError("Book meta id must be a non-empty string")
+    if not isinstance(title, str) or not title.strip():
+        raise ValueError("Book meta title must be a non-empty string")
+    if not isinstance(author, str) or not author.strip():
+        raise ValueError("Book meta author must be a non-empty string")
+    if not isinstance(source_kind, str) or source_kind not in SOURCE_KINDS:
+        allowed = ", ".join(sorted(SOURCE_KINDS))
+        raise ValueError(f"Book meta source_kind must be one of: {allowed}")
+    if expected_id is not None and book_id != expected_id:
+        raise ValueError(
+            f"Book meta id {book_id!r} does not match directory {expected_id!r}"
+        )
+    return BookMeta(
+        id=book_id,
+        title=title.strip(),
+        author=author.strip(),
+        source_kind=source_kind,
+    )
+
+
+def load_book_meta(book_id: str, root: Path = ROOT) -> BookMeta:
+    path = books_dir(root) / book_id / "meta.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing book meta: {path}")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
+    return _parse_book_meta(raw, expected_id=book_id)
+
+
+def load_catalog(root: Path = ROOT) -> list[BookMeta]:
+    """Discover books from data/books/*/meta.json (source of truth)."""
+    base = books_dir(root)
+    if not base.is_dir():
+        return []
+    books: list[BookMeta] = []
+    for child in sorted(base.iterdir(), key=lambda p: p.name):
+        if not child.is_dir() or child.name.startswith("."):
+            continue
+        meta_file = child / "meta.json"
+        if not meta_file.is_file():
+            continue
+        books.append(load_book_meta(child.name, root=root))
+    return books
+
+
+def write_catalog(root: Path = ROOT, books: list[BookMeta] | None = None) -> Path:
+    """Write data/books/catalog.json from per-book meta (derived snapshot)."""
+    entries = books if books is not None else load_catalog(root)
+    path = catalog_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"books": [asdict(b) for b in entries]}
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def require_book_id(book_id: str, root: Path = ROOT) -> BookMeta:
+    """Return meta for book_id or raise ValueError with known ids."""
+    catalog = load_catalog(root)
+    for meta in catalog:
+        if meta.id == book_id:
+            return meta
+    known = ", ".join(m.id for m in catalog) if catalog else "(none — add meta.json)"
+    raise ValueError(
+        f"Unknown book id {book_id!r}. Known: {known}. "
+        f"Add data/books/{book_id}/meta.json with id, title, author, source_kind."
+    )
+
+
+def validate_book_meta(meta: BookMeta, root: Path = ROOT) -> list[str]:
+    """Return human-readable problems for one catalog entry (empty if ok)."""
+    problems: list[str] = []
+    paths = BookPaths(book_id=meta.id, root=root)
+    if not paths.meta_path.is_file():
+        problems.append(f"missing meta.json at {paths.meta_path}")
+    if meta.source_kind == "gutenberg_txt" and not paths.source_path.is_file():
+        problems.append(f"missing source text at {paths.source_path}")
+    elif meta.source_kind == "pdf":
+        pdf = paths.books_dir / meta.id / f"{meta.id}.pdf"
+        if not pdf.is_file():
+            problems.append(f"missing source PDF at {pdf}")
+    return problems
 
 
 @dataclass(frozen=True)

@@ -281,10 +281,10 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Multi-book foundation: five implementation slices
 
-**Status:** current (MB1–MB3 done; MB4 next)  
+**Status:** current (MB1–MB4 done; MB5 next)  
 **Context:** Enriched Alice v1 shipped; multi-book is the next product slice. Need reviewable chunks and a safe Alice migration.  
 **Decision:** Implement foundation as **MB1–MB5** (path contract → wire CLI → migrate Alice → light catalog → book-scoped handoff viewer). One PR/chat per slice; **MB3 alone**. Flat-path compat until MB3. PDF ingest / Naked Sun / pipeline UI stay after foundation. Slice list: [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); live backlog: `todo.md` Now/Next.  
-**Consequences:** Agents pick **MB4** from Now after MB3; do not mix PDF or pipeline UI into MB1–MB5.  
+**Consequences:** Agents pick **MB5** from Now after MB4; do not mix PDF or pipeline UI into MB1–MB5.  
 **Extends:** “After Alice: multi-book…”; supersedes enriched-priority hold on multi-book (enriched v1 done).
 
 ## 2026-08 — MB1 path contract (`BookPaths` + `--book`)
@@ -320,6 +320,19 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Default `--book alice-wonderland` reads/writes scoped trees only. Flat Alice paths are gone.  
 **Extends:** MB2 wire CLI; Multi-book foundation five slices (MB3 implemented).
+
+## 2026-08 — MB4 light catalog (`meta.json` / `catalog.json`)
+
+**Status:** current  
+**Context:** After scoped paths, operators need a registry of known book ids before a second title or pipeline UI.  
+**Decision:**
+1. Per-book `data/books/<id>/meta.json` is source of truth: `id`, `title`, `author`, `source_kind` (`gutenberg_txt` \| `pdf`).
+2. `data/books/catalog.json` is a derived snapshot rewritten by CLI `books` from discovered metas.
+3. CLI `books` lists/validates (source file present for kind); `--validate` exits non-zero on problems.
+4. Book-scoped commands reject unknown `--book` ids with a known-id hint. Do not build MB5 handoff scoping, PDF ingest, or pipeline UI here.
+
+**Consequences:** New books need a `meta.json` before CLI work; Alice ships with one. Next: **MB5** book-scoped handoff viewer.  
+**Extends:** MB3 migrate Alice; Multi-book foundation five slices (MB4 implemented).
 
 ## 2026-08 — Agent-first playbook for next repos
 

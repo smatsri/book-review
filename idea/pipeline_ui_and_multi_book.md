@@ -49,7 +49,7 @@ Until that exists, treat “active book” as an explicit CLI flag / env — avo
 
 ### What stays single-book until migration
 
-Alice migration (MB3) scoped `data/` / `state/` / `output/` under `<book-id>`. Remaining: light catalog (MB4) and book-scoped handoff viewer (MB5).
+Alice migration (MB3) scoped `data/` / `state/` / `output/` under `<book-id>`. Light catalog (MB4) ships per-book `meta.json` + derived `catalog.json` + CLI `books`. Remaining foundation: book-scoped handoff viewer (MB5).
 
 ### Foundation slices (implementation order)
 

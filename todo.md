@@ -5,20 +5,16 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** MB3 done (Alice scoped under `alice-wonderland`; flat fallback dropped); next **MB4** (light catalog).
-- **Last success:** Alice source/`state`/`output` moved; `BookPaths` always scoped; smoke writes `state/alice-wonderland/` + `output/alice-wonderland/`.
-- **Do not redo:** MB1–MB3 path contract / CLI wiring / Alice migrate; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** MB4 done (Alice `meta.json` + derived `catalog.json` + CLI `books`); next **MB5** (book-scope handoff viewer).
+- **Last success:** `books --validate` ok; unknown `--book` rejected; chapters still write `state/alice-wonderland/`.
+- **Do not redo:** MB1–MB4 path contract / CLI wiring / Alice migrate / light catalog; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
+- [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
 
 ## Next
-
-Multi-book foundation (after MB4; one PR/chat each):
-
-- [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
 
 After multi-book foundation:
 
@@ -41,6 +37,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
 - [x] **MB3 — Migrate Alice** — scoped `data/` / `state/` / `output/`; drop flat fallback; smoke + architecture/runbook
 - [x] **MB2 — Wire CLI** — all commands + enriched/export use `BookPaths` (Alice still flat)
 - [x] **MB1 — Path contract** — `BookPaths` + CLI `--book <id>` (default `alice-wonderland`); flat Alice compat (no file moves)

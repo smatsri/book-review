@@ -8,7 +8,16 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from book import DEFAULT_BOOK_ID, BookPaths, Chapter, load_chapters
+from book import (
+    DEFAULT_BOOK_ID,
+    BookPaths,
+    Chapter,
+    load_catalog,
+    load_chapters,
+    require_book_id,
+    validate_book_meta,
+    write_catalog,
+)
 from enriched_book import write_book_enriched
 from export_book import EXPORT_MODES, export_report
 from footnotes import weave_footnotes
@@ -1114,6 +1123,32 @@ def cmd_export(args: argparse.Namespace) -> None:
         print(f"Wrote {path.relative_to(ROOT)}")
 
 
+def cmd_books(args: argparse.Namespace) -> None:
+    books = load_catalog(ROOT)
+    path = write_catalog(ROOT, books)
+    if not books:
+        print("No books in catalog (add data/books/<id>/meta.json)")
+        print(f"Wrote empty {path.relative_to(ROOT)}")
+        if args.validate:
+            raise SystemExit(1)
+        return
+
+    problems_total = 0
+    for meta in books:
+        problems = validate_book_meta(meta, ROOT)
+        problems_total += len(problems)
+        status = "ok" if not problems else "INVALID"
+        print(
+            f"{meta.id}\t{meta.title}\t{meta.author}\t{meta.source_kind}\t{status}"
+        )
+        for problem in problems:
+            print(f"  - {problem}")
+
+    print(f"Wrote {path.relative_to(ROOT)} ({len(books)} book(s))")
+    if args.validate and problems_total:
+        raise SystemExit(1)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Book review MVP")
     book_parent = argparse.ArgumentParser(add_help=False)
@@ -1121,9 +1156,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--book",
         default=DEFAULT_BOOK_ID,
         metavar="ID",
-        help=f"Book id (default: {DEFAULT_BOOK_ID}; scoped state/output/data)",
+        help=(
+            f"Book id from catalog (default: {DEFAULT_BOOK_ID}; "
+            "scoped state/output/data; see `books`)"
+        ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    books_parser = sub.add_parser(
+        "books",
+        help="List/validate catalog (meta.json → catalog.json; no LLM)",
+    )
+    books_parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Exit non-zero if any book meta/source checks fail",
+    )
+    books_parser.set_defaults(func=cmd_books)
 
     chapters_parser = sub.add_parser(
         "chapters",
@@ -1400,6 +1449,15 @@ def main() -> None:
 
     parser = build_parser()
     args = parser.parse_args()
+    if args.command == "books":
+        args.func(args)
+        return
+
+    try:
+        require_book_id(args.book, ROOT)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
     paths = BookPaths(book_id=args.book, root=ROOT)
     args.paths = paths
     paths.state_dir.mkdir(parents=True, exist_ok=True)

@@ -18,7 +18,14 @@ Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
 
 ## Commands
 
-Optional `--book <id>` on every command (default `alice-wonderland`). Artifacts live under `state/<id>/` and `output/<id>/`; source under `data/books/<id>/<id>.txt`. Elsewhere below, bare `state/…` / `output/…` paths mean under that book id.
+Optional `--book <id>` on every book-scoped command (default `alice-wonderland`; must appear in the catalog). Artifacts live under `state/<id>/` and `output/<id>/`; source under `data/books/<id>/<id>.txt`. Elsewhere below, bare `state/…` / `output/…` paths mean under that book id.
+
+List registered books (no LLM; refreshes `data/books/catalog.json` from per-book `meta.json`):
+
+```powershell
+python main.py books
+python main.py books --validate
+```
 
 List chapters (no LLM call; writes `state/<id>/chapters.json`):
 
@@ -189,11 +196,13 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 
 ## Smoke checks
 
-After changing the loader / splitter / `BookPaths` / CLI path wiring:
+After changing the loader / splitter / `BookPaths` / catalog / CLI path wiring:
 
-1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both write `state/alice-wonderland/chapters.json`.
-2. Confirm `state/alice-wonderland/chapters.json` updated.
-3. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
+1. `python main.py books --validate` — expect `alice-wonderland` ok and refreshed `data/books/catalog.json`.
+2. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both write `state/alice-wonderland/chapters.json`.
+3. `python main.py chapters --book no-such-book` — expect unknown-id error listing known books.
+4. Confirm `state/alice-wonderland/chapters.json` updated.
+5. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
 
 After changing Reader / Editor / Critic:
 
