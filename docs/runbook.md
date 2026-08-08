@@ -18,9 +18,9 @@ Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
 
 ## Commands
 
-Optional `--book <id>` on every command (default `alice-wonderland`). Alice still uses flat `state/` / `output/` until MB3.
+Optional `--book <id>` on every command (default `alice-wonderland`). Artifacts live under `state/<id>/` and `output/<id>/`; source under `data/books/<id>/<id>.txt`. Elsewhere below, bare `state/…` / `output/…` paths mean under that book id.
 
-List chapters (no LLM call; writes `state/chapters.json`):
+List chapters (no LLM call; writes `state/<id>/chapters.json`):
 
 ```powershell
 python main.py chapters
@@ -33,15 +33,15 @@ Summarize one chapter (Reader → Editor → Critic → revise; needs API key):
 python main.py summarize --chapter 1
 ```
 
-Writes `state/chapter-01-analysis.json`, `state/chapter-01-draft.md`, `state/chapter-01-critique.json`, then `output/chapter-01-summary.md`.
+Writes `state/<id>/chapter-01-analysis.json`, `state/<id>/chapter-01-draft.md`, `state/<id>/chapter-01-critique.json`, then `output/<id>/chapter-01-summary.md`.
 
-Summarize every chapter, then merge into `output/book-report.md`:
+Summarize every chapter, then merge into `output/<id>/book-report.md`:
 
 ```powershell
 python main.py summarize --all
 ```
 
-Skips when the chapter summary file already exists. Soft-resumes from the first missing `state/` artifact when the summary is absent.
+Skips when the chapter summary file already exists. Soft-resumes from the first missing `state/<id>/` artifact when the summary is absent.
 
 Force regenerates from Reader through summary:
 
@@ -153,7 +153,7 @@ Open the Visual Handoff HTML viewer (needs `state/book-visual-handoff.json`; no 
 python main.py view-handoff
 ```
 
-Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/book-visual-handoff.json`). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/alice-wonderland/book-visual-handoff.json` until MB5). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/<id>/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
 
 Apply handoff answers into a locked resolved bible (needs four bible files + handoff + answers; no LLM):
 
@@ -191,9 +191,9 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 
 After changing the loader / splitter / `BookPaths` / CLI path wiring:
 
-1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both still write flat `state/chapters.json` (Alice compat until MB3).
-2. Confirm `state/chapters.json` updated.
-3. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — still under flat `state/` + `output/`.
+1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both write `state/alice-wonderland/chapters.json`.
+2. Confirm `state/alice-wonderland/chapters.json` updated.
+3. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
 
 After changing Reader / Editor / Critic:
 

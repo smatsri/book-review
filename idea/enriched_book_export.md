@@ -33,7 +33,7 @@ Goal: open an EPUB/HTML and **read Alice**, with enrichment that does not bury t
 - Full literary essay sections inside the reading edition (those stay in the companion report).
 - Inline mid-paragraph footnote anchors requiring perfect quote matching (unless already reliable from enriched MD).
 - New image gen / Vision QA.
-- Multi-book paths (can still use flat Alice layout for first enriched pack).
+- Multi-book paths (scoped `state/<id>/` / `output/<id>/` via `BookPaths`).
 - Fancy print layout / typography beyond what current `export_book.py` stack can do.
 
 **Outputs (suggested names):**

@@ -274,7 +274,7 @@ def export_report(
 
     ``mode`` selects source stem/title (``report`` or ``enriched``). Explicit
     ``source`` / ``title`` override the mode defaults. Artifact dirs come from
-    ``paths`` (default Alice flat layout).
+    ``paths`` (default ``BookPaths`` for ``alice-wonderland``).
 
     Returns paths written. Skips existing targets unless ``force``.
     Raises SystemExit if the Markdown source is missing.

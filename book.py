@@ -7,10 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_BOOK_ID = "alice-wonderland"
-ALICE_FLAT_TXT = "alice-adventures-in-wonderland.txt"
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_BOOK = ROOT / "data" / "books" / ALICE_FLAT_TXT
+DEFAULT_BOOK = (
+    ROOT / "data" / "books" / DEFAULT_BOOK_ID / f"{DEFAULT_BOOK_ID}.txt"
+)
 
 START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
@@ -19,29 +20,18 @@ CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
 
 @dataclass(frozen=True)
 class BookPaths:
-    """Resolve state/output/source paths for a book id (flat Alice compat until MB3)."""
+    """Resolve state/output/source paths under book-id–scoped trees."""
 
     book_id: str
     root: Path = ROOT
 
-    def _use_scoped(self) -> bool:
-        if (self.root / "state" / self.book_id).is_dir():
-            return True
-        if (self.root / "data" / "books" / self.book_id).is_dir():
-            return True
-        return self.book_id != DEFAULT_BOOK_ID
-
     @property
     def state_dir(self) -> Path:
-        if self._use_scoped():
-            return self.root / "state" / self.book_id
-        return self.root / "state"
+        return self.root / "state" / self.book_id
 
     @property
     def output_dir(self) -> Path:
-        if self._use_scoped():
-            return self.root / "output" / self.book_id
-        return self.root / "output"
+        return self.root / "output" / self.book_id
 
     @property
     def illustrations_dir(self) -> Path:
@@ -49,14 +39,9 @@ class BookPaths:
 
     @property
     def source_path(self) -> Path:
-        if not self._use_scoped() and self.book_id == DEFAULT_BOOK_ID:
-            return self.root / "data" / "books" / ALICE_FLAT_TXT
-        books_dir = self.root / "data" / "books" / self.book_id
-        if self.book_id == DEFAULT_BOOK_ID:
-            flat = self.root / "data" / "books" / ALICE_FLAT_TXT
-            if flat.is_file() and not books_dir.is_dir():
-                return flat
-        return books_dir / f"{self.book_id}.txt"
+        return (
+            self.root / "data" / "books" / self.book_id / f"{self.book_id}.txt"
+        )
 
     def chapter_summary_path(self, number: int) -> Path:
         return self.output_dir / f"chapter-{number:02d}-summary.md"

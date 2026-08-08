@@ -10,7 +10,7 @@ Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader
 ## Pipeline
 
 ```
-data/books/*.txt
+data/books/<book-id>/<book-id>.txt
         |
    book.py (load + strip Gutenberg wrapper + split CHAPTER headings)
         |
@@ -46,7 +46,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` resolves state/output/source per `--book` id (Alice default still flat until MB3) |
+| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book` |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
@@ -67,12 +67,14 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
-| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Alice: flat `alice-adventures-in-wonderland.txt`. Future books: `data/books/<book-id>/` (via `BookPaths`) |
-| `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON (Alice flat today; scoped `state/<book-id>/` when that tree exists or for non-Alice ids) |
-| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs (same flat/scoped rule as `state/`) |
-| `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`; downloads `book-visual-handoff-answers.json`) |
+| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/<book-id>.txt` (Alice: `alice-wonderland/alice-wonderland.txt`) |
+| `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible |
+| `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
+| `web/` | Committed static viewers (e.g. `handoff.html` fetches `state/alice-wonderland/book-visual-handoff.json` until MB5; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model
+
+Artifact paths below are under `state/<book-id>/` or `output/<book-id>/` (via `BookPaths`).
 
 `Chapter` (`book.py`):
 
@@ -185,7 +187,7 @@ Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/hand
 - `source_handoff` — `book-visual-handoff.json`
 - `answers` — one row per handoff `open_questions` entry: `{index, question, chosen, chosen_text, note}`
 - `index` — 0-based into that handoff’s `open_questions`; `chosen` — 0-based into that question’s `options`, or `null` if unanswered / no options; `chosen_text` / `question` denormalized for humans + resolve validation; `note` optional free text (empty string when unused)
-- Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; Download answers saves the file (place under `state/` manually)
+- Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; Download answers saves the file (place under `state/<book-id>/` manually)
 - No CLI / LLM; consistency issues are not answered here
 
 Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`):
@@ -244,7 +246,8 @@ Do not assume these exist in code:
 - Enriched v2+ (inline footnote markers in body, mid-chapter scene placement, character plates, chapter openers) — v1 binder is shipped; see [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
+- Light book catalog (`meta.json` / `catalog.json`) — MB4
+- Book-scoped handoff viewer (`view-handoff --book` + dynamic fetch) — MB5; Alice DEFAULT_URL is hardcoded for now
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls
 

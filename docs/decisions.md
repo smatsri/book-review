@@ -281,15 +281,15 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Multi-book foundation: five implementation slices
 
-**Status:** current (MB1–MB2 done; MB3 next)  
+**Status:** current (MB1–MB3 done; MB4 next)  
 **Context:** Enriched Alice v1 shipped; multi-book is the next product slice. Need reviewable chunks and a safe Alice migration.  
 **Decision:** Implement foundation as **MB1–MB5** (path contract → wire CLI → migrate Alice → light catalog → book-scoped handoff viewer). One PR/chat per slice; **MB3 alone**. Flat-path compat until MB3. PDF ingest / Naked Sun / pipeline UI stay after foundation. Slice list: [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); live backlog: `todo.md` Now/Next.  
-**Consequences:** Agents pick **MB3** from Now; do not mix PDF or pipeline UI into MB1–MB5.  
+**Consequences:** Agents pick **MB4** from Now after MB3; do not mix PDF or pipeline UI into MB1–MB5.  
 **Extends:** “After Alice: multi-book…”; supersedes enriched-priority hold on multi-book (enriched v1 done).
 
 ## 2026-08 — MB1 path contract (`BookPaths` + `--book`)
 
-**Status:** superseded by MB2 (contract still in force)  
+**Status:** superseded by MB3 (contract still in force; flat Alice compat removed)  
 **Context:** Need a stable book-id path API before wiring every command or moving Alice files.  
 **Decision:**
 1. Default book id is `alice-wonderland` (slug; source file remains `data/books/alice-adventures-in-wonderland.txt`).
@@ -302,11 +302,24 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — MB2 wire CLI through `BookPaths`
 
-**Status:** current  
+**Status:** superseded by MB3 (CLI still resolves via `BookPaths`)  
 **Context:** MB1 added `--book` + `BookPaths` but command bodies still used flat `state/` / `output/` constants.  
 **Decision:** Every CLI command (and `enriched_book` / `export_book`) resolves source + artifacts via `BookPaths` from `args.paths`. Alice default still flat (compat until MB3). No file moves.  
 **Consequences:** Non-Alice `--book` ids read/write scoped dirs; Alice smoke paths unchanged. Next: **MB3** migrate Alice under `<book-id>` and drop flat fallback.  
 **Extends:** MB1 path contract.
+
+## 2026-08 — MB3 migrate Alice (always-scoped paths)
+
+**Status:** current  
+**Context:** MB1–MB2 kept Alice on flat `state/` / `output/` / flat Gutenberg txt for compat. Multi-book needs one layout for every id.  
+**Decision:**
+1. One-time move: source → `data/books/alice-wonderland/alice-wonderland.txt`; artifacts → `state/alice-wonderland/` and `output/alice-wonderland/` (keep root `.gitkeep`s).
+2. `BookPaths` always scoped: `state/<id>/`, `output/<id>/`, `data/books/<id>/<id>.txt`. Drop `_use_scoped` and Alice flat fallback.
+3. `web/handoff.html` `DEFAULT_URL` points at Alice scoped handoff until MB5 (`view-handoff --book` + dynamic fetch).
+4. Update architecture / runbook smoke; do not build catalog (MB4) or Naked Sun / PDF / pipeline UI here.
+
+**Consequences:** Default `--book alice-wonderland` reads/writes scoped trees only. Flat Alice paths are gone.  
+**Extends:** MB2 wire CLI; Multi-book foundation five slices (MB3 implemented).
 
 ## 2026-08 — Agent-first playbook for next repos
 

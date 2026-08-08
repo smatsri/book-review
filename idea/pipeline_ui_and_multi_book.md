@@ -1,7 +1,7 @@
 # Pipeline UI + multi-book (vision)
 
-> Aspirational. **Not implemented.** Current truth: [`docs/architecture.md`](../docs/architecture.md).  
-> Handoff viewer today: `web/handoff.html` + `view-handoff` (single-book, flat `state/` / `output/`).
+> Aspirational. Current path layout (scoped trees) is in [`docs/architecture.md`](../docs/architecture.md).  
+> Handoff viewer today: `web/handoff.html` + `view-handoff` (Alice DEFAULT_URL hardcoded; MB5 will book-scope).
 
 ## Why
 
@@ -49,7 +49,7 @@ Until that exists, treat “active book” as an explicit CLI flag / env — avo
 
 ### What stays single-book until migration
 
-Today’s paths (`data/books/*.txt`, flat `state/`, flat `output/`, handoff viewer fetching `../state/book-visual-handoff.json`) are Alice-shaped. Migration = introduce `<book-id>` scoping, then point viewers/CLI at the active book.
+Alice migration (MB3) scoped `data/` / `state/` / `output/` under `<book-id>`. Remaining: light catalog (MB4) and book-scoped handoff viewer (MB5).
 
 ### Foundation slices (implementation order)
 

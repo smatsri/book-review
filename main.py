@@ -72,7 +72,7 @@ def write_book_report(chapters: list[Chapter], paths: BookPaths) -> Path:
 
 
 def write_book_rollup(chapters: list[Chapter], paths: BookPaths) -> Path:
-    """Merge Reader analyses into state/book-rollup.json (no LLM)."""
+    """Merge Reader analyses into state/<book-id>/book-rollup.json (no LLM)."""
     rollup_path = paths.book_rollup_path()
     analyses: list[dict] = []
     missing: list[int] = []
@@ -910,7 +910,7 @@ def write_book_visual_resolved(paths: BookPaths, *, force: bool) -> Path | None:
         raise SystemExit(
             f"Missing {answers_path.relative_to(ROOT)}. "
             "Download answers from `python main.py view-handoff` and place "
-            "the file under state/."
+            "the file under state/<book-id>/."
         )
 
     if resolved_path.exists() and not force:
@@ -1121,7 +1121,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--book",
         default=DEFAULT_BOOK_ID,
         metavar="ID",
-        help=f"Book id (default: {DEFAULT_BOOK_ID}; Alice still uses flat paths)",
+        help=f"Book id (default: {DEFAULT_BOOK_ID}; scoped state/output/data)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -1138,7 +1138,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Reader→Editor→Critic→revise for chapter(s); writes state analysis + "
             "draft + critique + output summary; --all also writes book-report.md "
-            "and state/book-rollup.json"
+            "and state/<book-id>/book-rollup.json"
         ),
     )
     summarize_parser.add_argument(
@@ -1152,7 +1152,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help=(
             "Summarize every chapter, then merge into output/book-report.md "
-            "and state/book-rollup.json"
+            "and state/<book-id>/book-rollup.json"
         ),
     )
     summarize_parser.add_argument(
@@ -1196,7 +1196,7 @@ def build_parser() -> argparse.ArgumentParser:
         "rollup",
         parents=[book_parent],
         help=(
-            "Merge chapter analyses into state/book-rollup.json "
+            "Merge chapter analyses into state/<book-id>/book-rollup.json "
             "(characters + themes; no LLM)"
         ),
     )
@@ -1206,14 +1206,14 @@ def build_parser() -> argparse.ArgumentParser:
         "aliases",
         parents=[book_parent],
         help=(
-            "LLM alias merge of state/book-rollup.json into "
-            "state/book-rollup-merged.json"
+            "LLM alias merge of state/<book-id>/book-rollup.json into "
+            "state/<book-id>/book-rollup-merged.json"
         ),
     )
     aliases_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-rollup-merged.json already exists",
+        help="Regenerate even if state/<book-id>/book-rollup-merged.json already exists",
     )
     aliases_parser.set_defaults(func=cmd_aliases)
 
@@ -1237,13 +1237,13 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "LLM book-level visual identity (style / palette / atmosphere / "
-            "period / motifs) into state/book-visual-identity.json"
+            "period / motifs) into state/<book-id>/book-visual-identity.json"
         ),
     )
     visual_identity_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-identity.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-identity.json already exists",
     )
     visual_identity_parser.set_defaults(func=cmd_visual_identity)
 
@@ -1252,13 +1252,13 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "LLM character visual sheets (physical / personality / "
-            "visual_language) into state/book-visual-characters.json"
+            "visual_language) into state/<book-id>/book-visual-characters.json"
         ),
     )
     visual_characters_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-characters.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-characters.json already exists",
     )
     visual_characters_parser.set_defaults(func=cmd_visual_characters)
 
@@ -1267,13 +1267,13 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "LLM place / setting sheets (architecture / climate / "
-            "atmosphere / symbols) into state/book-visual-places.json"
+            "atmosphere / symbols) into state/<book-id>/book-visual-places.json"
         ),
     )
     visual_places_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-places.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-places.json already exists",
     )
     visual_places_parser.set_defaults(func=cmd_visual_places)
 
@@ -1282,13 +1282,13 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "LLM scene briefs (illustration moments + emotional_focus / "
-            "composition) into state/book-visual-scenes.json"
+            "composition) into state/<book-id>/book-visual-scenes.json"
         ),
     )
     visual_scenes_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-scenes.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-scenes.json already exists",
     )
     visual_scenes_parser.set_defaults(func=cmd_visual_scenes)
 
@@ -1297,13 +1297,13 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "LLM Visual Bible handoff (open questions + consistency issues) "
-            "into state/book-visual-handoff.json"
+            "into state/<book-id>/book-visual-handoff.json"
         ),
     )
     visual_handoff_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-handoff.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-handoff.json already exists",
     )
     visual_handoff_parser.set_defaults(func=cmd_visual_handoff)
 
@@ -1311,14 +1311,14 @@ def build_parser() -> argparse.ArgumentParser:
         "visual-resolve",
         parents=[book_parent],
         help=(
-            "Apply state/book-visual-handoff-answers.json into a locked "
-            "resolved bible (state/book-visual-resolved.json; no LLM)"
+            "Apply state/<book-id>/book-visual-handoff-answers.json into a locked "
+            "resolved bible (state/<book-id>/book-visual-resolved.json; no LLM)"
         ),
     )
     visual_resolve_parser.add_argument(
         "--force",
         action="store_true",
-        help="Regenerate even if state/book-visual-resolved.json already exists",
+        help="Regenerate even if state/<book-id>/book-visual-resolved.json already exists",
     )
     visual_resolve_parser.set_defaults(func=cmd_visual_resolve)
 
@@ -1326,7 +1326,7 @@ def build_parser() -> argparse.ArgumentParser:
         "view-handoff",
         parents=[book_parent],
         help=(
-            "Open web/handoff.html for state/book-visual-handoff.json "
+            "Open web/handoff.html for state/<book-id>/book-visual-handoff.json "
             "(local HTTP server; no LLM)"
         ),
     )
