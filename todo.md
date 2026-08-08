@@ -20,6 +20,7 @@ After multi-book foundation:
 
 - [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] Optional: small report placement/caption follow-ups
+- [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
 - [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
 

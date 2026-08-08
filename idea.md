@@ -351,6 +351,7 @@ LLM Response
 חזון עתידי לחוויית קריאה דו-כיוונית: הקורא פונה לדמות הראשית, מקבל תשובות בסגנון אותנטי שלה, ורק על מה שקרה עד העמוד הנוכחי (מניעת ספוילרים מוחלטת).
 
 מפרט / סיכום: [`idea/virtual_character_companion.md`](idea/virtual_character_companion.md).
+Sketch / design notes: [`idea/character_companion_sketch.md`](idea/character_companion_sketch.md).
 
 הבסיס והדאטה שנבנים היום (פרקים, דמויות, ניתוח) הם התשתית לחזון הזה — בלי לגרור אותו ל־`todo.md` Now/Next.
 
