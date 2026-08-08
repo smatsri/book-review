@@ -989,6 +989,9 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
     import functools
     import http.server
     import socketserver
+    import urllib.error
+    import urllib.parse
+    import urllib.request
     import webbrowser
 
     paths: BookPaths = args.paths
@@ -996,17 +999,37 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
     if not handoff_path.exists():
         raise SystemExit(
             f"Missing {handoff_path.relative_to(ROOT)}. "
-            "Run `python main.py visual-handoff` first."
+            f"Run `python main.py visual-handoff --book {paths.book_id}` first."
         )
     if not WEB_HANDOFF_HTML_PATH.exists():
         raise SystemExit(f"Missing {WEB_HANDOFF_HTML_PATH.relative_to(ROOT)}.")
 
     port = VIEW_HANDOFF_PORT
-    url = f"http://127.0.0.1:{port}/web/handoff.html"
+    query = urllib.parse.urlencode({"book": paths.book_id})
+    url = f"http://127.0.0.1:{port}/web/handoff.html?{query}"
+    handoff_url = (
+        f"http://127.0.0.1:{port}/"
+        f"{handoff_path.relative_to(ROOT).as_posix()}"
+    )
+
+    def _already_serving() -> bool:
+        try:
+            with urllib.request.urlopen(handoff_url, timeout=1.0) as resp:
+                return 200 <= getattr(resp, "status", 200) < 300
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return False
+
+    if _already_serving():
+        print(f"Already serving on port {port}; opening {url}")
+        print(f"Handoff: {handoff_path.relative_to(ROOT)}")
+        webbrowser.open(url)
+        return
+
     handler = functools.partial(
         http.server.SimpleHTTPRequestHandler,
         directory=str(ROOT),
     )
+    socketserver.TCPServer.allow_reuse_address = True
     try:
         httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
     except OSError as exc:
@@ -1017,6 +1040,7 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
 
     with httpd:
         print(f"Serving {url}")
+        print(f"Handoff: {handoff_path.relative_to(ROOT)}")
         print("Press Ctrl+C to stop.")
         webbrowser.open(url)
         try:

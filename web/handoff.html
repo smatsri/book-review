@@ -315,9 +315,25 @@
   </main>
 
   <script>
-    const DEFAULT_URL = "../state/alice-wonderland/book-visual-handoff.json";
+    const HANDOFF_FILENAME = "book-visual-handoff.json";
     const ANSWERS_FILENAME = "book-visual-handoff-answers.json";
+    const DEFAULT_BOOK_ID = "alice-wonderland";
     let data = null;
+
+    function bookIdFromQuery() {
+      const raw = new URLSearchParams(window.location.search).get("book");
+      if (!raw) return DEFAULT_BOOK_ID;
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(raw)) {
+        throw new Error(
+          `Invalid book id in ?book= (use a slug like ${DEFAULT_BOOK_ID}).`
+        );
+      }
+      return raw;
+    }
+
+    function handoffUrlForBook(bookId) {
+      return `../state/${bookId}/${HANDOFF_FILENAME}`;
+    }
     /** @type {Map<number, {chosen: number|null, note: string}>} */
     let answers = new Map();
 
@@ -407,7 +423,7 @@
         setStatus(label || "Loading…");
         return;
       }
-      const base = label || DEFAULT_URL;
+      const base = label || el.status.dataset.label || "handoff";
       setStatus(`${base} · ${progressText()}`);
     }
 
@@ -551,7 +567,7 @@
       URL.revokeObjectURL(url);
       updateStatusBar(el.status.dataset.label || undefined);
       setStatus(
-        `${el.status.dataset.label || DEFAULT_URL} · ${progressText()} · downloaded ${ANSWERS_FILENAME}`
+        `${el.status.dataset.label || "handoff"} · ${progressText()} · downloaded ${ANSWERS_FILENAME}`
       );
     }
 
@@ -567,14 +583,22 @@
     }
 
     async function loadDefault() {
+      let handoffUrl;
       try {
-        const res = await fetch(DEFAULT_URL);
+        handoffUrl = handoffUrlForBook(bookIdFromQuery());
+      } catch (err) {
+        setStatus(err.message, true);
+        el.download.disabled = true;
+        return;
+      }
+      try {
+        const res = await fetch(handoffUrl);
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         const json = await res.json();
-        useData(json, DEFAULT_URL);
+        useData(json, handoffUrl);
       } catch (err) {
         setStatus(
-          `Could not load ${DEFAULT_URL} (${err.message}). Use “Load JSON…” or serve from repo root.`,
+          `Could not load ${handoffUrl} (${err.message}). Use “Load JSON…” or open via \`python main.py view-handoff --book <id>\`.`,
           true
         );
         el.download.disabled = true;

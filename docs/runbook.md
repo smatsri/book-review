@@ -154,13 +154,14 @@ python main.py visual-handoff --force
 
 Writes `state/book-visual-handoff.json` (`open_questions` + `consistency_issues`). Uses the four bible JSON files only (no chapter analyses). Deterministic name/gap checks merge with one LLM pass for soft issues and open questions (each question includes up to 3 `options` and optional `suggested` index). Does not rewrite steps 1–4 or rebuild the report. Skips when the handoff file already exists unless `--force`.
 
-Open the Visual Handoff HTML viewer (needs `state/book-visual-handoff.json`; no LLM):
+Open the Visual Handoff HTML viewer (needs `state/<book-id>/book-visual-handoff.json`; no LLM):
 
 ```powershell
 python main.py view-handoff
+python main.py view-handoff --book alice-wonderland
 ```
 
-Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html` (loads `state/alice-wonderland/book-visual-handoff.json` until MB5). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/<id>/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html?book=<id>` (fetches `state/<id>/book-visual-handoff.json`). If port 8765 already serves this handoff, re-running only reopens the browser (useful for the Cursor/VS Code task). Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/<id>/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C when this process owns the server. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
 
 Apply handoff answers into a locked resolved bible (needs four bible files + handoff + answers; no LLM):
 
@@ -281,8 +282,8 @@ After changing visual handoff:
 1. With `state/book-visual-identity.json` + `book-visual-characters.json` + `book-visual-places.json` + `book-visual-scenes.json` present, `python main.py visual-handoff --force` — expect `state/book-visual-handoff.json` with `open_questions` (`question` / `topic` / `related` / `note` / `options` / optional `suggested`) and `consistency_issues` (`summary` / `severity` / `related` / `suggestion`).
 2. Re-run `python main.py visual-handoff` — expect a skip message and no LLM call.
 3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
-4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765 and the browser page listing open questions (with selectable options / suggested pre-selected when present) and consistency issues (Ctrl+C to stop).
-5. Pick options, add a note, **Download answers** — expect `book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`); place it at `state/book-visual-handoff-answers.json`.
+4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765, browser URL includes `?book=alice-wonderland`, and the page lists open questions (with selectable options / suggested pre-selected when present) and consistency issues (Ctrl+C to stop).
+5. Pick options, add a note, **Download answers** — expect `book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`); place it at `state/<id>/book-visual-handoff-answers.json`.
 
 After changing visual resolve:
 

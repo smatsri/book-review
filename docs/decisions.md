@@ -281,10 +281,10 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Multi-book foundation: five implementation slices
 
-**Status:** current (MB1–MB4 done; MB5 next)  
+**Status:** current (MB1–MB5 done)  
 **Context:** Enriched Alice v1 shipped; multi-book is the next product slice. Need reviewable chunks and a safe Alice migration.  
 **Decision:** Implement foundation as **MB1–MB5** (path contract → wire CLI → migrate Alice → light catalog → book-scoped handoff viewer). One PR/chat per slice; **MB3 alone**. Flat-path compat until MB3. PDF ingest / Naked Sun / pipeline UI stay after foundation. Slice list: [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); live backlog: `todo.md` Now/Next.  
-**Consequences:** Agents pick **MB5** from Now after MB4; do not mix PDF or pipeline UI into MB1–MB5.  
+**Consequences:** Foundation complete; next product work is Naked Sun PDF ingest / pipeline UI from `todo.md` Next — not more MB slices.  
 **Extends:** “After Alice: multi-book…”; supersedes enriched-priority hold on multi-book (enriched v1 done).
 
 ## 2026-08 — MB1 path contract (`BookPaths` + `--book`)
@@ -315,7 +315,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:**
 1. One-time move: source → `data/books/alice-wonderland/alice-wonderland.txt`; artifacts → `state/alice-wonderland/` and `output/alice-wonderland/` (keep root `.gitkeep`s).
 2. `BookPaths` always scoped: `state/<id>/`, `output/<id>/`, `data/books/<id>/<id>.txt`. Drop `_use_scoped` and Alice flat fallback.
-3. `web/handoff.html` `DEFAULT_URL` points at Alice scoped handoff until MB5 (`view-handoff --book` + dynamic fetch).
+3. `web/handoff.html` temporarily pointed at Alice scoped handoff until MB5 (`view-handoff --book` + dynamic fetch).
 4. Update architecture / runbook smoke; do not build catalog (MB4) or Naked Sun / PDF / pipeline UI here.
 
 **Consequences:** Default `--book alice-wonderland` reads/writes scoped trees only. Flat Alice paths are gone.  
@@ -331,8 +331,21 @@ Short records of choices that should stay true across sessions. Add a new entry 
 3. CLI `books` lists/validates (source file present for kind); `--validate` exits non-zero on problems.
 4. Book-scoped commands reject unknown `--book` ids with a known-id hint. Do not build MB5 handoff scoping, PDF ingest, or pipeline UI here.
 
-**Consequences:** New books need a `meta.json` before CLI work; Alice ships with one. Next: **MB5** book-scoped handoff viewer.  
+**Consequences:** New books need a `meta.json` before CLI work; Alice ships with one. MB5 book-scoped handoff viewer completed next.  
 **Extends:** MB3 migrate Alice; Multi-book foundation five slices (MB4 implemented).
+
+## 2026-08 — MB5 book-scoped handoff viewer
+
+**Status:** current  
+**Context:** After MB3 scoped paths + MB4 catalog, `web/handoff.html` still hardcoded Alice’s handoff URL.  
+**Decision:**
+1. CLI `view-handoff` opens `web/handoff.html?book=<id>` (from `--book` / default) after verifying `state/<id>/book-visual-handoff.json` exists.
+2. Viewer reads `?book=`, validates a slug, fetches `../state/<id>/book-visual-handoff.json`; missing/invalid query falls back to `alice-wonderland`.
+3. If port 8765 already serves that handoff JSON, re-run opens the browser and exits (so the Cursor/VS Code task does not fail on bind).
+4. Manual “Load JSON…” and answers download filename unchanged. No pipeline UI / PDF / Naked Sun here.
+
+**Consequences:** Multi-book foundation (MB1–MB5) complete; operators can hand off any cataloged book with handoff JSON.  
+**Extends:** Visual handoff local viewer; MB3/MB4; Multi-book foundation five slices (MB5 implemented).
 
 ## 2026-08 — Agent-first playbook for next repos
 

@@ -5,20 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** MB4 done (Alice `meta.json` + derived `catalog.json` + CLI `books`); next **MB5** (book-scope handoff viewer).
-- **Last success:** `books --validate` ok; unknown `--book` rejected; chapters still write `state/alice-wonderland/`.
-- **Do not redo:** MB1–MB4 path contract / CLI wiring / Alice migrate / light catalog; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** MB5 done (book-scoped handoff viewer); multi-book foundation (MB1–MB5) complete. Next: Asimov *The Naked Sun* PDF ingest (or pipeline UI).
+- **Last success:** `view-handoff` opens `?book=<id>`; HTML fetches `state/<id>/book-visual-handoff.json`.
+- **Do not redo:** MB1–MB5 path/catalog/handoff-scope; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
+- [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
 
 ## Next
 
 After multi-book foundation:
 
-- [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
 - [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
@@ -37,6 +36,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + `?book=` fetch `state/<id>/book-visual-handoff.json`
 - [x] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
 - [x] **MB3 — Migrate Alice** — scoped `data/` / `state/` / `output/`; drop flat fallback; smoke + architecture/runbook
 - [x] **MB2 — Wire CLI** — all commands + enriched/export use `BookPaths` (Alice still flat)

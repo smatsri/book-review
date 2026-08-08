@@ -1,7 +1,7 @@
 # Pipeline UI + multi-book (vision)
 
 > Aspirational. Current path layout (scoped trees) is in [`docs/architecture.md`](../docs/architecture.md).  
-> Handoff viewer today: `web/handoff.html` + `view-handoff` (Alice DEFAULT_URL hardcoded; MB5 will book-scope).
+> Handoff viewer: `web/handoff.html` + `view-handoff --book` (fetches `state/<id>/book-visual-handoff.json`).
 
 ## Why
 
@@ -49,7 +49,7 @@ Until that exists, treat “active book” as an explicit CLI flag / env — avo
 
 ### What stays single-book until migration
 
-Alice migration (MB3) scoped `data/` / `state/` / `output/` under `<book-id>`. Light catalog (MB4) ships per-book `meta.json` + derived `catalog.json` + CLI `books`. Remaining foundation: book-scoped handoff viewer (MB5).
+Alice migration (MB3) scoped `data/` / `state/` / `output/` under `<book-id>`. Light catalog (MB4) ships per-book `meta.json` + derived `catalog.json` + CLI `books`. Book-scoped handoff viewer (MB5) done. Foundation complete; next: Naked Sun PDF / pipeline UI.
 
 ### Foundation slices (implementation order)
 
@@ -59,7 +59,7 @@ One PR/chat per slice; keep migrate (MB3) alone. Backlog ids in `todo.md`.
 2. **MB2 — Wire CLI** — every command resolves artifacts via `BookPaths`.
 3. **MB3 — Migrate Alice** — scoped `data/` / `state/` / `output/`; drop flat fallback; update architecture/runbook smoke.
 4. **MB4 — Light catalog** — per-book `meta.json` and/or `catalog.json`.
-5. **MB5 — Book-scope handoff viewer** — `view-handoff --book` + HTML fetch under `state/<book-id>/`.
+5. **MB5 — Book-scope handoff viewer** — done (`view-handoff --book` + HTML fetch under `state/<book-id>/`).
 
 Out of this foundation: PDF ingest, Naked Sun, pipeline control UI (see sequencing below).
 

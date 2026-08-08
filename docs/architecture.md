@@ -70,7 +70,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/<book-id>.txt` plus `meta.json` (`id`, `title`, `author`, `source_kind`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
 | `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
-| `web/` | Committed static viewers (e.g. `handoff.html` fetches `state/alice-wonderland/book-visual-handoff.json` until MB5; downloads `book-visual-handoff-answers.json`) |
+| `web/` | Committed static viewers (e.g. `handoff.html` fetches `state/<book-id>/book-visual-handoff.json` via `?book=` from `view-handoff`; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model
 
@@ -253,7 +253,6 @@ Do not assume these exist in code:
 - Enriched v2+ (inline footnote markers in body, mid-chapter scene placement, character plates, chapter openers) — v1 binder is shipped; see [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Book-scoped handoff viewer (`view-handoff --book` + dynamic fetch) — MB5; Alice DEFAULT_URL is hardcoded for now
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls
 
