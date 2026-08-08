@@ -11,6 +11,7 @@ How to work in this repo (humans and Cursor agents).
 | How to run / verify | [`docs/runbook.md`](docs/runbook.md) |
 | Why we chose X | [`docs/decisions.md`](docs/decisions.md) |
 | Vision / future agents | [`idea.md`](idea.md) — aspirational only; detailed specs under [`idea/`](idea/) when linked from there |
+| Start a new agent-first repo | [`docs/agent-playbook.md`](docs/agent-playbook.md) |
 
 Do not invent APIs, agents, or env vars that are not in code + `docs/`.  
 If `idea.md` conflicts with `docs/` or code, **code + docs win**.

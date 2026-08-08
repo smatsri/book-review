@@ -85,6 +85,7 @@ footnotes.py     # Weave footnote JSON into enriched chapter Markdown
 export_book.py   # Markdown report → HTML / PDF / EPUB
 main.py          # CLI
 AGENTS.md        # Agent/human workflow
+docs/agent-playbook.md  # Checklist to copy into a new agent-first repo
 idea.md          # Product / architecture vision
 todo.md          # Session + roadmap checklist
 ```

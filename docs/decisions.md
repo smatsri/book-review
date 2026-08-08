@@ -262,3 +262,10 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** No code change yet; agents must not assume multi-book paths or a control UI exist. When implementing, update architecture/runbook and supersede this entry’s “not implemented” note.  
 **Extends:** Visual handoff local viewer (web as human surface); Export HTML/PDF/EPUB (Alice product gate before second book).
+
+## 2026-08 — Agent-first playbook for next repos
+
+**Status:** current  
+**Context:** First project proved Session/`todo.md` + docs/idea split makes Agents-window work reliable; want a short reusable checklist without rewriting AGENTS for every clone.  
+**Decision:** Keep a copyable checklist in [`docs/agent-playbook.md`](agent-playbook.md). This repo’s live workflow stays in `AGENTS.md` + `todo.md`; the playbook is the template for day-one skeleton on the next project.  
+**Consequences:** Link from `AGENTS.md` / README; do not duplicate Session rules into multiple homes — playbook summarizes, AGENTS remains this repo’s contract.
