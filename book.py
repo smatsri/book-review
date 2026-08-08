@@ -18,7 +18,7 @@ START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
 CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
 
-SOURCE_KINDS = frozenset({"gutenberg_txt", "plain_txt", "pdf"})
+SOURCE_KINDS = frozenset({"gutenberg_txt", "plain_txt", "pdf", "epub"})
 
 
 @dataclass(frozen=True)
@@ -226,6 +226,10 @@ def validate_book_meta(meta: BookMeta, root: Path = ROOT) -> list[str]:
         pdf = paths.books_dir / meta.id / f"{meta.id}.pdf"
         if not pdf.is_file():
             problems.append(f"missing source PDF at {pdf}")
+    elif meta.source_kind == "epub":
+        epub = paths.books_dir / meta.id / f"{meta.id}.epub"
+        if not epub.is_file():
+            problems.append(f"missing source EPUB at {epub}")
     return problems
 
 

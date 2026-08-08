@@ -326,7 +326,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Status:** current  
 **Context:** After scoped paths, operators need a registry of known book ids before a second title or pipeline UI.  
 **Decision:**
-1. Per-book `data/books/<id>/meta.json` is source of truth: `id`, `title`, `author`, `source_kind` (`gutenberg_txt` \| `plain_txt` \| `pdf`).
+1. Per-book `data/books/<id>/meta.json` is source of truth: `id`, `title`, `author`, `source_kind` (`gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub`).
 2. `data/books/catalog.json` is a derived snapshot rewritten by CLI `books` from discovered metas.
 3. CLI `books` lists/validates (source file present for kind); `--validate` exits non-zero on problems.
 4. Book-scoped commands reject unknown `--book` ids with a known-id hint. Do not build MB5 handoff scoping, PDF ingest, or pipeline UI here.
@@ -349,7 +349,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Asimov source as `plain_txt` (not PDF yet)
 
-**Status:** current  
+**Status:** superseded by Asimov `epub` source  
 **Context:** Second title arrived as publisher plain text (`tmp/…txt`), not a PDF; catalog only allowed `gutenberg_txt` \| `pdf`.  
 **Decision:**
 1. Book id `asimov-naked-sun`; source at `data/books/asimov-naked-sun/asimov-naked-sun.txt` + `meta.json`.
@@ -358,6 +358,18 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** `books --validate` accepts the second title; `chapters` still uses Gutenberg `CHAPTER` rules until a plain-text splitter lands.  
 **Extends:** MB4 light catalog.
+
+## 2026-08 — Asimov primary source is EPUB
+
+**Status:** current  
+**Context:** Publisher EPUB available; plain-text dump has heavy front/back matter and weak chapter markers vs spine/TOC.  
+**Decision:**
+1. Canonical source for `asimov-naked-sun` is `data/books/asimov-naked-sun/asimov-naked-sun.epub` with `meta.source_kind` = `epub`.
+2. Catalog accepts `epub` and validates `<id>.epub` presence (same pattern as `pdf`). Leave leftover `.txt` optional; do not invent EPUB→chapter ingest in this placement step.
+3. Prefer EPUB ingest (ebooklib read + spine/nav) over inventing numbered-heading rules for the dump.
+
+**Consequences:** `books --validate` passes once the EPUB is on disk; `chapters --book asimov-naked-sun` still fails until EPUB ingest lands.  
+**Extends / supersedes:** Asimov `plain_txt` placement; MB4 light catalog.
 
 ## 2026-08 — Agent-first playbook for next repos
 

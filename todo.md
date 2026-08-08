@@ -5,19 +5,20 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Placed Asimov *The Naked Sun* under `data/books/asimov-naked-sun/` (`plain_txt` + `meta.json`). Next: chapter split for numbered headings (not Gutenberg `CHAPTER` rules).
-- **Last success:** Source moved from `tmp/`; catalog lists `asimov-naked-sun` with Alice.
+- **Stopped at:** Placed Asimov EPUB at `data/books/asimov-naked-sun/asimov-naked-sun.epub`; meta `source_kind: epub` (catalog accepts kind; ingest not built).
+- **Last success:** EPUB moved from `tmp/`; `books --validate` ok for `asimov-naked-sun`.
 - **Do not redo:** MB1–MB5 path/catalog/handoff-scope; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **Asimov chapter split** — parse numbered headings in `asimov-naked-sun.txt` (not Gutenberg `CHAPTER` rules); smoke `chapters --book asimov-naked-sun`
+- [ ] **EPUB ingest** — load `source_kind: epub` via ebooklib (spine/nav → `Chapter` list); skip front/back matter; smoke `chapters --book asimov-naked-sun`
 
 ## Next
 
 After multi-book foundation:
 
+- [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec

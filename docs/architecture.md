@@ -67,7 +67,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
-| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/<book-id>.txt` plus `meta.json` (`id`, `title`, `author`, `source_kind`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
+| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/` with `meta.json` plus source file by kind (`<id>.txt`, `<id>.epub`, or `<id>.pdf`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
 | `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
 | `web/` | Committed static viewers (e.g. `handoff.html` fetches `state/<book-id>/book-visual-handoff.json` via `?book=` from `view-handoff`; downloads `book-visual-handoff-answers.json`) |
@@ -80,7 +80,7 @@ Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / 
 
 - `id` — stable slug (must match directory name)
 - `title`, `author` — display fields
-- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` (PDF ingest not built yet; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt`)
+- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (PDF/EPUB ingest not built yet; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt`; `epub` expects `<id>.epub`)
 - `catalog.json` — derived snapshot of all metas (not the source of truth)
 
 `Chapter` (`book.py`):
