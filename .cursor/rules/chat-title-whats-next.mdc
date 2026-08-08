@@ -1,0 +1,17 @@
+---
+description: Meaningful chat titles when the user asks what's next
+alwaysApply: true
+---
+
+# Chat title for "what's next"
+
+When the user's first message (or primary ask) is along the lines of "what's next", "whats next", or "מה הלאה":
+
+1. Read `todo.md` **Session** / **Now** as usual.
+2. Immediately rename the chat via `rename_chat` to a short, specific title from the **Now** item (or Session stop point if Now is empty). Prefer verb + artifact, not generic labels.
+
+Examples:
+- Good: `Next: Draft-1 weave scenes`, `Next: export embed EPUB`
+- Bad: `Next discussion`, `Whats next`, `Todo check`
+
+Do this in the same turn as answering what's next — do not wait to be asked again.
