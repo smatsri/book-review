@@ -248,3 +248,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Store accepted scene art under `output/illustrations/` as `scene-NN-chNN-<slug>.jpg`, ordered to match `state/book-visual-resolved.json` `scenes[]`. Treat post-gen consistency review as a **human pass** for now (no Vision CLI / multimodal `llm.py` path). Current Alice set: human-accepted. Vision-LLM or hybrid review stays Later if regen loops or multi-book scale need it. Report/export weave is the next product slice.  
 **Consequences:** No new agent for gen or art QA yet; weave can assume files in `output/illustrations/` match the resolved scene list.  
 **Extends:** Visual handoff answers resolve/apply CLI (locked bible for image gen).
+
+## 2026-08 — After Alice: multi-book, PDF next title, grow pipeline UI
+
+**Status:** current (direction only — not implemented)  
+**Context:** Handoff local viewer worked well; next human product need is pipeline control + progress. Second title planned: Asimov *The Naked Sun* from a PDF. Flat single-book `state/` / `output/` cannot host two titles.  
+**Decision:**
+1. Finish Alice draft-1 (weave scenes → export) before multi-book / UI / Naked Sun work.
+2. Introduce **book-id–scoped** data/state/output (migrate Alice) before ingesting a second book.
+3. Treat **PDF ingest + book-specific chapter split** as required for Naked Sun (not Gutenberg `CHAPTER` headings).
+4. Grow `web/` into a **local pipeline operator UI** (status, run steps, progress) that wraps the CLI — CLI remains source of truth; no parallel business logic in the browser.
+5. Spec lives in [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); backlog in `todo.md` Later.
+
+**Consequences:** No code change yet; agents must not assume multi-book paths or a control UI exist. When implementing, update architecture/runbook and supersede this entry’s “not implemented” note.  
+**Extends:** Visual handoff local viewer (web as human surface); Export HTML/PDF/EPUB (Alice product gate before second book).

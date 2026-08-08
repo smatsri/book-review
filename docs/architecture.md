@@ -240,5 +240,8 @@ Do not assume these exist in code:
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
 - Visual Bible report–export weave of `output/illustrations/` (manual Bing scenes + human art pass done; Vision-LLM QA parked — see `docs/decisions.md`)
+- Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
+- PDF book ingest / non-Gutenberg chapter split
+- Pipeline control UI (beyond handoff viewer) — progress + run controls
 
-Those are roadmap items in `todo.md` / `idea.md`.
+Those are roadmap items in `todo.md` / `idea.md` (esp. [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).

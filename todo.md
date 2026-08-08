@@ -5,10 +5,10 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Planning first-draft illustrated product (EPUB/HTML). Tomorrow: finish footnotes for ch.6–12, then weave scenes → export.
-- **Last success:** 8 Bing scene JPGs in `output/illustrations/` (named to resolved scene briefs); human consistency vs `book-visual-resolved.json` accepted.
+- **Stopped at:** Docs-only backlog: after Alice draft-1 export → multi-book + PDF (*Naked Sun*) + pipeline control UI (vision in `idea/pipeline_ui_and_multi_book.md`). Now/Next still Alice footnotes → weave → export.
+- **Last success:** 8 Bing scene JPGs in `output/illustrations/` (named to resolved scene briefs); human consistency vs `book-visual-resolved.json` accepted. Direction locked in docs: grow `web/` past handoff; multi-book before second title.
 - **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve, manual Bing scene images + human art consistency pass (see `docs/decisions.md`).
-- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now). Perfect layout / full-novel packaging (draft-1 is illustrated companion report).
+- **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now). Perfect layout / full-novel packaging (draft-1 is illustrated companion report). Pipeline UI / multi-book / PDF ingest — Later only until Alice export lands.
 
 ## Now
 
@@ -26,6 +26,11 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Later
 
+- [ ] After Alice draft-1 export — **multi-book foundation** (book-id–scoped `data/` / `state/` / `output/`; migrate Alice off flat paths)
+  - Spec: `idea/pipeline_ui_and_multi_book.md` · decision: `docs/decisions.md`
+- [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
+- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress
+  - Prefer after multi-book scoping; CLI stays source of truth
 - [ ] PDF image/layout polish (or alternate PDF path) if EPUB/HTML isn’t enough
 - [ ] Vision-LLM (or hybrid) art consistency review vs resolved bible — optional; human pass is enough for current Alice set
 - [ ] Decide billing / model quality strategy (paid Flash? Pro/Sonnet mix? per-agent hybrid?)
