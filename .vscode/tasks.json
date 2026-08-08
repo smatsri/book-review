@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Open visual handoff",
+      "label": "Open visual pipeline",
       "type": "shell",
-      "command": "${workspaceFolder}/.venv/bin/python main.py view-handoff",
+      "command": "${workspaceFolder}/.venv/bin/python main.py view-pipeline",
       "options": {
         "cwd": "${workspaceFolder}"
       },

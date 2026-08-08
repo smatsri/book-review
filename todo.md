@@ -5,19 +5,20 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** EPUB ingest shipped; `chapters --book asimov-naked-sun` → 18 chapters.
-- **Last success:** ebooklib TOC `N. Title` → `Chapter`; Alice path unchanged.
-- **Do not redo:** MB1–MB5; EPUB placement/meta; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Pipeline UI-1 status board shipped (`view-pipeline` → `web/pipeline.html` + `/api/status`).
+- **Last success:** Alice shows mostly done; Asimov shows chapters done / rest missing; copy CLI works.
+- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
+- [ ] **Pipeline UI-2** — run one CLI step from the status board (thin subprocess wrapper + log/progress poll); CLI stays source of truth
 
 ## Next
 
 After multi-book foundation:
 
+- [ ] Pipeline UI-3 — handoff integrated as a stage action in the operator console
 - [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
@@ -36,6 +37,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Pipeline UI-1 — Status board** — `pipeline_status.py` + `view-pipeline` (port 8766) + `web/pipeline.html`; pick book, show done/partial/missing, copy CLI (no run)
 - [x] **EPUB ingest** — `source_kind: epub` via ebooklib numbered TOC → `Chapter` list; smoke `chapters --book asimov-naked-sun` (18 chapters)
 - [x] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + `?book=` fetch `state/<id>/book-visual-handoff.json`
 - [x] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids

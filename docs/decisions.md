@@ -404,3 +404,16 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Agents must not treat `book-report.epub` as the only product destination. Architecture / runbook document both binders; v2+ (inline markers, mid-chapter scenes, plates) stays in the idea spec.  
 **Supersedes (priority only):** the implication in “After Alice: multi-book…” that multi-book is the immediate next product slice after draft-1 — enriched book pack comes first; multi-book decision content otherwise unchanged.
+
+## 2026-08 — Pipeline UI-1: read-only status board
+
+**Status:** current  
+**Context:** Multi-book foundation + handoff viewer done; operators need artifact status across books before run controls. Spec sequences status → run → progress in [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md).  
+**Decision:**
+1. Ship **UI-1 only**: `pipeline_status.py` scans `BookPaths` trees → JSON (`done` / `partial` / `missing`; no stale mtimes yet).
+2. CLI `view-pipeline` serves repo root on **8766** with `GET /api/books` + `GET /api/status?book=`; opens `web/pipeline.html` (book picker, stage list, copy CLI). Does not subprocess pipeline steps.
+3. Keep `view-handoff` on **8765**; status page may deep-link to handoff when handoff JSON exists.
+4. CLI remains source of truth — UI does not fork business logic into JS (path knowledge stays in Python).
+
+**Consequences:** Run controls + live progress are Next (UI-2+); do not invent a job DB for UI-1. Architecture / runbook document `view-pipeline`.  
+**Extends:** “After Alice: multi-book…” pipeline UI intent; MB5 handoff viewer pattern.

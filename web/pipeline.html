@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pipeline status</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --ink: #1c1a17;
+      --muted: #5c574f;
+      --line: #d9d2c6;
+      --card: #fffdf9;
+      --accent: #0f5c4c;
+      --done: #0f5c4c;
+      --done-bg: #e6f2ef;
+      --partial: #8a4b12;
+      --partial-bg: #fff4e5;
+      --missing: #6b6560;
+      --missing-bg: #ebe6dc;
+      --err: #8b1e1e;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8dc 0%, transparent 45%),
+        linear-gradient(180deg, #faf7f2 0%, var(--bg) 100%);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+
+    header {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 1rem;
+    }
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.75rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .toolbar {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 1.25rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .toolbar label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    select, button {
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+    }
+    button:hover, select:hover { border-color: var(--accent); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fffdf9;
+      border-color: var(--accent);
+    }
+    .status-msg {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .status-msg.error { color: var(--err); }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 1.25rem 3rem;
+    }
+
+    .book-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+    }
+    .book-meta span {
+      background: var(--missing-bg);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .stages {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .stage {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.55rem 0.85rem;
+      align-items: start;
+    }
+    @media (max-width: 640px) {
+      .stage {
+        grid-template-columns: auto 1fr;
+      }
+      .stage .actions { grid-column: 1 / -1; }
+    }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: 0.2rem 0.45rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .badge.done { background: var(--done-bg); color: var(--done); }
+    .badge.partial { background: var(--partial-bg); color: var(--partial); }
+    .badge.missing { background: var(--missing-bg); color: var(--missing); }
+
+    .stage h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .stage .detail {
+      margin: 0.15rem 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .stage .cli {
+      margin: 0.45rem 0 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      color: var(--ink);
+      background: #f3efe7;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0.35rem 0.5rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .stage a {
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-items: stretch;
+    }
+    .actions button {
+      white-space: nowrap;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pipeline status</h1>
+    <p class="sub">Read-only artifact board. CLI remains source of truth — copy a command to run it.</p>
+  </header>
+
+  <div class="toolbar">
+    <label for="book-select">Book</label>
+    <select id="book-select" aria-label="Select book"></select>
+    <button type="button" class="primary" id="refresh-btn">Refresh</button>
+    <span class="status-msg" id="status-msg"></span>
+  </div>
+
+  <main>
+    <div class="book-meta" id="book-meta" hidden></div>
+    <ul class="stages" id="stages"></ul>
+    <p class="empty" id="empty" hidden>Select a book to see pipeline stages.</p>
+  </main>
+
+  <script>
+    const bookSelect = document.getElementById("book-select");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const statusMsg = document.getElementById("status-msg");
+    const bookMeta = document.getElementById("book-meta");
+    const stagesEl = document.getElementById("stages");
+    const emptyEl = document.getElementById("empty");
+
+    function queryBook() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("book") || "";
+    }
+
+    function setStatus(text, isError) {
+      statusMsg.textContent = text || "";
+      statusMsg.classList.toggle("error", Boolean(isError));
+    }
+
+    function setUrlBook(bookId) {
+      const url = new URL(window.location.href);
+      if (bookId) url.searchParams.set("book", bookId);
+      else url.searchParams.delete("book");
+      history.replaceState(null, "", url);
+    }
+
+    async function fetchJson(path) {
+      const resp = await fetch(path, { cache: "no-store" });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const err = data.error || resp.statusText || "Request failed";
+        throw new Error(err);
+      }
+      return data;
+    }
+
+    async function loadBooks() {
+      const data = await fetchJson("/api/books");
+      const books = data.books || [];
+      bookSelect.innerHTML = "";
+      if (!books.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "(no books in catalog)";
+        bookSelect.appendChild(opt);
+        return books;
+      }
+      for (const b of books) {
+        const opt = document.createElement("option");
+        opt.value = b.id;
+        opt.textContent = `${b.title} (${b.id})`;
+        bookSelect.appendChild(opt);
+      }
+      const preferred = queryBook();
+      if (preferred && books.some((b) => b.id === preferred)) {
+        bookSelect.value = preferred;
+      } else {
+        bookSelect.value = books[0].id;
+        setUrlBook(bookSelect.value);
+      }
+      return books;
+    }
+
+    function renderMeta(payload) {
+      const book = payload.book || {};
+      bookMeta.hidden = false;
+      bookMeta.innerHTML = "";
+      const chips = [
+        book.id,
+        book.author,
+        book.source_kind,
+        payload.chapters_json
+          ? `${payload.chapter_count} chapters`
+          : "no chapters.json",
+      ].filter(Boolean);
+      for (const text of chips) {
+        const span = document.createElement("span");
+        span.textContent = text;
+        bookMeta.appendChild(span);
+      }
+    }
+
+    function renderStages(payload) {
+      stagesEl.innerHTML = "";
+      const stages = payload.stages || [];
+      emptyEl.hidden = stages.length > 0;
+      if (!stages.length) {
+        emptyEl.hidden = false;
+        emptyEl.textContent = "No stages returned.";
+        return;
+      }
+      for (const stage of stages) {
+        const li = document.createElement("li");
+        li.className = "stage";
+
+        const badge = document.createElement("span");
+        badge.className = `badge ${stage.status || "missing"}`;
+        badge.textContent = stage.status || "missing";
+
+        const body = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = stage.label || stage.id;
+        body.appendChild(title);
+
+        if (stage.detail) {
+          const detail = document.createElement("p");
+          detail.className = "detail";
+          detail.textContent = stage.detail;
+          body.appendChild(detail);
+        }
+
+        if (stage.cli) {
+          const cli = document.createElement("pre");
+          cli.className = "cli";
+          cli.textContent = stage.cli;
+          body.appendChild(cli);
+        }
+
+        if (stage.links && stage.links.handoff) {
+          const link = document.createElement("a");
+          link.href = `http://127.0.0.1:8765${stage.links.handoff}`;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = "Open handoff viewer (port 8765)";
+          body.appendChild(link);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        if (stage.cli && !stage.cli.startsWith("#")) {
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.textContent = "Copy CLI";
+          copyBtn.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(stage.cli);
+              setStatus(`Copied: ${stage.id}`);
+            } catch (err) {
+              setStatus(`Copy failed: ${err.message}`, true);
+            }
+          });
+          actions.appendChild(copyBtn);
+        }
+
+        li.appendChild(badge);
+        li.appendChild(body);
+        li.appendChild(actions);
+        stagesEl.appendChild(li);
+      }
+    }
+
+    async function loadStatus() {
+      const bookId = bookSelect.value;
+      if (!bookId) {
+        stagesEl.innerHTML = "";
+        bookMeta.hidden = true;
+        emptyEl.hidden = false;
+        emptyEl.textContent = "Select a book to see pipeline stages.";
+        return;
+      }
+      setStatus("Loading…");
+      refreshBtn.disabled = true;
+      try {
+        const payload = await fetchJson(
+          `/api/status?book=${encodeURIComponent(bookId)}`
+        );
+        setUrlBook(bookId);
+        renderMeta(payload);
+        renderStages(payload);
+        setStatus(`Updated ${new Date().toLocaleTimeString()}`);
+      } catch (err) {
+        stagesEl.innerHTML = "";
+        bookMeta.hidden = true;
+        emptyEl.hidden = false;
+        emptyEl.textContent = err.message;
+        setStatus(err.message, true);
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    bookSelect.addEventListener("change", () => {
+      setUrlBook(bookSelect.value);
+      loadStatus();
+    });
+    refreshBtn.addEventListener("click", () => loadStatus());
+
+    (async function init() {
+      try {
+        await loadBooks();
+        await loadStatus();
+      } catch (err) {
+        const hint =
+          " Open via `python main.py view-pipeline` (port 8766) " +
+          "or restart `view-handoff` (port 8765) so /api/books is available.";
+        setStatus(
+          `Could not load catalog (${err.message}).${hint}`,
+          true
+        );
+        emptyEl.hidden = false;
+        emptyEl.textContent = err.message + hint;
+      }
+    })();
+  </script>
+</body>
+</html>

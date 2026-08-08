@@ -22,11 +22,14 @@ from enriched_book import write_book_enriched
 from export_book import EXPORT_MODES, export_report
 from footnotes import weave_footnotes
 from illustrations import illustrations_by_chapter, inject_illustrations
+from pipeline_status import build_pipeline_status, catalog_books_payload
 from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
 WEB_HANDOFF_HTML_PATH = ROOT / "web" / "handoff.html"
+WEB_PIPELINE_HTML_PATH = ROOT / "web" / "pipeline.html"
 VIEW_HANDOFF_PORT = 8765
+VIEW_PIPELINE_PORT = 8766
 
 # Pipeline stages in order. `--from STAGE` regenerates that stage and everything after.
 STAGES = ("reader", "draft", "critic", "revise")
@@ -985,15 +988,102 @@ def cmd_visual_resolve(args: argparse.Namespace) -> None:
     )
 
 
+def _http_ok(url: str) -> bool:
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url, timeout=1.0) as resp:
+            return 200 <= getattr(resp, "status", 200) < 300
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return False
+
+
+def _repo_http_handler():
+    """Static repo root + pipeline status APIs (used by view-handoff / view-pipeline)."""
+    import http.server
+    import urllib.parse
+
+    class RepoHttpHandler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *handler_args, **handler_kwargs):
+            super().__init__(*handler_args, directory=str(ROOT), **handler_kwargs)
+
+        def log_message(self, fmt: str, *log_args) -> None:
+            requestline = log_args[0] if log_args else ""
+            if isinstance(requestline, str) and "/api/" in requestline:
+                return
+            super().log_message(fmt, *log_args)
+
+        def do_GET(self) -> None:
+            parsed = urllib.parse.urlparse(self.path)
+            path = parsed.path.rstrip("/") or "/"
+            if path == "/api/books":
+                self._send_json(200, catalog_books_payload(ROOT))
+                return
+            if path == "/api/status":
+                qs = urllib.parse.parse_qs(parsed.query)
+                book_ids = qs.get("book") or []
+                if not book_ids or not book_ids[0].strip():
+                    self._send_json(400, {"error": "Missing book query parameter"})
+                    return
+                book_id = book_ids[0].strip()
+                try:
+                    payload = build_pipeline_status(book_id, root=ROOT)
+                except ValueError as exc:
+                    self._send_json(404, {"error": str(exc)})
+                    return
+                self._send_json(200, payload)
+                return
+            super().do_GET()
+
+        def _send_json(self, code: int, payload: object) -> None:
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+    return RepoHttpHandler
+
+
+def _serve_local(port: int, url: str, *, already_ok: bool, banner_lines: list[str]) -> None:
+    """Bind localhost server with shared repo handler, or reopen browser if up."""
+    import socketserver
+    import webbrowser
+
+    if already_ok:
+        for line in banner_lines:
+            print(line)
+        webbrowser.open(url)
+        return
+
+    handler = _repo_http_handler()
+    socketserver.TCPServer.allow_reuse_address = True
+    try:
+        httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
+    except OSError as exc:
+        raise SystemExit(
+            f"Could not bind 127.0.0.1:{port} ({exc}). "
+            "Stop whatever is using that port, then retry."
+        ) from exc
+
+    with httpd:
+        print(f"Serving {url}")
+        for line in banner_lines:
+            print(line)
+        print("Press Ctrl+C to stop.")
+        webbrowser.open(url)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nStopped.")
+
+
 def cmd_view_handoff(args: argparse.Namespace) -> None:
     """Serve web/handoff.html against state JSON and open a browser (no LLM)."""
-    import functools
-    import http.server
-    import socketserver
-    import urllib.error
     import urllib.parse
-    import urllib.request
-    import webbrowser
 
     paths: BookPaths = args.paths
     handoff_path = paths.book_visual_handoff_path()
@@ -1012,42 +1102,47 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
         f"http://127.0.0.1:{port}/"
         f"{handoff_path.relative_to(ROOT).as_posix()}"
     )
+    api_url = f"http://127.0.0.1:{port}/api/books"
 
-    def _already_serving() -> bool:
-        try:
-            with urllib.request.urlopen(handoff_url, timeout=1.0) as resp:
-                return 200 <= getattr(resp, "status", 200) < 300
-        except (urllib.error.URLError, TimeoutError, OSError):
-            return False
-
-    if _already_serving():
-        print(f"Already serving on port {port}; opening {url}")
-        print(f"Handoff: {handoff_path.relative_to(ROOT)}")
-        webbrowser.open(url)
-        return
-
-    handler = functools.partial(
-        http.server.SimpleHTTPRequestHandler,
-        directory=str(ROOT),
-    )
-    socketserver.TCPServer.allow_reuse_address = True
-    try:
-        httpd = socketserver.TCPServer(("127.0.0.1", port), handler)
-    except OSError as exc:
+    handoff_up = _http_ok(handoff_url)
+    api_up = _http_ok(api_url)
+    if handoff_up and not api_up:
         raise SystemExit(
-            f"Could not bind 127.0.0.1:{port} ({exc}). "
-            "Stop whatever is using that port, then retry."
-        ) from exc
+            f"Port {port} is serving files but not /api/books "
+            "(old view-handoff without pipeline APIs). "
+            "Stop that process (Ctrl+C in its terminal), then re-run "
+            "`python main.py view-handoff`."
+        )
 
-    with httpd:
-        print(f"Serving {url}")
-        print(f"Handoff: {handoff_path.relative_to(ROOT)}")
-        print("Press Ctrl+C to stop.")
-        webbrowser.open(url)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nStopped.")
+    already = handoff_up and api_up
+    if already:
+        banner = [
+            f"Already serving on port {port}; opening {url}",
+            f"Handoff: {handoff_path.relative_to(ROOT)}",
+        ]
+    else:
+        banner = [f"Handoff: {handoff_path.relative_to(ROOT)}"]
+    _serve_local(port, url, already_ok=already, banner_lines=banner)
+
+
+def cmd_view_pipeline(args: argparse.Namespace) -> None:
+    """Serve pipeline status board (read-only) and open a browser (no LLM)."""
+    import urllib.parse
+
+    if not WEB_PIPELINE_HTML_PATH.exists():
+        raise SystemExit(f"Missing {WEB_PIPELINE_HTML_PATH.relative_to(ROOT)}.")
+
+    paths: BookPaths = args.paths
+    port = VIEW_PIPELINE_PORT
+    query = urllib.parse.urlencode({"book": paths.book_id})
+    url = f"http://127.0.0.1:{port}/web/pipeline.html?{query}"
+    health_url = f"http://127.0.0.1:{port}/api/books"
+
+    already = _http_ok(health_url)
+    banner = (
+        [f"Already serving on port {port}; opening {url}"] if already else []
+    )
+    _serve_local(port, url, already_ok=already, banner_lines=banner)
 
 
 def footnotes_one(chapter: Chapter, paths: BookPaths, *, force: bool) -> str:
@@ -1405,6 +1500,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     view_handoff_parser.set_defaults(func=cmd_view_handoff)
+
+    view_pipeline_parser = sub.add_parser(
+        "view-pipeline",
+        parents=[book_parent],
+        help=(
+            "Open web/pipeline.html status board for catalog books "
+            "(local HTTP + /api/status; no LLM; read-only)"
+        ),
+    )
+    view_pipeline_parser.set_defaults(func=cmd_view_pipeline)
 
     footnotes_parser = sub.add_parser(
         "footnotes",
