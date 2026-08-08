@@ -5,24 +5,22 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Draft-1 export embed done; next is smoke-open EPUB/HTML as product check.
-- **Last success:** `export` packs scene JPGs into EPUB; HTML keeps relative `illustrations/` + img CSS; PDF uses xhtml2pdf `link_callback` (best-effort).
-- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing. Older work → Done / `docs/decisions.md`.
-- **Parked:** See Later (billing/model mix, Vision-LLM review, multi-book / UI / PDF ingest — after Alice draft-1 export smoke).
+- **Stopped at:** Draft-1 export smoke passed (EPUB images OK); next is human iterate on the draft.
+- **Last success:** Opened `output/book-report.epub` — scene images present and fine for now.
+- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing + smoke. Older work → Done / `docs/decisions.md`.
+- **Parked:** See Later (billing/model mix, Vision-LLM review, multi-book / UI / PDF ingest — Alice draft-1 export smoke done; gate open).
 
 ## Now
 
-- [ ] Draft-1 step 3 — Smoke `export --force`; open EPUB (and HTML) as the product check
+- [ ] Draft-1 step 4 — Human iterate from the draft (placement, captions, missing bits) — small follow-ups only
 
 ## Next
 
-Draft-1 (remaining):
-
-- [ ] Step 4 — Human iterate from the draft (placement, captions, missing bits) — small follow-ups only
+- [ ] After step 4: open Later — multi-book foundation first
 
 ## Later
 
-Gate: after Alice draft-1 export (weave → export smoke).
+Gate open: Alice draft-1 weave → export smoke done.
 
 - [ ] **Multi-book foundation** (book-id–scoped `data/` / `state/` / `output/`; migrate Alice off flat paths)
   - Spec: `idea/pipeline_ui_and_multi_book.md` · decision: `docs/decisions.md`
@@ -38,6 +36,7 @@ Gate: after Alice draft-1 export (weave → export smoke).
 
 Recent:
 
+- [x] Draft-1 step 3 — Smoke `export --force`; EPUB (and HTML) product check — images OK
 - [x] Draft-1 step 2 — Teach `export` to embed scene images (EPUB pack + HTML relative + PDF link_callback)
 - [x] Draft-1 step 1 — Weave scene illustrations into `book-report.md` (`illustrations.py` + `write_book_report`)
 - [x] Footnotes for all Alice chapters 1–12 (`footnotes --all`)
