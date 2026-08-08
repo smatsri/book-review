@@ -5,14 +5,13 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Docs-only backlog: after Alice draft-1 export → multi-book + PDF (*Naked Sun*) + pipeline control UI (vision in `idea/pipeline_ui_and_multi_book.md`). Now/Next still Alice footnotes → weave → export.
-- **Last success:** Added `docs/agent-playbook.md` (copyable agent-first checklist); linked from `AGENTS.md` / README + decisions entry. Prior: 8 Bing scene JPGs accepted; multi-book before second title.
-- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve, manual Bing scene images + human art consistency pass (see `docs/decisions.md`).
+- **Stopped at:** Footnotes complete for all 12 chapters; next is Draft-1 weave of scene JPGs into `book-report.md`, then export embed + smoke.
+- **Last success:** `footnotes --all` — wrote ch.7–12 footnotes + enriched MD (5–6 notes each); skipped 1–6; rebuilt `output/book-report.md`. Thinking off on local Qwen. Prior: ch.6 footnotes; agent-playbook docs.
+- **Do not redo:** Project skeleton, Alice loader/splitter, knowledge base, OpenAI→Gemini, skip/force, map/merge CLI, Reader/Editor split, dual providers, Gemini vs Qwen chapter-1 comparison, Critic one-pass loop (no multi-round), draft persist + `--from`, book rollup normalize rules, alias merge CLI/agent, export CLI, footnote enriched weave, LLM reduce synthesis, footnotes resume, full-book footnotes (1–12), visual-identity book identity, visual-characters sheets, visual-places sheets, visual-scenes briefs, visual-handoff, handoff HTML viewer + `view-handoff`, handoff question options, handoff answers download, visual-resolve, manual Bing scene images + human art consistency pass (see `docs/decisions.md`).
 - **Parked:** Paid Flash / Pro-Sonnet mix / per-agent hybrid — see Later + `docs/decisions.md`. Gutenberg/external book context (not needed this stage). Vision-LLM art consistency review (human pass for now). Perfect layout / full-novel packaging (draft-1 is illustrated companion report). Pipeline UI / multi-book / PDF ingest — Later only until Alice export lands.
 
 ## Now
 
-- [ ] Finish footnotes for remaining chapters (6–12) — existing CLI only: `python main.py footnotes` (resumes at first gap); then `report` if needed so enriched files land in `book-report.md`
 - [ ] Draft-1 step 1 — Weave scene illustrations into `book-report.md`
   - Deterministic: `book-visual-resolved.json` `scenes[]` → `output/illustrations/scene-NN-chNN-*.jpg`
   - Insert per matching chapter (caption = scene title); no LLM
@@ -61,6 +60,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [x] Export HTML / PDF / EPUB (`export` → `output/book-report.{html,pdf,epub}`)
 - [x] Footnote / research agent (`footnotes` → footnotes JSON + enriched MD; report prefers enriched)
 - [x] Bare `footnotes` resumes at first chapter missing footnotes JSON
+- [x] Footnotes for all Alice chapters 1–12 (`footnotes --all` → enriched MD + report)
 - [x] LLM reduce / book-level synthesis (`reduce` → `book-synthesis.md`; weave into report)
 - [x] Split Visual into bible-first steps (identity → characters → places → scenes → handoff; gen later)
 - [x] Visual Bible step 1 — book-level visual identity (`visual-identity` → `state/book-visual-identity.json`)
