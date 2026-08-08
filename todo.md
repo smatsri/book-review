@@ -5,10 +5,10 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Alice enriched v1 binder + `export --mode enriched` shipped and smoked (HTML/EPUB).
+- **Stopped at:** Alice enriched v1 shipped; layout/footnote issues parked (not fixing now). Next product slice: multi-book foundation.
 - **Last success:** `book-enriched.md` + `book-enriched.{html,pdf,epub}` — Gutenberg prose, scene JPGs, chapter Notes.
 - **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
-- **Parked:** Report human-iterate (optional); multi-book / UI / Naked Sun until after enriched Alice v1; billing / Vision-LLM / RAG.
+- **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
@@ -21,12 +21,13 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
 - [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (after multi-book; CLI stays source of truth)
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
+- [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
 
 ## Later
 
 After multi-book foundation.
 
-- [ ] PDF image/layout polish if EPUB/HTML isn’t enough
+- [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
 - [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
 - [ ] Billing / model quality strategy — local Qwen for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] RAG / embeddings over chapters

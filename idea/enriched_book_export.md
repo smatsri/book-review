@@ -43,6 +43,20 @@ Goal: open an EPUB/HTML and **read Alice**, with enrichment that does not bury t
 
 Reuse EPUB image packing / HTML relative / PDF `link_callback` already taught for the report.
 
+**Status:** Alice enriched v1 binder + `export --mode enriched` shipped. Layout/footnote polish below is parked (do not block multi-book).
+
+## Known issues (Alice v1 — parked)
+
+Initial human pass of `book-enriched.{pdf,epub,html}` (2026-08). Fix later as enriched polish / v1.1 — not a blocker for multi-book.
+
+| Scope | Symptom |
+|-------|---------|
+| **PDF** | Body text uses roughly half the page width; the rest stays white. |
+| **EPUB** | Each sentence breaks onto its own line, so many rows are mostly empty whitespace instead of flowing as paragraphs. |
+| **All (HTML / PDF / EPUB)** | At least one footnote renders wrong: empty list items (bullets with no text) and nested empty lists — a run of bare bullets. |
+
+Likely homes when fixing: PDF CSS / xhtml2pdf layout; EPUB paragraph/whitespace handling in the MD→EPUB path; footnote/endnote Markdown weave (`footnotes.py` / binder Notes) so list markup is not emitted empty.
+
 ## Alice enriched v2+ (later)
 
 - True inline footnote markers when anchors are high-confidence.
