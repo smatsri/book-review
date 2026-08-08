@@ -50,7 +50,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
 | `illustrations.py` | Deterministic scene→JPG map; `write_book_report` inserts markdown under matching chapters (chapter files stay pristine) |
-| `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
+| `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB; packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
 | `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
@@ -215,7 +215,7 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - Visual handoff: deterministic consistency checks + one LLM call over slim bible sheets → `state/book-visual-handoff.json` (no report weave)
 - Visual resolve: deterministic apply of handoff answers → `state/book-visual-resolved.json` (no LLM; no report weave)
 - Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD
-- Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes supported via `extra`)
+- Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes via `extra`; `illustrations/` JPGs relative in HTML, packed in EPUB, xhtml2pdf `link_callback` for PDF)
 - Regenerating a chapter summary: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
 
 ## Skip / force / from
@@ -241,7 +241,6 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Export embed of `output/illustrations/` into HTML/PDF/EPUB (report markdown weave is built; packing assets in `export` is Draft-1 step 2 — Vision-LLM QA parked — see `docs/decisions.md`)
 - Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls

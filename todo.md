@@ -5,20 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Draft-1 report weave done; next is export embed of scene JPGs → smoke EPUB/HTML.
-- **Last success:** `report` weaves 8 scene illustrations into `output/book-report.md` (chapter sources pristine).
-- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave. Older work → Done / `docs/decisions.md`.
-- **Parked:** See Later (billing/model mix, Vision-LLM review, multi-book / UI / PDF ingest — after Alice draft-1 export).
+- **Stopped at:** Draft-1 export embed done; next is smoke-open EPUB/HTML as product check.
+- **Last success:** `export` packs scene JPGs into EPUB; HTML keeps relative `illustrations/` + img CSS; PDF uses xhtml2pdf `link_callback` (best-effort).
+- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing. Older work → Done / `docs/decisions.md`.
+- **Parked:** See Later (billing/model mix, Vision-LLM review, multi-book / UI / PDF ingest — after Alice draft-1 export smoke).
 
 ## Now
 
-- [ ] Draft-1 step 2 — Teach `export` to embed those images (EPUB + HTML first; PDF best-effort / xhtml2pdf OK)
+- [ ] Draft-1 step 3 — Smoke `export --force`; open EPUB (and HTML) as the product check
 
 ## Next
 
 Draft-1 (remaining):
 
-- [ ] Step 3 — Smoke `export --force`; open EPUB (and HTML) as the product check
 - [ ] Step 4 — Human iterate from the draft (placement, captions, missing bits) — small follow-ups only
 
 ## Later
@@ -39,6 +38,7 @@ Gate: after Alice draft-1 export (weave → export smoke).
 
 Recent:
 
+- [x] Draft-1 step 2 — Teach `export` to embed scene images (EPUB pack + HTML relative + PDF link_callback)
 - [x] Draft-1 step 1 — Weave scene illustrations into `book-report.md` (`illustrations.py` + `write_book_report`)
 - [x] Footnotes for all Alice chapters 1–12 (`footnotes --all`)
 - [x] Visual bible → handoff → resolve; Bing scene JPGs + human art consistency pass

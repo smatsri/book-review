@@ -172,7 +172,7 @@ python main.py export --format html
 python main.py export --force
 ```
 
-Requires `output/book-report.md` (run `report` or `summarize --all` first). Default `--format all` writes `output/book-report.html`, `.pdf`, and `.epub`. Skips each file that already exists unless `--force`.
+Requires `output/book-report.md` (run `report` or `summarize --all` first). Default `--format all` writes `output/book-report.html`, `.pdf`, and `.epub`. Scene images referenced as `illustrations/…` in the report stay relative for HTML (open beside `output/illustrations/`), are packed into the EPUB, and are resolved for PDF via xhtml2pdf (best-effort). Skips each file that already exists unless `--force`.
 
 ## Smoke checks
 
@@ -272,6 +272,7 @@ After changing export:
 1. With `output/book-report.md` present, `python main.py export --force` — expect `output/book-report.html`, `.pdf`, and `.epub`.
 2. Re-run `python main.py export` — expect skip messages and no rewrite.
 3. `python main.py export --format html --force` — expect only the HTML file refreshed.
+4. With woven scene images in the report + JPGs under `output/illustrations/`, open HTML and EPUB after `--force` — expect scene images under matching chapters (EPUB file should be multi-MB when images pack; PDF best-effort).
 
 ## Notes
 
