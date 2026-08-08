@@ -326,7 +326,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Status:** current  
 **Context:** After scoped paths, operators need a registry of known book ids before a second title or pipeline UI.  
 **Decision:**
-1. Per-book `data/books/<id>/meta.json` is source of truth: `id`, `title`, `author`, `source_kind` (`gutenberg_txt` \| `pdf`).
+1. Per-book `data/books/<id>/meta.json` is source of truth: `id`, `title`, `author`, `source_kind` (`gutenberg_txt` \| `plain_txt` \| `pdf`).
 2. `data/books/catalog.json` is a derived snapshot rewritten by CLI `books` from discovered metas.
 3. CLI `books` lists/validates (source file present for kind); `--validate` exits non-zero on problems.
 4. Book-scoped commands reject unknown `--book` ids with a known-id hint. Do not build MB5 handoff scoping, PDF ingest, or pipeline UI here.
@@ -346,6 +346,18 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Multi-book foundation (MB1–MB5) complete; operators can hand off any cataloged book with handoff JSON.  
 **Extends:** Visual handoff local viewer; MB3/MB4; Multi-book foundation five slices (MB5 implemented).
+
+## 2026-08 — Asimov source as `plain_txt` (not PDF yet)
+
+**Status:** current  
+**Context:** Second title arrived as publisher plain text (`tmp/…txt`), not a PDF; catalog only allowed `gutenberg_txt` \| `pdf`.  
+**Decision:**
+1. Book id `asimov-naked-sun`; source at `data/books/asimov-naked-sun/asimov-naked-sun.txt` + `meta.json`.
+2. Add `source_kind` value `plain_txt` (same on-disk check as Gutenberg: `<id>.txt` present). Chapter split for numbered headings is still separate work.
+3. Do not pretend this file is Gutenberg or invent PDF ingest here.
+
+**Consequences:** `books --validate` accepts the second title; `chapters` still uses Gutenberg `CHAPTER` rules until a plain-text splitter lands.  
+**Extends:** MB4 light catalog.
 
 ## 2026-08 — Agent-first playbook for next repos
 

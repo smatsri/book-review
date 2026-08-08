@@ -80,7 +80,7 @@ Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / 
 
 - `id` — stable slug (must match directory name)
 - `title`, `author` — display fields
-- `source_kind` — `gutenberg_txt` \| `pdf` (PDF ingest not built yet)
+- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` (PDF ingest not built yet; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt`)
 - `catalog.json` — derived snapshot of all metas (not the source of truth)
 
 `Chapter` (`book.py`):

@@ -18,7 +18,7 @@ START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
 CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
 
-SOURCE_KINDS = frozenset({"gutenberg_txt", "pdf"})
+SOURCE_KINDS = frozenset({"gutenberg_txt", "plain_txt", "pdf"})
 
 
 @dataclass(frozen=True)
@@ -220,7 +220,7 @@ def validate_book_meta(meta: BookMeta, root: Path = ROOT) -> list[str]:
     paths = BookPaths(book_id=meta.id, root=root)
     if not paths.meta_path.is_file():
         problems.append(f"missing meta.json at {paths.meta_path}")
-    if meta.source_kind == "gutenberg_txt" and not paths.source_path.is_file():
+    if meta.source_kind in ("gutenberg_txt", "plain_txt") and not paths.source_path.is_file():
         problems.append(f"missing source text at {paths.source_path}")
     elif meta.source_kind == "pdf":
         pdf = paths.books_dir / meta.id / f"{meta.id}.pdf"

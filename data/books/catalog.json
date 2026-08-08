@@ -5,6 +5,12 @@
       "title": "Alice's Adventures in Wonderland",
       "author": "Lewis Carroll",
       "source_kind": "gutenberg_txt"
+    },
+    {
+      "id": "asimov-naked-sun",
+      "title": "The Naked Sun",
+      "author": "Isaac Asimov",
+      "source_kind": "plain_txt"
     }
   ]
 }

@@ -5,14 +5,14 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** MB5 done (book-scoped handoff viewer); multi-book foundation (MB1–MB5) complete. Next: Asimov *The Naked Sun* PDF ingest (or pipeline UI).
-- **Last success:** `view-handoff` opens `?book=<id>`; HTML fetches `state/<id>/book-visual-handoff.json`.
+- **Stopped at:** Placed Asimov *The Naked Sun* under `data/books/asimov-naked-sun/` (`plain_txt` + `meta.json`). Next: chapter split for numbered headings (not Gutenberg `CHAPTER` rules).
+- **Last success:** Source moved from `tmp/`; catalog lists `asimov-naked-sun` with Alice.
 - **Do not redo:** MB1–MB5 path/catalog/handoff-scope; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
+- [ ] **Asimov chapter split** — parse numbered headings in `asimov-naked-sun.txt` (not Gutenberg `CHAPTER` rules); smoke `chapters --book asimov-naked-sun`
 
 ## Next
 
