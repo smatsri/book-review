@@ -285,3 +285,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Context:** First project proved Session/`todo.md` + docs/idea split makes Agents-window work reliable; want a short reusable checklist without rewriting AGENTS for every clone.  
 **Decision:** Keep a copyable checklist in [`docs/agent-playbook.md`](agent-playbook.md). This repo’s live workflow stays in `AGENTS.md` + `todo.md`; the playbook is the template for day-one skeleton on the next project.  
 **Consequences:** Link from `AGENTS.md` / README; do not duplicate Session rules into multiple homes — playbook summarizes, AGENTS remains this repo’s contract.
+
+## 2026-08 — Enriched book is product north star
+
+**Status:** current (direction — enriched pack not implemented yet)  
+**Context:** Draft-1 shipped companion `book-report` HTML/PDF/EPUB with scene images. That matches an editorial dossier, not `idea.md`’s enriched *edition* of the source text. Willing to reconsider; chose to keep enrichment as the primary product.  
+**Decision:**
+1. **North star:** packaging the original book body with enrichment layers (images, footnotes, later light chapter openers) — Alice enriched v1 spec in [`idea/enriched_book_export.md`](../idea/enriched_book_export.md).
+2. **Companion report stays** as a second export / review artifact (`book-report.*`); do not remove or freeze feature work that only helps the report if it also feeds layers.
+3. **Alice enriched v1 (minimal):** Gutenberg chapter text as spine + scene JPGs at chapter/scene breaks (reuse `illustrations.py` map) + footnotes as chapter (or book) endnotes from existing JSON; no new LLM; reuse export image packing.
+4. **Priority:** enriched pack for Alice before multi-book / Naked Sun / pipeline UI (those stay Later; Alice report draft-1 smoke remains done).
+5. Human iterate on report placement stays optional/small; does not block starting the enriched binder.
+
+**Consequences:** Agents must not treat `book-report.epub` as the final product destination. Until code lands, architecture still documents report-only export; promote into `docs/architecture.md` / runbook when the binder ships.  
+**Supersedes (priority only):** the implication in “After Alice: multi-book…” that multi-book is the immediate next product slice after draft-1 — enriched book pack comes first; multi-book decision content otherwise unchanged.

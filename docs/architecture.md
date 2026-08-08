@@ -239,10 +239,11 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 
 Do not assume these exist in code:
 
+- **Enriched book pack** (original chapter body + images + footnote endnotes → `book-enriched.*`) — product north star; companion `book-report.*` is what export builds today. Spec: [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
 - Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls
 
-Those are roadmap items in `todo.md` / `idea.md` (esp. [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).
+Those are roadmap items in `todo.md` / `idea.md` (esp. enriched pack + [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).

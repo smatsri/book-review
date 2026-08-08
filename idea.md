@@ -321,13 +321,18 @@ LLM Response
 - PDF.
 - EPUB.
 
+שני תוצרים (אותן שכבות העשרה):
+
+- **Companion report** — קיים היום (`book-report.*`).
+- **Enriched book** — מהדורה לקריאה של גוף הספר + תמונות + הערות — מפרט: [`idea/enriched_book_export.md`](idea/enriched_book_export.md).
+
 ---
 
 # שלב 6 - ממשק מקומי + ריבוי ספרים (חזון)
 
 ה-handoff viewer (`web/handoff.html`) הוכיח ש־UI מקומי דק עדיף על JSON בצ'אט לשלבי אדם-בלולאה.
 
-כיוון הבא (אחרי Alice draft-1):
+כיוון אחרי **Alice enriched v1** (לא רק companion report):
 
 - **Pipeline UI** — שליטה בשלבי ה־CLI + הצגת progress / סטטוס ארטיפקטים.
 - **Multi-book** — `state/` / `output/` / מקורות לפי `book-id` (לא שטוח כמו היום).
@@ -335,7 +340,7 @@ LLM Response
 
 מפרט: [`idea/pipeline_ui_and_multi_book.md`](idea/pipeline_ui_and_multi_book.md).
 
-עקרון: ה־CLI נשאר מקור האמת; ה־UI עוטף אותו. לא לממש לפני סיום export של Alice (ראה `todo.md`).
+עקרון: ה־CLI נשאר מקור האמת; ה־UI עוטף אותו. לא לממש לפני enriched Alice v1 (ראה `todo.md`).
 
 ---
 
