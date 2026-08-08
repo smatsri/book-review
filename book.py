@@ -1,11 +1,15 @@
-"""Load a Gutenberg plain-text book and split it into chapters."""
+"""Load a book (Gutenberg text or EPUB) and split it into chapters."""
 
 from __future__ import annotations
 
 import json
 import re
 from dataclasses import asdict, dataclass
+from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+from ebooklib import epub
 
 DEFAULT_BOOK_ID = "alice-wonderland"
 
@@ -17,6 +21,8 @@ DEFAULT_BOOK = (
 START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
 CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
+# TOC titles like "1. A Question Is Asked" (numbered chapters only).
+EPUB_NUMBERED_TOC_RE = re.compile(r"^(\d+)\.\s+(.+)$")
 
 SOURCE_KINDS = frozenset({"gutenberg_txt", "plain_txt", "pdf", "epub"})
 
@@ -62,6 +68,12 @@ class BookPaths:
     def source_path(self) -> Path:
         return (
             self.root / "data" / "books" / self.book_id / f"{self.book_id}.txt"
+        )
+
+    @property
+    def epub_path(self) -> Path:
+        return (
+            self.root / "data" / "books" / self.book_id / f"{self.book_id}.epub"
         )
 
     def chapter_summary_path(self, number: int) -> Path:
@@ -227,9 +239,8 @@ def validate_book_meta(meta: BookMeta, root: Path = ROOT) -> list[str]:
         if not pdf.is_file():
             problems.append(f"missing source PDF at {pdf}")
     elif meta.source_kind == "epub":
-        epub = paths.books_dir / meta.id / f"{meta.id}.epub"
-        if not epub.is_file():
-            problems.append(f"missing source EPUB at {epub}")
+        if not paths.epub_path.is_file():
+            problems.append(f"missing source EPUB at {paths.epub_path}")
     return problems
 
 
@@ -270,6 +281,33 @@ def _roman_to_int(roman: str) -> int:
             total += value
             prev = value
     return total
+
+
+def _int_to_roman(n: int) -> str:
+    if n < 1:
+        raise ValueError(f"Roman numeral requires positive int, got {n}")
+    parts = (
+        (1000, "M"),
+        (900, "CM"),
+        (500, "D"),
+        (400, "CD"),
+        (100, "C"),
+        (90, "XC"),
+        (50, "L"),
+        (40, "XL"),
+        (10, "X"),
+        (9, "IX"),
+        (5, "V"),
+        (4, "IV"),
+        (1, "I"),
+    )
+    remaining = n
+    out: list[str] = []
+    for value, numeral in parts:
+        while remaining >= value:
+            out.append(numeral)
+            remaining -= value
+    return "".join(out)
 
 
 def load_book(path: Path | None = None) -> str:
@@ -314,3 +352,198 @@ def split_chapters(book_text: str) -> list[Chapter]:
 
 def load_chapters(path: Path | None = None) -> list[Chapter]:
     return split_chapters(load_book(path))
+
+
+class _HTMLToText(HTMLParser):
+    """Strip tags/scripts; keep paragraph-ish line breaks."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._parts: list[str] = []
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in ("script", "style"):
+            self._skip_depth += 1
+            return
+        if self._skip_depth:
+            return
+        if tag in ("br", "p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "tr"):
+            self._parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("script", "style") and self._skip_depth:
+            self._skip_depth -= 1
+            return
+        if self._skip_depth:
+            return
+        if tag in ("p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "tr"):
+            self._parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if not self._skip_depth:
+            self._parts.append(data)
+
+    def text(self) -> str:
+        raw = "".join(self._parts)
+        lines = [re.sub(r"[ \t]+", " ", line).strip() for line in raw.splitlines()]
+        # Collapse runs of blank lines to a single blank line.
+        out: list[str] = []
+        blank = False
+        for line in lines:
+            if not line:
+                if out and not blank:
+                    out.append("")
+                    blank = True
+                continue
+            out.append(line)
+            blank = False
+        return "\n".join(out).strip()
+
+
+def _html_to_text(html: str) -> str:
+    parser = _HTMLToText()
+    parser.feed(html)
+    parser.close()
+    return parser.text()
+
+
+def _flatten_epub_toc(items: list | tuple) -> list[tuple[str, str]]:
+    """Return (title, href) pairs from ebooklib TOC (nested Link / tuples)."""
+    flat: list[tuple[str, str]] = []
+    for item in items:
+        if isinstance(item, tuple) and len(item) == 2:
+            link, children = item
+            title = (getattr(link, "title", None) or "").strip()
+            href = (getattr(link, "href", None) or "").strip()
+            if title and href:
+                flat.append((title, href))
+            if children:
+                flat.extend(_flatten_epub_toc(children))
+        else:
+            title = (getattr(item, "title", None) or "").strip()
+            href = (getattr(item, "href", None) or "").strip()
+            if title and href:
+                flat.append((title, href))
+    return flat
+
+
+def _epub_href_path(href: str) -> str:
+    """Drop fragment/query; unquote; normalize to item name path."""
+    parsed = urlparse(href)
+    path = unquote(parsed.path)
+    return path.lstrip("/")
+
+
+def _epub_item_for_href(book: epub.EpubBook, href: str):
+    path = _epub_href_path(href)
+    if not path:
+        return None
+    item = book.get_item_with_href(path)
+    if item is not None:
+        return item
+    # Some EPUBs store names without a leading folder; try basename match.
+    base = Path(path).name
+    for candidate in book.get_items():
+        name = candidate.get_name() or ""
+        if name == path or Path(name).name == base:
+            return candidate
+    return None
+
+
+def _strip_epub_chapter_heading(text: str, number: int, title: str) -> str:
+    """Remove leading 'N' / title echo common in chapter XHTML."""
+    lines = text.splitlines()
+    i = 0
+    # Skip blank lines at start.
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i >= len(lines):
+        return text
+
+    first = lines[i].strip()
+    num_s = str(number)
+    title_compact = re.sub(r"\s+", "", title).casefold()
+    first_compact = re.sub(r"\s+", "", first).casefold()
+
+    # Lone chapter number line.
+    if first == num_s or re.fullmatch(rf"{re.escape(num_s)}\.?", first):
+        i += 1
+        while i < len(lines) and not lines[i].strip():
+            i += 1
+        if i < len(lines):
+            second = lines[i].strip()
+            second_compact = re.sub(r"\s+", "", second).casefold()
+            if second_compact == title_compact:
+                i += 1
+        return "\n".join(lines[i:]).strip()
+
+    # "1TITLE" or "1. TITLE" mashed on one line.
+    mashed = re.match(
+        rf"^{re.escape(num_s)}\.?\s*(.*)$",
+        first,
+        flags=re.IGNORECASE,
+    )
+    if mashed:
+        rest = mashed.group(1).strip()
+        rest_compact = re.sub(r"\s+", "", rest).casefold()
+        if not rest or rest_compact == title_compact:
+            i += 1
+            return "\n".join(lines[i:]).strip()
+
+    if first_compact == title_compact:
+        i += 1
+        return "\n".join(lines[i:]).strip()
+
+    return text
+
+
+def load_epub_chapters(path: Path) -> list[Chapter]:
+    """Load chapters from EPUB via numbered TOC entries (skip front/back matter)."""
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing EPUB: {path}")
+
+    book = epub.read_epub(str(path))
+    toc_entries = _flatten_epub_toc(book.toc or [])
+    chapters: list[Chapter] = []
+
+    for toc_title, href in toc_entries:
+        match = EPUB_NUMBERED_TOC_RE.match(toc_title.strip())
+        if not match:
+            continue
+        number = int(match.group(1))
+        title = match.group(2).strip()
+        item = _epub_item_for_href(book, href)
+        if item is None:
+            raise ValueError(f"EPUB TOC href not found in package: {href!r}")
+        raw = item.get_content().decode("utf-8", errors="replace")
+        body = _strip_epub_chapter_heading(_html_to_text(raw), number, title)
+        if not body:
+            raise ValueError(f"EPUB chapter {number} ({title!r}) has empty body")
+        chapters.append(
+            Chapter(
+                number=number,
+                roman=_int_to_roman(number),
+                title=title,
+                text=body,
+            )
+        )
+
+    if not chapters:
+        raise ValueError(
+            f"No numbered TOC chapters (N. Title) found in EPUB: {path}"
+        )
+    return chapters
+
+
+def load_chapters_for_book(meta: BookMeta, paths: BookPaths) -> list[Chapter]:
+    """Dispatch chapter load by catalog source_kind."""
+    if meta.source_kind in ("gutenberg_txt", "plain_txt"):
+        return load_chapters(paths.source_path)
+    if meta.source_kind == "epub":
+        return load_epub_chapters(paths.epub_path)
+    if meta.source_kind == "pdf":
+        raise ValueError(
+            f"PDF ingest is not implemented yet (book {meta.id!r})."
+        )
+    raise ValueError(f"Unsupported source_kind: {meta.source_kind!r}")

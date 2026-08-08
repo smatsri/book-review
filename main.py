@@ -13,7 +13,7 @@ from book import (
     BookPaths,
     Chapter,
     load_catalog,
-    load_chapters,
+    load_chapters_for_book,
     require_book_id,
     validate_book_meta,
     write_catalog,
@@ -33,7 +33,8 @@ STAGES = ("reader", "draft", "critic", "revise")
 
 
 def _chapters(paths: BookPaths) -> list[Chapter]:
-    return load_chapters(paths.source_path)
+    meta = require_book_id(paths.book_id, root=paths.root)
+    return load_chapters_for_book(meta, paths)
 
 
 def write_book_report(chapters: list[Chapter], paths: BookPaths) -> Path:

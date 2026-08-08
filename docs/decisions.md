@@ -371,6 +371,19 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Consequences:** `books --validate` passes once the EPUB is on disk; `chapters --book asimov-naked-sun` still fails until EPUB ingest lands.  
 **Extends / supersedes:** Asimov `plain_txt` placement; MB4 light catalog.
 
+## 2026-08 — EPUB ingest via numbered TOC
+
+**Status:** current  
+**Context:** Asimov EPUB on disk; need `Chapter` list without inventing plain-text heading rules. Spine includes front/back and a non-TOC teaser.  
+**Decision:**
+1. `load_chapters_for_book` dispatches on `meta.source_kind`: Gutenberg/plain_txt keep existing `.txt` + `CHAPTER` split; `epub` uses ebooklib; `pdf` raises not-implemented.
+2. EPUB chapters come only from TOC titles matching `N. Title` (Arabic number + period). That skips front/back without a title denylist; do not treat full spine as chapters.
+3. HTML→plain text via stdlib HTMLParser; strip leading number/title echo from body; `roman` derived with `_int_to_roman` so `Chapter.heading` stays compatible with the rest of the pipeline.
+4. `BookPaths.epub_path` = `data/books/<id>/<id>.epub`; CLI `_chapters` always goes through catalog meta.
+
+**Consequences:** `chapters --book asimov-naked-sun` yields 18 Naked Sun chapters into `state/asimov-naked-sun/chapters.json`. Leftover `.txt` optional; plain_txt numbered-heading splitter still Later if needed.  
+**Extends:** Asimov primary source is EPUB; MB4 light catalog.
+
 ## 2026-08 — Agent-first playbook for next repos
 
 **Status:** current  

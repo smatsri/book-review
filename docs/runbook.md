@@ -199,11 +199,12 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 
 After changing the loader / splitter / `BookPaths` / catalog / CLI path wiring:
 
-1. `python main.py books --validate` — expect `alice-wonderland` ok and refreshed `data/books/catalog.json`.
+1. `python main.py books --validate` — expect `alice-wonderland` and `asimov-naked-sun` ok and refreshed `data/books/catalog.json`.
 2. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both write `state/alice-wonderland/chapters.json`.
-3. `python main.py chapters --book no-such-book` — expect unknown-id error listing known books.
-4. Confirm `state/alice-wonderland/chapters.json` updated.
-5. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
+3. `python main.py chapters --book asimov-naked-sun` — expect **18** chapters (`CHAPTER I. A Question Is Asked` … `CHAPTER XVIII. …`); writes `state/asimov-naked-sun/chapters.json`.
+4. `python main.py chapters --book no-such-book` — expect unknown-id error listing known books.
+5. Confirm `state/alice-wonderland/chapters.json` (and Asimov path when testing EPUB) updated.
+6. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
 
 After changing Reader / Editor / Critic:
 

@@ -5,14 +5,14 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff, answers → resolved bible) into structured state, bind an enriched reading edition (original chapter body + scene images + footnote endnotes), and export either the companion report or the enriched book to HTML/PDF/EPUB.
+Current MVP: load a cataloged book from Gutenberg plain text or EPUB, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff, answers → resolved bible) into structured state, bind an enriched reading edition (original chapter body + scene images + footnote endnotes), and export either the companion report or the enriched book to HTML/PDF/EPUB.
 
 ## Pipeline
 
 ```
-data/books/<book-id>/<book-id>.txt
+data/books/<book-id>/  (.txt gutenberg/plain  or  .epub)
         |
-   book.py (load + strip Gutenberg wrapper + split CHAPTER headings)
+   book.py (dispatch by meta.source_kind → Chapter list)
         |
    list[Chapter]
         |
@@ -46,7 +46,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json` |
+| `book.py` | Load book text or EPUB, produce `Chapter` list; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json`. Gutenberg/plain_txt: strip markers + `CHAPTER` split. EPUB: ebooklib TOC entries matching `N. Title` (skips front/back); PDF ingest not built. |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
@@ -80,14 +80,14 @@ Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / 
 
 - `id` — stable slug (must match directory name)
 - `title`, `author` — display fields
-- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (PDF/EPUB ingest not built yet; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt`; `epub` expects `<id>.epub`)
+- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (`epub` expects `<id>.epub` and loads via numbered TOC; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt` still using Gutenberg `CHAPTER` split; PDF ingest not built)
 - `catalog.json` — derived snapshot of all metas (not the source of truth)
 
 `Chapter` (`book.py`):
 
-- `number` — Arabic chapter number (from Roman numeral)
-- `roman` — Roman numeral from the heading
-- `title` — first non-empty line after `CHAPTER …`
+- `number` — Arabic chapter number (from Roman numeral for Gutenberg; from TOC `N.` for EPUB)
+- `roman` — Roman numeral from the heading, or derived from `number` for EPUB
+- `title` — first non-empty line after `CHAPTER …` (Gutenberg) or TOC title after `N.` (EPUB)
 - `text` — chapter body
 - `heading` — `CHAPTER {roman}. {title}`
 

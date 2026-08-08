@@ -5,21 +5,20 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Placed Asimov EPUB at `data/books/asimov-naked-sun/asimov-naked-sun.epub`; meta `source_kind: epub` (catalog accepts kind; ingest not built).
-- **Last success:** EPUB moved from `tmp/`; `books --validate` ok for `asimov-naked-sun`.
-- **Do not redo:** MB1–MB5 path/catalog/handoff-scope; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** EPUB ingest shipped; `chapters --book asimov-naked-sun` → 18 chapters.
+- **Last success:** ebooklib TOC `N. Title` → `Chapter`; Alice path unchanged.
+- **Do not redo:** MB1–MB5; EPUB placement/meta; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **EPUB ingest** — load `source_kind: epub` via ebooklib (spine/nav → `Chapter` list); skip front/back matter; smoke `chapters --book asimov-naked-sun`
+- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
 
 ## Next
 
 After multi-book foundation:
 
 - [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
-- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
 - [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
@@ -37,6 +36,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **EPUB ingest** — `source_kind: epub` via ebooklib numbered TOC → `Chapter` list; smoke `chapters --book asimov-naked-sun` (18 chapters)
 - [x] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + `?book=` fetch `state/<id>/book-visual-handoff.json`
 - [x] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
 - [x] **MB3 — Migrate Alice** — scoped `data/` / `state/` / `output/`; drop flat fallback; smoke + architecture/runbook
