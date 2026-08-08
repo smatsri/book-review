@@ -65,6 +65,14 @@ python main.py report
 
 Prefers enriched chapter MD over summaries; weaves `output/book-synthesis.md` after the header when present; inserts scene images from `output/illustrations/` under matching chapters when `state/book-visual-resolved.json` exists (relative `![…](illustrations/…)` paths; chapter source files unchanged).
 
+Bind the reading edition (Gutenberg body + scene images + footnote endnotes; no LLM):
+
+```powershell
+python main.py enriched
+```
+
+Writes `output/book-enriched.md`. Uses `Chapter.text` as the spine; inserts scene images like `report`; appends per-chapter `### Notes` from `state/chapter-NN-footnotes.json` when present (no mid-body footnote markers). Always regenerates.
+
 Merge chapter analyses into a book-level character/theme index (no LLM):
 
 ```powershell
@@ -164,15 +172,17 @@ python main.py footnotes --chapter 1 --force
 
 Writes `state/chapter-NN-footnotes.json` and `output/chapter-NN-enriched.md` (Editor summary stays pristine). With no `--chapter`, resumes at the first chapter missing footnotes JSON. Explicit `--chapter` skips when that file already exists unless `--force`. `--all` also rebuilds `output/book-report.md` (prefers enriched chapter files when present).
 
-Export the merged Markdown report to HTML, PDF, and/or EPUB (no LLM):
+Export binder Markdown to HTML, PDF, and/or EPUB (no LLM):
 
 ```powershell
 python main.py export
+python main.py export --mode report
+python main.py export --mode enriched
 python main.py export --format html
 python main.py export --force
 ```
 
-Requires `output/book-report.md` (run `report` or `summarize --all` first). Default `--format all` writes `output/book-report.html`, `.pdf`, and `.epub`. Scene images referenced as `illustrations/…` in the report stay relative for HTML (open beside `output/illustrations/`), are packed into the EPUB, and are resolved for PDF via xhtml2pdf (best-effort). Skips each file that already exists unless `--force`.
+Default `--mode report` requires `output/book-report.md` (run `report` or `summarize --all` first) and writes `output/book-report.html`, `.pdf`, and `.epub`. `--mode enriched` requires `output/book-enriched.md` (run `enriched` first) and writes `output/book-enriched.{html,pdf,epub}`. Scene images referenced as `illustrations/…` stay relative for HTML (open beside `output/illustrations/`), are packed into the EPUB, and are resolved for PDF via xhtml2pdf (best-effort). Skips each file that already exists unless `--force`.
 
 ## Smoke checks
 
@@ -273,6 +283,12 @@ After changing export:
 2. Re-run `python main.py export` — expect skip messages and no rewrite.
 3. `python main.py export --format html --force` — expect only the HTML file refreshed.
 4. With woven scene images in the report + JPGs under `output/illustrations/`, open HTML and EPUB after `--force` — expect scene images under matching chapters (EPUB file should be multi-MB when images pack; PDF best-effort).
+
+After changing the enriched binder:
+
+1. `python main.py enriched` — expect `output/book-enriched.md` with Gutenberg chapter prose (not Plot Summary), scene `![…](illustrations/…)` under matching chapters, and `### Notes` where footnote JSON exists.
+2. `python main.py export --mode enriched --force` — expect `output/book-enriched.html`, `.pdf`, and `.epub`.
+3. Open HTML/EPUB — expect readable Alice text, in-chapter images, and chapter endnotes; default `export` (report mode) still writes `book-report.*` only.
 
 ## Notes
 

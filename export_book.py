@@ -1,4 +1,4 @@
-"""Export book-report.md to HTML, PDF, and EPUB (no LLM)."""
+"""Export book Markdown to HTML, PDF, and EPUB (no LLM)."""
 
 from __future__ import annotations
 
@@ -14,10 +14,28 @@ from xhtml2pdf import pisa
 ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "output"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
+BOOK_ENRICHED_PATH = OUTPUT_DIR / "book-enriched.md"
 ILLUSTRATIONS_PREFIX = "illustrations/"
 
 FORMATS = ("html", "pdf", "epub")
+EXPORT_MODES = ("report", "enriched")
 DEFAULT_TITLE = "Book Report"
+ENRICHED_TITLE = "Alice's Adventures in Wonderland"
+
+_MODE_CONFIG = {
+    "report": {
+        "source": BOOK_REPORT_PATH,
+        "stem": "book-report",
+        "title": DEFAULT_TITLE,
+        "binder_hint": "python main.py report",
+    },
+    "enriched": {
+        "source": BOOK_ENRICHED_PATH,
+        "stem": "book-enriched",
+        "title": ENRICHED_TITLE,
+        "binder_hint": "python main.py enriched",
+    },
+}
 
 _CSS = """
 body {
@@ -124,10 +142,10 @@ def md_to_html(md_text: str, title: str = DEFAULT_TITLE) -> str:
     )
 
 
-def output_path(fmt: str) -> Path:
+def output_path(fmt: str, stem: str = "book-report") -> Path:
     if fmt not in FORMATS:
         raise ValueError(f"Unknown format: {fmt}")
-    return OUTPUT_DIR / f"book-report.{fmt}"
+    return OUTPUT_DIR / f"{stem}.{fmt}"
 
 
 def resolve_formats(fmt: str) -> list[str]:
@@ -237,23 +255,36 @@ def export_report(
     formats: Iterable[str] | str = "all",
     *,
     force: bool = False,
+    mode: str = "report",
     source: Path | None = None,
-    title: str = DEFAULT_TITLE,
+    title: str | None = None,
 ) -> list[Path]:
-    """Export book-report.md to the requested formats.
+    """Export binder Markdown to the requested formats.
+
+    ``mode`` selects source stem/title (``report`` or ``enriched``). Explicit
+    ``source`` / ``title`` override the mode defaults.
 
     Returns paths written. Skips existing targets unless ``force``.
     Raises SystemExit if the Markdown source is missing.
 
-    Scene images referenced as ``illustrations/…`` in the report are left as
-    relative links for HTML (beside ``output/``), packed into the EPUB, and
-    resolved via xhtml2pdf ``link_callback`` for PDF (best-effort).
+    Scene images referenced as ``illustrations/…`` are left as relative links
+    for HTML (beside ``output/``), packed into the EPUB, and resolved via
+    xhtml2pdf ``link_callback`` for PDF (best-effort).
     """
-    src = source or BOOK_REPORT_PATH
+    if mode not in _MODE_CONFIG:
+        raise ValueError(f"Unknown export mode: {mode}")
+    cfg = _MODE_CONFIG[mode]
+    src = source or cfg["source"]
+    stem = cfg["stem"]
+    export_title = title if title is not None else cfg["title"]
+    assert isinstance(src, Path)
+    assert isinstance(stem, str)
+    assert isinstance(export_title, str)
+
     if not src.exists():
+        rel = src.relative_to(ROOT) if src.is_relative_to(ROOT) else src
         raise SystemExit(
-            f"Missing {src.relative_to(ROOT) if src.is_relative_to(ROOT) else src}. "
-            "Run `python main.py report` first."
+            f"Missing {rel}. Run `{cfg['binder_hint']}` first."
         )
 
     if isinstance(formats, str):
@@ -264,7 +295,7 @@ def export_report(
     md_text = src.read_text(encoding="utf-8")
     written: list[Path] = []
     for fmt in fmt_list:
-        dest = output_path(fmt)
+        dest = output_path(fmt, stem=stem)
         if dest.exists() and not force:
             print(
                 f"Skip export {fmt}: {dest.relative_to(ROOT)} already exists "
@@ -272,6 +303,6 @@ def export_report(
             )
             continue
         writer = _WRITERS[fmt]
-        path = writer(md_text, dest, title=title)
+        path = writer(md_text, dest, title=export_title)
         written.append(path)
     return written

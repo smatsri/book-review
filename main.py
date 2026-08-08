@@ -9,7 +9,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from book import Chapter, load_chapters
-from export_book import export_report
+from enriched_book import write_book_enriched
+from export_book import EXPORT_MODES, export_report
 from footnotes import weave_footnotes
 from illustrations import illustrations_by_chapter, inject_illustrations
 from rollup import apply_alias_clusters, build_book_rollup
@@ -337,6 +338,11 @@ def cmd_summarize(args: argparse.Namespace) -> None:
 def cmd_report(_: argparse.Namespace) -> None:
     report_path = write_book_report(load_chapters())
     print(f"Wrote {report_path.relative_to(ROOT)}")
+
+
+def cmd_enriched(_: argparse.Namespace) -> None:
+    path = write_book_enriched(load_chapters())
+    print(f"Wrote {path.relative_to(ROOT)}")
 
 
 def cmd_rollup(_: argparse.Namespace) -> None:
@@ -1109,7 +1115,7 @@ def cmd_footnotes(args: argparse.Namespace) -> None:
 
 
 def cmd_export(args: argparse.Namespace) -> None:
-    written = export_report(args.format, force=args.force)
+    written = export_report(args.format, force=args.force, mode=args.mode)
     for path in written:
         print(f"Wrote {path.relative_to(ROOT)}")
 
@@ -1168,6 +1174,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Merge existing chapter summaries into output/book-report.md (no LLM)",
     )
     report_parser.set_defaults(func=cmd_report)
+
+    enriched_parser = sub.add_parser(
+        "enriched",
+        help=(
+            "Bind Gutenberg chapters + scene images + footnote endnotes into "
+            "output/book-enriched.md (no LLM)"
+        ),
+    )
+    enriched_parser.set_defaults(func=cmd_enriched)
 
     rollup_parser = sub.add_parser(
         "rollup",
@@ -1331,8 +1346,17 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser = sub.add_parser(
         "export",
         help=(
-            "Export output/book-report.md to HTML, PDF, and/or EPUB "
-            "(no LLM)"
+            "Export binder Markdown to HTML, PDF, and/or EPUB "
+            "(no LLM; skips existing files unless --force)"
+        ),
+    )
+    export_parser.add_argument(
+        "--mode",
+        choices=list(EXPORT_MODES),
+        default="report",
+        help=(
+            "Which binder to export: report → book-report.*; "
+            "enriched → book-enriched.* (default: report)"
         ),
     )
     export_parser.add_argument(

@@ -109,4 +109,38 @@ def weave_footnotes(summary_md: str, payload: dict[str, Any]) -> str:
     return "\n".join(parts).rstrip() + "\n"
 
 
-__all__ = ["weave_footnotes"]
+def endnotes_markdown(payload: dict[str, Any]) -> str:
+    """Format footnote JSON as a chapter-end ``### Notes`` bullet list.
+
+    Does not place mid-body markers (anchors often target Editor summaries,
+    not Gutenberg prose). Returns empty string when there are no usable notes.
+    """
+    footnotes = payload.get("footnotes") or []
+    if not isinstance(footnotes, list) or not footnotes:
+        return ""
+
+    lines: list[str] = []
+    for item in footnotes:
+        if not isinstance(item, dict):
+            continue
+        anchor = item.get("anchor")
+        note = item.get("note")
+        if (
+            not isinstance(anchor, str)
+            or not anchor.strip()
+            or not isinstance(note, str)
+            or not note.strip()
+        ):
+            continue
+        kind = item.get("kind") or "concept"
+        confidence = item.get("confidence") or "low"
+        lines.append(
+            f"- **{anchor.strip()}** ({kind}; {confidence}): {note.strip()}"
+        )
+
+    if not lines:
+        return ""
+    return "### Notes\n\n" + "\n".join(lines) + "\n"
+
+
+__all__ = ["weave_footnotes", "endnotes_markdown"]

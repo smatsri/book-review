@@ -5,7 +5,7 @@ What the codebase does **today**. Vision and future agents live in [`idea.md`](.
 ## Purpose
 
 Multi-agent pipeline for analyzing and enriching public-domain books.  
-Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff, answers → resolved bible) into structured state, and export the report to HTML/PDF/EPUB.
+Current MVP: load one Gutenberg plain-text book, split into chapters, run Reader → Editor → Critic → revise per chapter, merge into one Markdown report, roll up cross-chapter characters/themes into structured state, optionally research footnotes into enriched chapter Markdown, optionally LLM-reduce into a book-level synthesis woven into the report, optionally derive a Visual Bible (identity, character sheets, place sheets, scene briefs, handoff, answers → resolved bible) into structured state, bind an enriched reading edition (original chapter body + scene images + footnote endnotes), and export either the companion report or the enriched book to HTML/PDF/EPUB.
 
 ## Pipeline
 
@@ -18,11 +18,11 @@ data/books/*.txt
         |
    +----+----+--------+--------+--------+-----------+----------+----------------+------------------+---------------+---------------+---------------+----------------+
    |         |        |        |        |           |          |                |                  |               |               |               |                |
-chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters visual-places visual-scenes visual-handoff visual-resolve
-(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual     (CLI → Visual (CLI → Visual (CLI → Visual (CLI, no LLM;
-         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)   Places LLM)   Scenes LLM)   Handoff LLM +  deep-copy +
-         Editor →     |       |    Merger) LLM +     LLM)          |                  |               |               |             deterministic) apply answers)
-         Critic →     |       |      |     weave)      |           |                  |               |               |               |                |
+chapters summarize report  rollup  aliases footnotes  reduce  visual-identity  visual-characters visual-places visual-scenes visual-handoff visual-resolve  enriched
+(CLI)    (CLI →    (CLI,   (CLI,   (CLI →  (CLI →    (CLI →   (CLI → Visual     (CLI → Visual     (CLI → Visual (CLI → Visual (CLI → Visual (CLI, no LLM;          (CLI, no LLM;
+         Reader →  no LLM) no LLM) Alias   Footnote  Reducer  Identity LLM)    Characters LLM)   Places LLM)   Scenes LLM)   Handoff LLM +  deep-copy +         Gutenberg +
+         Editor →     |       |    Merger) LLM +     LLM)          |                  |               |               |             deterministic) apply answers)    scenes + endnotes
+         Critic →     |       |      |     weave)      |           |                  |               |               |               |                |                → book-enriched.md)
          revise)      |       |      |       |         |           |                  |               |               |               |                |
    |         |        |       |      |       |         |           |                  |               |               |               |                |
 state/   state/     prefers book-  book-  state/   output/   state/book-      state/book-      state/book-    state/book-    state/book-    state/book-
@@ -37,9 +37,9 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
           others
           separate)
                                     |
-                                 export (CLI, no LLM)
+                                 export --mode report|enriched (CLI, no LLM)
                                     |
-                         book-report.html / .pdf / .epub
+                    book-report.*  or  book-enriched.html / .pdf / .epub
 ```
 
 ## Main pieces
@@ -48,10 +48,11 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 |------|------|
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
-| `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
-| `illustrations.py` | Deterministic scene→JPG map; `write_book_report` inserts markdown under matching chapters (chapter files stay pristine) |
-| `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB; packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
+| `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
+| `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
+| `enriched_book.py` | Deterministic binder: Gutenberg `Chapter` body + scene JPGs + footnote endnotes → `book-enriched.md` |
+| `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -68,7 +69,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
-| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB + `illustrations/` scene JPGs |
+| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
 | `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model
@@ -214,8 +215,9 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - Visual scenes: one LLM call over compact analyses (plot + events + cast names) + slim identity + character/place sheet names → `state/book-visual-scenes.json` (no report weave)
 - Visual handoff: deterministic consistency checks + one LLM call over slim bible sheets → `state/book-visual-handoff.json` (no report weave)
 - Visual resolve: deterministic apply of handoff answers → `state/book-visual-resolved.json` (no LLM; no report weave)
-- Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD
-- Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` (no LLM; Markdown Extra footnotes via `extra`; `illustrations/` JPGs relative in HTML, packed in EPUB, xhtml2pdf `link_callback` for PDF)
+- Footnotes: one LLM call per chapter → footnotes JSON; deterministic weave → enriched MD (report path); reading edition uses chapter-end Notes from the same JSON
+- Export: deterministic MD → HTML/PDF/EPUB from `book-report.md` or `book-enriched.md` via `--mode` (no LLM; Markdown Extra footnotes via `extra`; `illustrations/` JPGs relative in HTML, packed in EPUB, xhtml2pdf `link_callback` for PDF)
+- Enriched binder: deterministic Gutenberg chapters + scene weave + endnotes → `book-enriched.md` (no LLM)
 - Regenerating a chapter summary: up to four LLM calls (Reader, Editor draft, Critic, revise); fewer with soft resume or `--from`
 
 ## Skip / force / from
@@ -233,17 +235,17 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - `visual-handoff` skips when `state/book-visual-handoff.json` exists unless `--force`
 - `visual-resolve` skips when `state/book-visual-resolved.json` exists unless `--force`
 - `footnotes` with no `--chapter` resumes at the first chapter missing footnotes JSON; with `--chapter` skips when that file exists unless `--force`
-- `export` skips each existing `output/book-report.{html,pdf,epub}` unless `--force`
+- `export` skips each existing `output/book-report.{html,pdf,epub}` (or `book-enriched.*` when `--mode enriched`) unless `--force`
 
 ## Not built yet
 
 Do not assume these exist in code:
 
-- **Enriched book pack** (original chapter body + images + footnote endnotes → `book-enriched.*`) — product north star; companion `book-report.*` is what export builds today. Spec: [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
+- Enriched v2+ (inline footnote markers in body, mid-chapter scene placement, character plates, chapter openers) — v1 binder is shipped; see [`idea/enriched_book_export.md`](../idea/enriched_book_export.md)
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
 - Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls
 
-Those are roadmap items in `todo.md` / `idea.md` (esp. enriched pack + [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).
+Those are roadmap items in `todo.md` / `idea.md` (esp. [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).

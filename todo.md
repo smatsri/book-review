@@ -5,30 +5,27 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Locked product north star = enriched book (not companion report); Alice enriched v1 spec written; next is implement binder.
-- **Last success:** Draft-1 `book-report.epub` smoke (images OK); decision + [`idea/enriched_book_export.md`](idea/enriched_book_export.md).
-- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing + smoke. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Alice enriched v1 binder + `export --mode enriched` shipped and smoked (HTML/EPUB).
+- **Last success:** `book-enriched.md` + `book-enriched.{html,pdf,epub}` — Gutenberg prose, scene JPGs, chapter Notes.
+- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Report human-iterate (optional); multi-book / UI / Naked Sun until after enriched Alice v1; billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] Enriched Alice v1 — binder: Gutenberg chapter body + scene JPGs + footnote endnotes → `book-enriched` MD + export (no new LLM)
-  - Spec: `idea/enriched_book_export.md` · decision: `docs/decisions.md`
+- [ ] Optional: small report placement/caption follow-ups (does not block enriched)
+- [ ] **Multi-book foundation** (book-id–scoped `data/` / `state/` / `output/`; migrate Alice off flat paths)
+  - Spec: `idea/pipeline_ui_and_multi_book.md` · decision: `docs/decisions.md`
 
 ## Next
 
-- [ ] Smoke enriched EPUB/HTML (read Alice, images in-chapter, endnotes present)
-- [ ] Optional: small report placement/caption follow-ups (does not block enriched)
-
-## Later
-
-After Alice enriched v1 smoke.
-
-- [ ] **Multi-book foundation** (book-id–scoped `data/` / `state/` / `output/`; migrate Alice off flat paths)
-  - Spec: `idea/pipeline_ui_and_multi_book.md` · decision: `docs/decisions.md`
 - [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
 - [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (after multi-book; CLI stays source of truth)
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
+
+## Later
+
+After multi-book foundation.
+
 - [ ] PDF image/layout polish if EPUB/HTML isn’t enough
 - [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
 - [ ] Billing / model quality strategy — local Qwen for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
@@ -38,6 +35,7 @@ After Alice enriched v1 smoke.
 
 Recent:
 
+- [x] Enriched Alice v1 — binder + `export --mode enriched` → `book-enriched.*` (no new LLM); smoke HTML/EPUB
 - [x] Product direction: enriched book north star; companion report kept as second export (`idea/enriched_book_export.md`)
 - [x] Draft-1 step 3 — Smoke `export --force`; EPUB (and HTML) product check — images OK
 - [x] Draft-1 step 2 — Teach `export` to embed scene images (EPUB pack + HTML relative + PDF link_callback)
