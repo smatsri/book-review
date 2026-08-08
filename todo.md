@@ -5,20 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Pipeline UI-1 status board shipped (`view-pipeline` → `web/pipeline.html` + `/api/status`).
-- **Last success:** Alice shows mostly done; Asimov shows chapters done / rest missing; copy CLI works.
-- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Pipeline UI-2 Run shipped (`POST/GET /api/run` + allowlisted subprocess + poll in `web/pipeline.html`).
+- **Last success:** Status board can start one CLI stage; log + badges poll; illustrations / handoff-answers not runnable.
+- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **Pipeline UI-2** — run one CLI step from the status board (thin subprocess wrapper + log/progress poll); CLI stays source of truth
+- [ ] **Pipeline UI-3** — handoff integrated as a stage action in the operator console
 
 ## Next
 
 After multi-book foundation:
 
-- [ ] Pipeline UI-3 — handoff integrated as a stage action in the operator console
 - [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
@@ -28,6 +27,7 @@ After multi-book foundation:
 
 After multi-book foundation.
 
+- [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
 - [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
 - [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
 - [ ] Billing / model quality strategy — local Qwen for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
@@ -37,6 +37,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Pipeline UI-2 — Run one CLI step** — `pipeline_run.py` + `POST/GET /api/run`; allowlist; one job; poll log + status; Run button in `web/pipeline.html`
 - [x] **Pipeline UI-1 — Status board** — `pipeline_status.py` + `view-pipeline` (port 8766) + `web/pipeline.html`; pick book, show done/partial/missing, copy CLI (no run)
 - [x] **EPUB ingest** — `source_kind: epub` via ebooklib numbered TOC → `Chapter` list; smoke `chapters --book asimov-naked-sun` (18 chapters)
 - [x] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + `?book=` fetch `state/<id>/book-visual-handoff.json`

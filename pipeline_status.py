@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from book import BookMeta, BookPaths, ROOT, load_catalog, require_book_id
+from pipeline_run import stage_is_runnable
 
 
 def _cli(command: str, book_id: str) -> str:
@@ -69,6 +70,7 @@ def _stage(
         "label": label,
         "status": status,
         "cli": cli,
+        "runnable": stage_is_runnable(stage_id),
     }
     if detail is not None:
         row["detail"] = detail

@@ -52,7 +52,8 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
 | `enriched_book.py` | Deterministic binder: Gutenberg `Chapter` body + scene JPGs + footnote endnotes → `book-enriched.md` |
 | `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
-| `pipeline_status.py` | Deterministic filesystem scan of `state/<id>/` + `output/<id>/` → JSON stage status (`done` / `partial` / `missing`) for the local pipeline board |
+| `pipeline_status.py` | Deterministic filesystem scan of `state/<id>/` + `output/<id>/` → JSON stage status (`done` / `partial` / `missing`, plus `runnable`) for the local pipeline board |
+| `pipeline_run.py` | Thin allowlisted subprocess runner for the board: one global job; writes `state/<id>/run-status.json` + `pipeline-run.log` |
 | `main.py` | CLI: `books`, `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `view-pipeline`, `footnotes`, `export`; every book-scoped command accepts `--book` (default `alice-wonderland`, must be in catalog) and resolves artifacts via `args.paths` (`BookPaths`). |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
@@ -69,9 +70,9 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/` with `meta.json` plus source file by kind (`<id>.txt`, `<id>.epub`, or `<id>.pdf`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
-| `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible |
+| `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible + optional `run-status.json` / `pipeline-run.log` from the operator UI |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
-| `web/` | Committed static viewers: `handoff.html` (visual handoff Q&A); `pipeline.html` (read-only status board via `view-pipeline` APIs). |
+| `web/` | Committed static viewers: `handoff.html` (visual handoff Q&A); `pipeline.html` (status board + allowlisted Run via `view-pipeline` APIs). |
 
 ## Data model
 
@@ -255,6 +256,6 @@ Do not assume these exist in code:
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
 - PDF book ingest / non-Gutenberg chapter split
-- Pipeline UI run controls + live progress (status board UI-1 is shipped; see `view-pipeline`)
+- Pipeline UI-3 handoff integration in the operator console (UI-1 status + UI-2 allowlisted Run are shipped; see `view-pipeline`)
 
 Those are roadmap items in `todo.md` / `idea.md` (esp. [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).

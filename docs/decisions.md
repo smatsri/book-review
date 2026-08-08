@@ -417,3 +417,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Run controls + live progress are Next (UI-2+); do not invent a job DB for UI-1. Architecture / runbook document `view-pipeline`.  
 **Extends:** “After Alice: multi-book…” pipeline UI intent; MB5 handoff viewer pattern.
+
+## 2026-08 — Pipeline UI-2: allowlisted Run + poll
+
+**Status:** current  
+**Context:** UI-1 status board shipped; operators still copy CLI to run steps. Spec’s next slice is run controls + progress poll ([`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).  
+**Decision:**
+1. Ship **UI-2**: `pipeline_run.py` allowlists stage ids → fixed `python main.py … --book` argv; one global subprocess at a time.
+2. Persist `state/<id>/run-status.json` + `pipeline-run.log`; expose `POST /api/run` (`202`) and `GET /api/run` (log tail + state). Second start → `409`.
+3. `web/pipeline.html` adds **Run** for `runnable` stages, polls ~1.5s, refreshes `/api/status` while running. No `--force` / `--from` UI; no SSE; no job DB.
+4. Not runnable: `illustrations` (manual JPGs), `visual_answers` (`view-handoff` nested server). Keep Copy CLI / handoff link.
+5. Primary port remains **8766** (`view-pipeline`); shared handler also serves `/api/run` on 8765.
+
+**Consequences:** UI-3 (handoff integrated in the console) is Next. Architecture / runbook document Run APIs and smoke.  
+**Extends:** Pipeline UI-1 status board.

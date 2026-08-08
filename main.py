@@ -22,6 +22,7 @@ from enriched_book import write_book_enriched
 from export_book import EXPORT_MODES, export_report
 from footnotes import weave_footnotes
 from illustrations import illustrations_by_chapter, inject_illustrations
+from pipeline_run import get_run_status, start_run
 from pipeline_status import build_pipeline_status, catalog_books_payload
 from rollup import apply_alias_clusters, build_book_rollup
 
@@ -1034,7 +1035,57 @@ def _repo_http_handler():
                     return
                 self._send_json(200, payload)
                 return
+            if path == "/api/run":
+                self._send_json(200, get_run_status())
+                return
             super().do_GET()
+
+        def do_POST(self) -> None:
+            parsed = urllib.parse.urlparse(self.path)
+            path = parsed.path.rstrip("/") or "/"
+            if path != "/api/run":
+                self.send_error(404, "Not Found")
+                return
+            length_raw = self.headers.get("Content-Length", "0")
+            try:
+                length = int(length_raw)
+            except ValueError:
+                self._send_json(400, {"error": "Invalid Content-Length"})
+                return
+            if length < 0 or length > 65536:
+                self._send_json(400, {"error": "Request body too large"})
+                return
+            raw = self.rfile.read(length) if length else b""
+            try:
+                body = json.loads(raw.decode("utf-8") or "{}")
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                self._send_json(400, {"error": "Invalid JSON body"})
+                return
+            if not isinstance(body, dict):
+                self._send_json(400, {"error": "JSON body must be an object"})
+                return
+            book_id = body.get("book")
+            stage_id = body.get("stage")
+            if not isinstance(book_id, str) or not book_id.strip():
+                self._send_json(400, {"error": "Missing book"})
+                return
+            if not isinstance(stage_id, str) or not stage_id.strip():
+                self._send_json(400, {"error": "Missing stage"})
+                return
+            try:
+                payload = start_run(book_id.strip(), stage_id.strip(), root=ROOT)
+            except ValueError as exc:
+                msg = str(exc)
+                code = 404 if "Unknown book" in msg else 400
+                self._send_json(code, {"error": msg})
+                return
+            except RuntimeError as exc:
+                self._send_json(409, {"error": str(exc)})
+                return
+            except OSError as exc:
+                self._send_json(500, {"error": str(exc)})
+                return
+            self._send_json(202, payload)
 
         def _send_json(self, code: int, payload: object) -> None:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -1126,7 +1177,7 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
 
 
 def cmd_view_pipeline(args: argparse.Namespace) -> None:
-    """Serve pipeline status board (read-only) and open a browser (no LLM)."""
+    """Serve pipeline status board (status + allowlisted Run) and open a browser (no LLM)."""
     import urllib.parse
 
     if not WEB_PIPELINE_HTML_PATH.exists():
@@ -1506,7 +1557,7 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[book_parent],
         help=(
             "Open web/pipeline.html status board for catalog books "
-            "(local HTTP + /api/status; no LLM; read-only)"
+            "(local HTTP + /api/status + /api/run; no LLM)"
         ),
     )
     view_pipeline_parser.set_defaults(func=cmd_view_pipeline)

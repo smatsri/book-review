@@ -111,6 +111,38 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
+    .run-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+    .run-panel[hidden] { display: none; }
+    .run-panel h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+    }
+    .run-meta {
+      margin: 0 0 0.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .run-log {
+      margin: 0;
+      max-height: 220px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      background: #f3efe7;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0.5rem 0.6rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .stages {
       list-style: none;
       margin: 0;
@@ -193,7 +225,7 @@
 <body>
   <header>
     <h1>Pipeline status</h1>
-    <p class="sub">Read-only artifact board. CLI remains source of truth — copy a command to run it.</p>
+    <p class="sub">Local operator board. CLI remains source of truth — copy or run one allowlisted step.</p>
   </header>
 
   <div class="toolbar">
@@ -205,6 +237,11 @@
 
   <main>
     <div class="book-meta" id="book-meta" hidden></div>
+    <section class="run-panel" id="run-panel" hidden>
+      <h2>Run</h2>
+      <p class="run-meta" id="run-meta"></p>
+      <pre class="run-log" id="run-log"></pre>
+    </section>
     <ul class="stages" id="stages"></ul>
     <p class="empty" id="empty" hidden>Select a book to see pipeline stages.</p>
   </main>
@@ -216,6 +253,14 @@
     const bookMeta = document.getElementById("book-meta");
     const stagesEl = document.getElementById("stages");
     const emptyEl = document.getElementById("empty");
+    const runPanel = document.getElementById("run-panel");
+    const runMeta = document.getElementById("run-meta");
+    const runLog = document.getElementById("run-log");
+
+    const POLL_MS = 1500;
+    let runBusy = false;
+    let pollTimer = null;
+    let sawRunning = false;
 
     function queryBook() {
       const params = new URLSearchParams(window.location.search);
@@ -234,14 +279,129 @@
       history.replaceState(null, "", url);
     }
 
-    async function fetchJson(path) {
-      const resp = await fetch(path, { cache: "no-store" });
+    async function fetchJson(path, options) {
+      const resp = await fetch(path, { cache: "no-store", ...(options || {}) });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         const err = data.error || resp.statusText || "Request failed";
-        throw new Error(err);
+        const e = new Error(err);
+        e.status = resp.status;
+        throw e;
       }
       return data;
+    }
+
+    function setRunButtonsDisabled(disabled) {
+      stagesEl.querySelectorAll("button.run-btn").forEach((btn) => {
+        btn.disabled = disabled;
+      });
+    }
+
+    function renderRunPanel(run) {
+      if (!run || run.state === "idle") {
+        if (!sawRunning) {
+          runPanel.hidden = true;
+        }
+        return;
+      }
+      runPanel.hidden = false;
+      const bits = [
+        run.state,
+        run.book_id && `book=${run.book_id}`,
+        run.stage_id && `stage=${run.stage_id}`,
+        run.pid != null && `pid=${run.pid}`,
+        run.exit_code != null && `exit=${run.exit_code}`,
+      ].filter(Boolean);
+      runMeta.textContent = bits.join(" · ");
+      runLog.textContent = run.log_tail || "";
+      runLog.scrollTop = runLog.scrollHeight;
+    }
+
+    function stopPoll() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    async function refreshStatusQuiet() {
+      const bookId = bookSelect.value;
+      if (!bookId) return;
+      try {
+        const payload = await fetchJson(
+          `/api/status?book=${encodeURIComponent(bookId)}`
+        );
+        renderMeta(payload);
+        renderStages(payload);
+        setRunButtonsDisabled(runBusy);
+      } catch (_) {
+        /* keep prior board during poll */
+      }
+    }
+
+    async function pollRunOnce() {
+      try {
+        const run = await fetchJson("/api/run");
+        renderRunPanel(run);
+        if (run.state === "running") {
+          sawRunning = true;
+          runBusy = true;
+          setRunButtonsDisabled(true);
+          await refreshStatusQuiet();
+          setStatus(`Running ${run.stage_id}…`);
+          return;
+        }
+        if (sawRunning && run.state === "finished") {
+          sawRunning = false;
+          runBusy = false;
+          setRunButtonsDisabled(false);
+          stopPoll();
+          await refreshStatusQuiet();
+          const code = run.exit_code;
+          if (code === 0) {
+            setStatus(`Finished ${run.stage_id} (exit 0)`);
+          } else {
+            setStatus(`Finished ${run.stage_id} (exit ${code})`, true);
+          }
+          return;
+        }
+        if (run.state === "idle" || run.state === "finished") {
+          runBusy = false;
+          setRunButtonsDisabled(false);
+          stopPoll();
+        }
+      } catch (err) {
+        setStatus(`Run poll failed: ${err.message}`, true);
+      }
+    }
+
+    function startPoll() {
+      stopPoll();
+      pollTimer = setInterval(pollRunOnce, POLL_MS);
+      pollRunOnce();
+    }
+
+    async function startStageRun(stageId) {
+      const bookId = bookSelect.value;
+      if (!bookId || !stageId) return;
+      setRunButtonsDisabled(true);
+      runBusy = true;
+      sawRunning = true;
+      try {
+        const run = await fetchJson("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ book: bookId, stage: stageId }),
+        });
+        renderRunPanel(run);
+        setStatus(`Started ${stageId}`);
+        startPoll();
+      } catch (err) {
+        runBusy = false;
+        sawRunning = false;
+        setRunButtonsDisabled(false);
+        setStatus(err.message, true);
+      }
     }
 
     async function loadBooks() {
@@ -351,6 +511,15 @@
           });
           actions.appendChild(copyBtn);
         }
+        if (stage.runnable) {
+          const runBtn = document.createElement("button");
+          runBtn.type = "button";
+          runBtn.className = "primary run-btn";
+          runBtn.textContent = "Run";
+          runBtn.disabled = runBusy;
+          runBtn.addEventListener("click", () => startStageRun(stage.id));
+          actions.appendChild(runBtn);
+        }
 
         li.appendChild(badge);
         li.appendChild(body);
@@ -377,6 +546,7 @@
         setUrlBook(bookId);
         renderMeta(payload);
         renderStages(payload);
+        setRunButtonsDisabled(runBusy);
         setStatus(`Updated ${new Date().toLocaleTimeString()}`);
       } catch (err) {
         stagesEl.innerHTML = "";
@@ -399,6 +569,16 @@
       try {
         await loadBooks();
         await loadStatus();
+        const run = await fetchJson("/api/run");
+        if (run.state === "running") {
+          sawRunning = true;
+          runBusy = true;
+          renderRunPanel(run);
+          setRunButtonsDisabled(true);
+          startPoll();
+        } else if (run.state === "finished") {
+          renderRunPanel(run);
+        }
       } catch (err) {
         const hint =
           " Open via `python main.py view-pipeline` (port 8766) " +
