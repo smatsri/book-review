@@ -46,13 +46,13 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
+| `book.py` | Load book text, strip Gutenberg markers, split into `Chapter`; `BookPaths` resolves state/output/source per `--book` id (Alice default still flat until MB3) |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
 | `enriched_book.py` | Deterministic binder: Gutenberg `Chapter` body + scene JPGs + footnote endnotes → `book-enriched.md` |
 | `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export`; every command accepts `--book` (default `alice-wonderland`). Commands still read flat module path constants until MB2. |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -67,9 +67,9 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
-| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
-| `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
-| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
+| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Alice: flat `alice-adventures-in-wonderland.txt`. Future books: `data/books/<book-id>/` (via `BookPaths`) |
+| `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON (Alice flat today; scoped `state/<book-id>/` when that tree exists or for non-Alice ids) |
+| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs (same flat/scoped rule as `state/`) |
 | `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model

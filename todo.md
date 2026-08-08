@@ -5,20 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Multi-book foundation split into 5 slices; next implement **MB1** (path contract). No code yet.
-- **Last success:** `book-enriched.md` + `book-enriched.{html,pdf,epub}` — Gutenberg prose, scene JPGs, chapter Notes.
-- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** MB1 done (`BookPaths` + `--book`); next implement **MB2** (wire CLI).
+- **Last success:** `BookPaths` flat Alice compat; `python main.py chapters --book alice-wonderland` writes flat `state/chapters.json`.
+- **Do not redo:** MB1 path contract; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **MB1 — Path contract** — `BookPaths` + CLI `--book <id>` (default `alice-wonderland`); flat Alice compat (no file moves). Spec slices: `idea/pipeline_ui_and_multi_book.md`
+- [ ] **MB2 — Wire CLI** — all commands use `BookPaths` (no scattered `ROOT / "state"`)
 
 ## Next
 
-Multi-book foundation (after MB1; one PR/chat each; keep MB3 alone):
+Multi-book foundation (after MB2; one PR/chat each; keep MB3 alone):
 
-- [ ] **MB2 — Wire CLI** — all commands use `BookPaths` (no scattered `ROOT / "state"`)
 - [ ] **MB3 — Migrate Alice** — move source/`state`/`output` under `<book-id>`; drop flat fallback; smoke + architecture/runbook
 - [ ] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
 - [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
@@ -44,6 +43,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **MB1 — Path contract** — `BookPaths` + CLI `--book <id>` (default `alice-wonderland`); flat Alice compat (no file moves)
 - [x] Enriched Alice v1 — binder + `export --mode enriched` → `book-enriched.*` (no new LLM); smoke HTML/EPUB
 - [x] Product direction: enriched book north star; companion report kept as second export (`idea/enriched_book_export.md`)
 - [x] Draft-1 step 3 — Smoke `export --force`; EPUB (and HTML) product check — images OK

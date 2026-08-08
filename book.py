@@ -6,11 +6,114 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_BOOK = Path(__file__).resolve().parent / "data" / "books" / "alice-adventures-in-wonderland.txt"
+DEFAULT_BOOK_ID = "alice-wonderland"
+ALICE_FLAT_TXT = "alice-adventures-in-wonderland.txt"
+
+ROOT = Path(__file__).resolve().parent
+DEFAULT_BOOK = ROOT / "data" / "books" / ALICE_FLAT_TXT
 
 START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
 END_MARKER = "*** END OF THE PROJECT GUTENBERG EBOOK"
 CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
+
+
+@dataclass(frozen=True)
+class BookPaths:
+    """Resolve state/output/source paths for a book id (flat Alice compat until MB3)."""
+
+    book_id: str
+    root: Path = ROOT
+
+    def _use_scoped(self) -> bool:
+        if (self.root / "state" / self.book_id).is_dir():
+            return True
+        if (self.root / "data" / "books" / self.book_id).is_dir():
+            return True
+        return self.book_id != DEFAULT_BOOK_ID
+
+    @property
+    def state_dir(self) -> Path:
+        if self._use_scoped():
+            return self.root / "state" / self.book_id
+        return self.root / "state"
+
+    @property
+    def output_dir(self) -> Path:
+        if self._use_scoped():
+            return self.root / "output" / self.book_id
+        return self.root / "output"
+
+    @property
+    def illustrations_dir(self) -> Path:
+        return self.output_dir / "illustrations"
+
+    @property
+    def source_path(self) -> Path:
+        if not self._use_scoped() and self.book_id == DEFAULT_BOOK_ID:
+            return self.root / "data" / "books" / ALICE_FLAT_TXT
+        books_dir = self.root / "data" / "books" / self.book_id
+        if self.book_id == DEFAULT_BOOK_ID:
+            flat = self.root / "data" / "books" / ALICE_FLAT_TXT
+            if flat.is_file() and not books_dir.is_dir():
+                return flat
+        return books_dir / f"{self.book_id}.txt"
+
+    def chapter_summary_path(self, number: int) -> Path:
+        return self.output_dir / f"chapter-{number:02d}-summary.md"
+
+    def chapter_analysis_path(self, number: int) -> Path:
+        return self.state_dir / f"chapter-{number:02d}-analysis.json"
+
+    def chapter_draft_path(self, number: int) -> Path:
+        return self.state_dir / f"chapter-{number:02d}-draft.md"
+
+    def chapter_critique_path(self, number: int) -> Path:
+        return self.state_dir / f"chapter-{number:02d}-critique.json"
+
+    def chapter_footnotes_path(self, number: int) -> Path:
+        return self.state_dir / f"chapter-{number:02d}-footnotes.json"
+
+    def chapter_enriched_path(self, number: int) -> Path:
+        return self.output_dir / f"chapter-{number:02d}-enriched.md"
+
+    def chapters_json_path(self) -> Path:
+        return self.state_dir / "chapters.json"
+
+    def book_report_path(self) -> Path:
+        return self.output_dir / "book-report.md"
+
+    def book_enriched_path(self) -> Path:
+        return self.output_dir / "book-enriched.md"
+
+    def book_synthesis_path(self) -> Path:
+        return self.output_dir / "book-synthesis.md"
+
+    def book_rollup_path(self) -> Path:
+        return self.state_dir / "book-rollup.json"
+
+    def book_rollup_merged_path(self) -> Path:
+        return self.state_dir / "book-rollup-merged.json"
+
+    def book_visual_identity_path(self) -> Path:
+        return self.state_dir / "book-visual-identity.json"
+
+    def book_visual_characters_path(self) -> Path:
+        return self.state_dir / "book-visual-characters.json"
+
+    def book_visual_places_path(self) -> Path:
+        return self.state_dir / "book-visual-places.json"
+
+    def book_visual_scenes_path(self) -> Path:
+        return self.state_dir / "book-visual-scenes.json"
+
+    def book_visual_handoff_path(self) -> Path:
+        return self.state_dir / "book-visual-handoff.json"
+
+    def book_visual_answers_path(self) -> Path:
+        return self.state_dir / "book-visual-handoff-answers.json"
+
+    def book_visual_resolved_path(self) -> Path:
+        return self.state_dir / "book-visual-resolved.json"
 
 
 @dataclass(frozen=True)

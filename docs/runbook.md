@@ -18,10 +18,13 @@ Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
 
 ## Commands
 
+Optional `--book <id>` on every command (default `alice-wonderland`). Alice still uses flat `state/` / `output/` until MB3.
+
 List chapters (no LLM call; writes `state/chapters.json`):
 
 ```powershell
 python main.py chapters
+python main.py chapters --book alice-wonderland
 ```
 
 Summarize one chapter (Reader → Editor → Critic → revise; needs API key):
@@ -186,9 +189,9 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 
 ## Smoke checks
 
-After changing the loader / splitter:
+After changing the loader / splitter / `BookPaths`:
 
-1. `python main.py chapters` — expect a sensible chapter count and titles.
+1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both still write flat `state/chapters.json`.
 2. Confirm `state/chapters.json` updated.
 
 After changing Reader / Editor / Critic:

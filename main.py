@@ -8,7 +8,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from book import Chapter, load_chapters
+from book import DEFAULT_BOOK_ID, BookPaths, Chapter, load_chapters
 from enriched_book import write_book_enriched
 from export_book import EXPORT_MODES, export_report
 from footnotes import weave_footnotes
@@ -1122,13 +1122,25 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Book review MVP")
+    book_parent = argparse.ArgumentParser(add_help=False)
+    book_parent.add_argument(
+        "--book",
+        default=DEFAULT_BOOK_ID,
+        metavar="ID",
+        help=f"Book id (default: {DEFAULT_BOOK_ID}; Alice still uses flat paths)",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    chapters_parser = sub.add_parser("chapters", help="List chapters (no LLM)")
+    chapters_parser = sub.add_parser(
+        "chapters",
+        parents=[book_parent],
+        help="List chapters (no LLM)",
+    )
     chapters_parser.set_defaults(func=cmd_chapters)
 
     summarize_parser = sub.add_parser(
         "summarize",
+        parents=[book_parent],
         help=(
             "Reader→Editor→Critic→revise for chapter(s); writes state analysis + "
             "draft + critique + output summary; --all also writes book-report.md "
@@ -1171,12 +1183,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     report_parser = sub.add_parser(
         "report",
+        parents=[book_parent],
         help="Merge existing chapter summaries into output/book-report.md (no LLM)",
     )
     report_parser.set_defaults(func=cmd_report)
 
     enriched_parser = sub.add_parser(
         "enriched",
+        parents=[book_parent],
         help=(
             "Bind Gutenberg chapters + scene images + footnote endnotes into "
             "output/book-enriched.md (no LLM)"
@@ -1186,6 +1200,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     rollup_parser = sub.add_parser(
         "rollup",
+        parents=[book_parent],
         help=(
             "Merge chapter analyses into state/book-rollup.json "
             "(characters + themes; no LLM)"
@@ -1195,6 +1210,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     aliases_parser = sub.add_parser(
         "aliases",
+        parents=[book_parent],
         help=(
             "LLM alias merge of state/book-rollup.json into "
             "state/book-rollup-merged.json"
@@ -1209,6 +1225,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     reduce_parser = sub.add_parser(
         "reduce",
+        parents=[book_parent],
         help=(
             "LLM book-level synthesis from compact analyses + rollup into "
             "output/book-synthesis.md; rebuilds book-report.md"
@@ -1223,6 +1240,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_identity_parser = sub.add_parser(
         "visual-identity",
+        parents=[book_parent],
         help=(
             "LLM book-level visual identity (style / palette / atmosphere / "
             "period / motifs) into state/book-visual-identity.json"
@@ -1237,6 +1255,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_characters_parser = sub.add_parser(
         "visual-characters",
+        parents=[book_parent],
         help=(
             "LLM character visual sheets (physical / personality / "
             "visual_language) into state/book-visual-characters.json"
@@ -1251,6 +1270,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_places_parser = sub.add_parser(
         "visual-places",
+        parents=[book_parent],
         help=(
             "LLM place / setting sheets (architecture / climate / "
             "atmosphere / symbols) into state/book-visual-places.json"
@@ -1265,6 +1285,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_scenes_parser = sub.add_parser(
         "visual-scenes",
+        parents=[book_parent],
         help=(
             "LLM scene briefs (illustration moments + emotional_focus / "
             "composition) into state/book-visual-scenes.json"
@@ -1279,6 +1300,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_handoff_parser = sub.add_parser(
         "visual-handoff",
+        parents=[book_parent],
         help=(
             "LLM Visual Bible handoff (open questions + consistency issues) "
             "into state/book-visual-handoff.json"
@@ -1293,6 +1315,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visual_resolve_parser = sub.add_parser(
         "visual-resolve",
+        parents=[book_parent],
         help=(
             "Apply state/book-visual-handoff-answers.json into a locked "
             "resolved bible (state/book-visual-resolved.json; no LLM)"
@@ -1307,6 +1330,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     view_handoff_parser = sub.add_parser(
         "view-handoff",
+        parents=[book_parent],
         help=(
             "Open web/handoff.html for state/book-visual-handoff.json "
             "(local HTTP server; no LLM)"
@@ -1316,6 +1340,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     footnotes_parser = sub.add_parser(
         "footnotes",
+        parents=[book_parent],
         help=(
             "Footnote/Research agent: write state footnotes JSON + enriched "
             "chapter Markdown (keeps summaries pristine); --all also rebuilds "
@@ -1345,6 +1370,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     export_parser = sub.add_parser(
         "export",
+        parents=[book_parent],
         help=(
             "Export binder Markdown to HTML, PDF, and/or EPUB "
             "(no LLM; skips existing files unless --force)"
@@ -1377,11 +1403,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     load_dotenv(ROOT / ".env")
-    OUTPUT_DIR.mkdir(exist_ok=True)
-    STATE_DIR.mkdir(exist_ok=True)
 
     parser = build_parser()
     args = parser.parse_args()
+    paths = BookPaths(book_id=args.book, root=ROOT)
+    args.paths = paths
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
+    paths.output_dir.mkdir(parents=True, exist_ok=True)
     args.func(args)
 
 
