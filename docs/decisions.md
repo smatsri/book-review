@@ -279,6 +279,14 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Consequences:** No code change yet; agents must not assume multi-book paths or a control UI exist. When implementing, update architecture/runbook and supersede this entry’s “not implemented” note.  
 **Extends:** Visual handoff local viewer (web as human surface); Export HTML/PDF/EPUB (Alice product gate before second book).
 
+## 2026-08 — Multi-book foundation: five implementation slices
+
+**Status:** current (plan; MB1 not started)  
+**Context:** Enriched Alice v1 shipped; multi-book is the next product slice. Need reviewable chunks and a safe Alice migration.  
+**Decision:** Implement foundation as **MB1–MB5** (path contract → wire CLI → migrate Alice → light catalog → book-scoped handoff viewer). One PR/chat per slice; **MB3 alone**. Flat-path compat until MB3. PDF ingest / Naked Sun / pipeline UI stay after foundation. Slice list: [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); live backlog: `todo.md` Now/Next.  
+**Consequences:** Agents pick **MB1** from Now; do not mix PDF or pipeline UI into MB1–MB5.  
+**Extends:** “After Alice: multi-book…”; supersedes enriched-priority hold on multi-book (enriched v1 done).
+
 ## 2026-08 — Agent-first playbook for next repos
 
 **Status:** current  

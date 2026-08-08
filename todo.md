@@ -5,21 +5,29 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Alice enriched v1 shipped; layout/footnote issues parked (not fixing now). Next product slice: multi-book foundation.
+- **Stopped at:** Multi-book foundation split into 5 slices; next implement **MB1** (path contract). No code yet.
 - **Last success:** `book-enriched.md` + `book-enriched.{html,pdf,epub}` — Gutenberg prose, scene JPGs, chapter Notes.
 - **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] Optional: small report placement/caption follow-ups (does not block enriched)
-- [ ] **Multi-book foundation** (book-id–scoped `data/` / `state/` / `output/`; migrate Alice off flat paths)
-  - Spec: `idea/pipeline_ui_and_multi_book.md` · decision: `docs/decisions.md`
+- [ ] **MB1 — Path contract** — `BookPaths` + CLI `--book <id>` (default `alice-wonderland`); flat Alice compat (no file moves). Spec slices: `idea/pipeline_ui_and_multi_book.md`
 
 ## Next
 
+Multi-book foundation (after MB1; one PR/chat each; keep MB3 alone):
+
+- [ ] **MB2 — Wire CLI** — all commands use `BookPaths` (no scattered `ROOT / "state"`)
+- [ ] **MB3 — Migrate Alice** — move source/`state`/`output` under `<book-id>`; drop flat fallback; smoke + architecture/runbook
+- [ ] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
+- [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
+
+After multi-book foundation:
+
 - [ ] Next title: **Asimov — *The Naked Sun*** — PDF ingest + chapter split (not Gutenberg `CHAPTER` rules)
-- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (after multi-book; CLI stays source of truth)
+- [ ] **Pipeline control UI** (grow `web/` past handoff): pick book, run CLI steps, show artifact status + progress (CLI stays source of truth)
+- [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
 - [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
 

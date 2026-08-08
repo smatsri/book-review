@@ -51,6 +51,18 @@ Until that exists, treat “active book” as an explicit CLI flag / env — avo
 
 Today’s paths (`data/books/*.txt`, flat `state/`, flat `output/`, handoff viewer fetching `../state/book-visual-handoff.json`) are Alice-shaped. Migration = introduce `<book-id>` scoping, then point viewers/CLI at the active book.
 
+### Foundation slices (implementation order)
+
+One PR/chat per slice; keep migrate (MB3) alone. Backlog ids in `todo.md`.
+
+1. **MB1 — Path contract** — `BookPaths` + `--book <id>`; flat Alice compat; no file moves.
+2. **MB2 — Wire CLI** — every command resolves artifacts via `BookPaths`.
+3. **MB3 — Migrate Alice** — scoped `data/` / `state/` / `output/`; drop flat fallback; update architecture/runbook smoke.
+4. **MB4 — Light catalog** — per-book `meta.json` and/or `catalog.json`.
+5. **MB5 — Book-scope handoff viewer** — `view-handoff --book` + HTML fetch under `state/<book-id>/`.
+
+Out of this foundation: PDF ingest, Naked Sun, pipeline control UI (see sequencing below).
+
 ## Pipeline control UI
 
 ### Intent
