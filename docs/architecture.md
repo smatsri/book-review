@@ -49,6 +49,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `book.py` | Load book text, strip Gutenberg markers, split into `Chapter` |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD |
+| `illustrations.py` | Deterministic scene→JPG map; `write_book_report` inserts markdown under matching chapters (chapter files stay pristine) |
 | `export_book.py` | Deterministic export of `book-report.md` → HTML / PDF / EPUB |
 | `main.py` | CLI: `chapters`, `summarize`, `report`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export` |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
@@ -67,7 +68,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`) |
 | `state/` | Chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON |
-| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` + HTML/PDF/EPUB + `illustrations/` scene JPGs (manual for now; not woven yet) |
+| `output/` | Per-chapter summaries + enriched MD + synthesis + merged `book-report.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB + `illustrations/` scene JPGs |
 | `web/` | Committed static viewers (e.g. `handoff.html` for `state/book-visual-handoff.json` via `view-handoff`; downloads `book-visual-handoff-answers.json`) |
 
 ## Data model
@@ -125,6 +126,7 @@ Book synthesis (`output/book-synthesis.md`, from `reduce`):
 - Also requires all `chapter-NN-summary.md` so the rebuilt report can include chapters
 - No full book text / full summaries in the prompt; no author/genre external context
 - `write_book_report` inserts synthesis after the report header when the file exists
+- `write_book_report` also weaves scene illustrations under matching chapters when `state/book-visual-resolved.json` + `output/illustrations/scene-NN-chNN-*.jpg` exist (via `illustrations.py`; chapter enriched/summary files unchanged)
 - Not run by `summarize --all`; skip unless `--force`
 
 Book visual identity (`state/book-visual-identity.json`, from `visual-identity`):
@@ -239,7 +241,7 @@ Do not assume these exist in code:
 
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
-- Visual Bible report–export weave of `output/illustrations/` (manual Bing scenes + human art pass done; Vision-LLM QA parked — see `docs/decisions.md`)
+- Export embed of `output/illustrations/` into HTML/PDF/EPUB (report markdown weave is built; packing assets in `export` is Draft-1 step 2 — Vision-LLM QA parked — see `docs/decisions.md`)
 - Multi-book / book-id–scoped `state/` + `output/` (today is single flat Alice layout)
 - PDF book ingest / non-Gutenberg chapter split
 - Pipeline control UI (beyond handoff viewer) — progress + run controls

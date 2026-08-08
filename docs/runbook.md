@@ -63,6 +63,8 @@ Merge existing chapter summaries only (no LLM):
 python main.py report
 ```
 
+Prefers enriched chapter MD over summaries; weaves `output/book-synthesis.md` after the header when present; inserts scene images from `output/illustrations/` under matching chapters when `state/book-visual-resolved.json` exists (relative `![…](illustrations/…)` paths; chapter source files unchanged).
+
 Merge chapter analyses into a book-level character/theme index (no LLM):
 
 ```powershell
@@ -205,7 +207,8 @@ After changing map/merge:
 1. `python main.py summarize --all` — expect per-chapter files under `output/`, `output/book-report.md`, and `state/book-rollup.json`.
 2. Re-run `python main.py summarize --all` — expect skips + refreshed report + rollup.
 3. `python main.py report` — expect `book-report.md` rewritten from existing chapter files.
-4. `python main.py rollup` — expect `state/book-rollup.json` with `chapters_included`, merged `characters` (`name` / `notes` / `chapters`), and `themes` (`theme` / `chapters`).
+4. With resolved bible + JPGs present, `python main.py report` — expect `![…](illustrations/scene-…)` under each scene’s chapter (e.g. ch.1 Fall Through the Well); chapter enriched/summary files unchanged.
+5. `python main.py rollup` — expect `state/book-rollup.json` with `chapters_included`, merged `characters` (`name` / `notes` / `chapters`), and `themes` (`theme` / `chapters`).
 
 After changing alias merge:
 

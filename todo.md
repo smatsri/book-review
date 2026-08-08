@@ -5,24 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Footnotes complete for all 12 chapters; next is Draft-1 weave → export embed → smoke.
-- **Last success:** `footnotes --all` (ch.1–12 enriched MD + report rebuild). Prior: Bing scene JPGs accepted; agent-playbook docs.
-- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff viewer/answers; Bing JPGs + human art pass. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Draft-1 report weave done; next is export embed of scene JPGs → smoke EPUB/HTML.
+- **Last success:** `report` weaves 8 scene illustrations into `output/book-report.md` (chapter sources pristine).
+- **Do not redo:** Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave. Older work → Done / `docs/decisions.md`.
 - **Parked:** See Later (billing/model mix, Vision-LLM review, multi-book / UI / PDF ingest — after Alice draft-1 export).
 
 ## Now
 
-- [ ] Draft-1 step 1 — Weave scene illustrations into `book-report.md`
-  - Depends: `state/book-visual-resolved.json` + `output/illustrations/scene-NN-chNN-*.jpg`
-  - Deterministic: map `scenes[]` → JPGs; insert under matching chapter (caption = scene title); no LLM
-  - Prefer `report` (or thin weave helper) so regen stays skip/force-friendly
-  - **Done when:** each resolved scene with a JPG appears under its chapter in `output/book-report.md`
+- [ ] Draft-1 step 2 — Teach `export` to embed those images (EPUB + HTML first; PDF best-effort / xhtml2pdf OK)
 
 ## Next
 
 Draft-1 (remaining):
 
-- [ ] Step 2 — Teach `export` to embed those images (EPUB + HTML first; PDF best-effort / xhtml2pdf OK)
 - [ ] Step 3 — Smoke `export --force`; open EPUB (and HTML) as the product check
 - [ ] Step 4 — Human iterate from the draft (placement, captions, missing bits) — small follow-ups only
 
@@ -44,6 +39,7 @@ Gate: after Alice draft-1 export (weave → export smoke).
 
 Recent:
 
+- [x] Draft-1 step 1 — Weave scene illustrations into `book-report.md` (`illustrations.py` + `write_book_report`)
 - [x] Footnotes for all Alice chapters 1–12 (`footnotes --all`)
 - [x] Visual bible → handoff → resolve; Bing scene JPGs + human art consistency pass
 - [x] Handoff viewer + answers JSON + `visual-resolve`

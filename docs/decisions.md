@@ -245,9 +245,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Status:** current  
 **Context:** Resolved bible is ready; automated image gen and Vision-LLM consistency review are not built. Eight scene illustrations were produced externally (Bing) from the resolved scene briefs.  
-**Decision:** Store accepted scene art under `output/illustrations/` as `scene-NN-chNN-<slug>.jpg`, ordered to match `state/book-visual-resolved.json` `scenes[]`. Treat post-gen consistency review as a **human pass** for now (no Vision CLI / multimodal `llm.py` path). Current Alice set: human-accepted. Vision-LLM or hybrid review stays Later if regen loops or multi-book scale need it. Report/export weave is the next product slice.  
+**Decision:** Store accepted scene art under `output/illustrations/` as `scene-NN-chNN-<slug>.jpg`, ordered to match `state/book-visual-resolved.json` `scenes[]`. Treat post-gen consistency review as a **human pass** for now (no Vision CLI / multimodal `llm.py` path). Current Alice set: human-accepted. Vision-LLM or hybrid review stays Later if regen loops or multi-book scale need it. Report weave is built; export embed is the next product slice.  
 **Consequences:** No new agent for gen or art QA yet; weave can assume files in `output/illustrations/` match the resolved scene list.  
 **Extends:** Visual handoff answers resolve/apply CLI (locked bible for image gen).
+
+## 2026-08 — Report weave for scene illustrations
+
+**Status:** current  
+**Context:** Accepted JPGs live beside the report; draft-1 needs them visible in `book-report.md` without mutating enriched chapter files or teaching export yet.  
+**Decision:** Deterministic `illustrations.py` maps `book-visual-resolved.json` `scenes.scenes[]` (1-based index) → `output/illustrations/scene-NN-chCC-*.jpg`. `write_book_report` inserts `![title](illustrations/…)` plus italic caption after each chapter’s first `#` heading. Missing resolved file or JPG skips that scene. No new CLI — every report rebuild stays illustration-aware. Export packing of image assets stays a separate step.  
+**Consequences:** Markdown preview and future export share one weave path; chapter summaries/enriched MD stay text-only.  
+**Extends:** Scene images manual; art consistency is human for now.
 
 ## 2026-08 — After Alice: multi-book, PDF next title, grow pipeline UI
 

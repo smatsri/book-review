@@ -11,11 +11,13 @@ from dotenv import load_dotenv
 from book import Chapter, load_chapters
 from export_book import export_report
 from footnotes import weave_footnotes
+from illustrations import illustrations_by_chapter, inject_illustrations
 from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "output"
 STATE_DIR = ROOT / "state"
+ILLUSTRATIONS_DIR = OUTPUT_DIR / "illustrations"
 BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
 BOOK_SYNTHESIS_PATH = OUTPUT_DIR / "book-synthesis.md"
 BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
@@ -60,6 +62,9 @@ def chapter_enriched_path(number: int) -> Path:
 
 def write_book_report(chapters: list[Chapter]) -> Path:
     """Merge chapter Markdown into one report (prefer enriched over summary)."""
+    scene_blocks = illustrations_by_chapter(
+        BOOK_VISUAL_RESOLVED_PATH, ILLUSTRATIONS_DIR
+    )
     parts: list[str] = []
     missing: list[int] = []
     for ch in chapters:
@@ -72,7 +77,8 @@ def write_book_report(chapters: list[Chapter]) -> Path:
         else:
             missing.append(ch.number)
             continue
-        parts.append(path.read_text(encoding="utf-8").strip())
+        body = path.read_text(encoding="utf-8").strip()
+        parts.append(inject_illustrations(body, scene_blocks.get(ch.number, [])))
 
     if missing:
         available = ", ".join(str(n) for n in missing)
