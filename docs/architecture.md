@@ -52,7 +52,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
 | `enriched_book.py` | Deterministic binder: Gutenberg `Chapter` body + scene JPGs + footnote endnotes → `book-enriched.md` |
 | `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
-| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export`; every command accepts `--book` (default `alice-wonderland`). Commands still read flat module path constants until MB2. |
+| `main.py` | CLI: `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `footnotes`, `export`; every command accepts `--book` (default `alice-wonderland`) and resolves all artifacts via `args.paths` (`BookPaths`). |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |

@@ -16,20 +16,6 @@ from illustrations import illustrations_by_chapter, inject_illustrations
 from rollup import apply_alias_clusters, build_book_rollup
 
 ROOT = Path(__file__).resolve().parent
-OUTPUT_DIR = ROOT / "output"
-STATE_DIR = ROOT / "state"
-ILLUSTRATIONS_DIR = OUTPUT_DIR / "illustrations"
-BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
-BOOK_SYNTHESIS_PATH = OUTPUT_DIR / "book-synthesis.md"
-BOOK_ROLLUP_PATH = STATE_DIR / "book-rollup.json"
-BOOK_ROLLUP_MERGED_PATH = STATE_DIR / "book-rollup-merged.json"
-BOOK_VISUAL_IDENTITY_PATH = STATE_DIR / "book-visual-identity.json"
-BOOK_VISUAL_CHARACTERS_PATH = STATE_DIR / "book-visual-characters.json"
-BOOK_VISUAL_PLACES_PATH = STATE_DIR / "book-visual-places.json"
-BOOK_VISUAL_SCENES_PATH = STATE_DIR / "book-visual-scenes.json"
-BOOK_VISUAL_HANDOFF_PATH = STATE_DIR / "book-visual-handoff.json"
-BOOK_VISUAL_ANSWERS_PATH = STATE_DIR / "book-visual-handoff-answers.json"
-BOOK_VISUAL_RESOLVED_PATH = STATE_DIR / "book-visual-resolved.json"
 WEB_HANDOFF_HTML_PATH = ROOT / "web" / "handoff.html"
 VIEW_HANDOFF_PORT = 8765
 
@@ -37,40 +23,22 @@ VIEW_HANDOFF_PORT = 8765
 STAGES = ("reader", "draft", "critic", "revise")
 
 
-def chapter_summary_path(number: int) -> Path:
-    return OUTPUT_DIR / f"chapter-{number:02d}-summary.md"
+def _chapters(paths: BookPaths) -> list[Chapter]:
+    return load_chapters(paths.source_path)
 
 
-def chapter_analysis_path(number: int) -> Path:
-    return STATE_DIR / f"chapter-{number:02d}-analysis.json"
-
-
-def chapter_draft_path(number: int) -> Path:
-    return STATE_DIR / f"chapter-{number:02d}-draft.md"
-
-
-def chapter_critique_path(number: int) -> Path:
-    return STATE_DIR / f"chapter-{number:02d}-critique.json"
-
-
-def chapter_footnotes_path(number: int) -> Path:
-    return STATE_DIR / f"chapter-{number:02d}-footnotes.json"
-
-
-def chapter_enriched_path(number: int) -> Path:
-    return OUTPUT_DIR / f"chapter-{number:02d}-enriched.md"
-
-
-def write_book_report(chapters: list[Chapter]) -> Path:
+def write_book_report(chapters: list[Chapter], paths: BookPaths) -> Path:
     """Merge chapter Markdown into one report (prefer enriched over summary)."""
+    report_path = paths.book_report_path()
+    synthesis_path = paths.book_synthesis_path()
     scene_blocks = illustrations_by_chapter(
-        BOOK_VISUAL_RESOLVED_PATH, ILLUSTRATIONS_DIR
+        paths.book_visual_resolved_path(), paths.illustrations_dir
     )
     parts: list[str] = []
     missing: list[int] = []
     for ch in chapters:
-        enriched = chapter_enriched_path(ch.number)
-        summary = chapter_summary_path(ch.number)
+        enriched = paths.chapter_enriched_path(ch.number)
+        summary = paths.chapter_summary_path(ch.number)
         if enriched.exists():
             path = enriched
         elif summary.exists():
@@ -93,22 +61,23 @@ def write_book_report(chapters: list[Chapter]) -> Path:
         f"Merged chapter summaries ({len(parts)} chapters).\n"
     )
     chunks: list[str] = [header.rstrip()]
-    if BOOK_SYNTHESIS_PATH.exists():
-        synthesis = BOOK_SYNTHESIS_PATH.read_text(encoding="utf-8").strip()
+    if synthesis_path.exists():
+        synthesis = synthesis_path.read_text(encoding="utf-8").strip()
         if synthesis:
             chunks.append(synthesis)
     body = "\n\n---\n\n".join(parts)
     chunks.append(body)
-    BOOK_REPORT_PATH.write_text("\n\n---\n\n".join(chunks) + "\n", encoding="utf-8")
-    return BOOK_REPORT_PATH
+    report_path.write_text("\n\n---\n\n".join(chunks) + "\n", encoding="utf-8")
+    return report_path
 
 
-def write_book_rollup(chapters: list[Chapter]) -> Path:
+def write_book_rollup(chapters: list[Chapter], paths: BookPaths) -> Path:
     """Merge Reader analyses into state/book-rollup.json (no LLM)."""
+    rollup_path = paths.book_rollup_path()
     analyses: list[dict] = []
     missing: list[int] = []
     for ch in chapters:
-        path = chapter_analysis_path(ch.number)
+        path = paths.chapter_analysis_path(ch.number)
         if not path.exists():
             missing.append(ch.number)
             continue
@@ -122,11 +91,11 @@ def write_book_rollup(chapters: list[Chapter]) -> Path:
         )
 
     payload = build_book_rollup(analyses)
-    BOOK_ROLLUP_PATH.write_text(
+    rollup_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_ROLLUP_PATH
+    return rollup_path
 
 
 def _require_artifact(path: Path, *, stage: str, hint: str) -> None:
@@ -203,6 +172,7 @@ def _resolve_start(
 
 def summarize_one(
     chapter: Chapter,
+    paths: BookPaths,
     *,
     force: bool,
     from_stage: str | None,
@@ -215,10 +185,10 @@ def summarize_one(
     from agents.editor import edit_analysis, revise_summary
     from agents.reader import read_chapter
 
-    out_path = chapter_summary_path(chapter.number)
-    notes_path = chapter_analysis_path(chapter.number)
-    draft_path = chapter_draft_path(chapter.number)
-    critique_path = chapter_critique_path(chapter.number)
+    out_path = paths.chapter_summary_path(chapter.number)
+    notes_path = paths.chapter_analysis_path(chapter.number)
+    draft_path = paths.chapter_draft_path(chapter.number)
+    critique_path = paths.chapter_critique_path(chapter.number)
 
     start = _resolve_start(
         force=force,
@@ -280,14 +250,15 @@ def summarize_one(
     return "wrote"
 
 
-def cmd_chapters(_: argparse.Namespace) -> None:
-    chapters = load_chapters()
+def cmd_chapters(args: argparse.Namespace) -> None:
+    paths: BookPaths = args.paths
+    chapters = _chapters(paths)
     print(f"Found {len(chapters)} chapters:\n")
     for ch in chapters:
         words = len(ch.text.split())
         print(f"  {ch.number:2d}. {ch.heading}  ({words} words)")
 
-    state_path = STATE_DIR / "chapters.json"
+    state_path = paths.chapters_json_path()
     payload = [
         {
             "number": ch.number,
@@ -302,7 +273,8 @@ def cmd_chapters(_: argparse.Namespace) -> None:
 
 
 def cmd_summarize(args: argparse.Namespace) -> None:
-    chapters = load_chapters()
+    paths: BookPaths = args.paths
+    chapters = _chapters(paths)
 
     if args.all:
         if args.chapter != 1:
@@ -319,6 +291,7 @@ def cmd_summarize(args: argparse.Namespace) -> None:
     for chapter in targets:
         result = summarize_one(
             chapter,
+            paths,
             force=args.force,
             from_stage=args.from_stage,
         )
@@ -329,24 +302,27 @@ def cmd_summarize(args: argparse.Namespace) -> None:
 
     if args.all:
         print(f"\nMap done: {wrote} written, {skipped} skipped")
-        report_path = write_book_report(chapters)
+        report_path = write_book_report(chapters, paths)
         print(f"Wrote {report_path.relative_to(ROOT)}")
-        rollup_path = write_book_rollup(chapters)
+        rollup_path = write_book_rollup(chapters, paths)
         print(f"Wrote {rollup_path.relative_to(ROOT)}")
 
 
-def cmd_report(_: argparse.Namespace) -> None:
-    report_path = write_book_report(load_chapters())
+def cmd_report(args: argparse.Namespace) -> None:
+    paths: BookPaths = args.paths
+    report_path = write_book_report(_chapters(paths), paths)
     print(f"Wrote {report_path.relative_to(ROOT)}")
 
 
-def cmd_enriched(_: argparse.Namespace) -> None:
-    path = write_book_enriched(load_chapters())
+def cmd_enriched(args: argparse.Namespace) -> None:
+    paths: BookPaths = args.paths
+    path = write_book_enriched(_chapters(paths), paths)
     print(f"Wrote {path.relative_to(ROOT)}")
 
 
-def cmd_rollup(_: argparse.Namespace) -> None:
-    rollup_path = write_book_rollup(load_chapters())
+def cmd_rollup(args: argparse.Namespace) -> None:
+    paths: BookPaths = args.paths
+    rollup_path = write_book_rollup(_chapters(paths), paths)
     payload = json.loads(rollup_path.read_text(encoding="utf-8"))
     print(f"Wrote {rollup_path.relative_to(ROOT)}")
     print(
@@ -356,39 +332,41 @@ def cmd_rollup(_: argparse.Namespace) -> None:
     )
 
 
-def write_book_rollup_merged(*, force: bool) -> Path | None:
+def write_book_rollup_merged(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM alias merge of book-rollup.json → book-rollup-merged.json.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_ROLLUP_PATH.exists():
+    rollup_path = paths.book_rollup_path()
+    merged_path = paths.book_rollup_merged_path()
+    if not rollup_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            f"Missing {rollup_path.relative_to(ROOT)}. "
             "Run `python main.py rollup` first."
         )
 
-    if BOOK_ROLLUP_MERGED_PATH.exists() and not force:
+    if merged_path.exists() and not force:
         print(
-            f"Skip aliases: {BOOK_ROLLUP_MERGED_PATH.relative_to(ROOT)} already exists "
+            f"Skip aliases: {merged_path.relative_to(ROOT)} already exists "
             "(use --force to regenerate)"
         )
         return None
 
     from agents.alias_merger import propose_alias_clusters
 
-    rollup = json.loads(BOOK_ROLLUP_PATH.read_text(encoding="utf-8"))
+    rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
     print("Proposing character/theme alias clusters ...")
     clusters = propose_alias_clusters(rollup)
     payload = apply_alias_clusters(rollup, clusters)
-    BOOK_ROLLUP_MERGED_PATH.write_text(
+    merged_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_ROLLUP_MERGED_PATH
+    return merged_path
 
 
 def cmd_aliases(args: argparse.Namespace) -> None:
-    merged_path = write_book_rollup_merged(force=args.force)
+    merged_path = write_book_rollup_merged(args.paths, force=args.force)
     if merged_path is None:
         return
     payload = json.loads(merged_path.read_text(encoding="utf-8"))
@@ -402,32 +380,35 @@ def cmd_aliases(args: argparse.Namespace) -> None:
     )
 
 
-def write_book_synthesis(*, force: bool) -> Path | None:
+def write_book_synthesis(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM reduce: compact analyses + rollup → output/book-synthesis.md.
 
     Requires chapter summaries too so the rebuilt report can include them.
     Returns the path written, or None if skipped.
     """
-    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+    rollup_base = paths.book_rollup_path()
+    rollup_merged = paths.book_rollup_merged_path()
+    synthesis_path = paths.book_synthesis_path()
+    if not rollup_base.exists() and not rollup_merged.exists():
         raise SystemExit(
-            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            f"Missing {rollup_base.relative_to(ROOT)}. "
             "Run `python main.py rollup` first."
         )
 
-    if BOOK_SYNTHESIS_PATH.exists() and not force:
+    if synthesis_path.exists() and not force:
         print(
-            f"Skip reduce: {BOOK_SYNTHESIS_PATH.relative_to(ROOT)} already exists "
+            f"Skip reduce: {synthesis_path.relative_to(ROOT)} already exists "
             "(use --force to regenerate)"
         )
         return None
 
-    chapters = load_chapters()
+    chapters = _chapters(paths)
     analyses: list[dict] = []
     missing_analysis: list[int] = []
     missing_summary: list[int] = []
     for ch in chapters:
-        analysis_path = chapter_analysis_path(ch.number)
-        summary_path = chapter_summary_path(ch.number)
+        analysis_path = paths.chapter_analysis_path(ch.number)
+        summary_path = paths.chapter_summary_path(ch.number)
         if not analysis_path.exists():
             missing_analysis.append(ch.number)
             continue
@@ -449,11 +430,7 @@ def write_book_synthesis(*, force: bool) -> Path | None:
             "Run `python main.py summarize --all` first."
         )
 
-    rollup_path = (
-        BOOK_ROLLUP_MERGED_PATH
-        if BOOK_ROLLUP_MERGED_PATH.exists()
-        else BOOK_ROLLUP_PATH
-    )
+    rollup_path = rollup_merged if rollup_merged.exists() else rollup_base
     rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
 
     from agents.reducer import synthesize_book
@@ -463,42 +440,46 @@ def write_book_synthesis(*, force: bool) -> Path | None:
         f"+ {rollup_path.relative_to(ROOT)} ..."
     )
     markdown = synthesize_book(analyses, rollup)
-    BOOK_SYNTHESIS_PATH.write_text(markdown, encoding="utf-8")
-    return BOOK_SYNTHESIS_PATH
+    synthesis_path.write_text(markdown, encoding="utf-8")
+    return synthesis_path
 
 
 def cmd_reduce(args: argparse.Namespace) -> None:
-    synth_path = write_book_synthesis(force=args.force)
+    paths: BookPaths = args.paths
+    synth_path = write_book_synthesis(paths, force=args.force)
     if synth_path is None:
         return
     print(f"Wrote {synth_path.relative_to(ROOT)}")
-    report_path = write_book_report(load_chapters())
+    report_path = write_book_report(_chapters(paths), paths)
     print(f"Wrote {report_path.relative_to(ROOT)}")
 
 
-def write_book_visual_identity(*, force: bool) -> Path | None:
+def write_book_visual_identity(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM visual identity from compact analyses + rollup → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+    rollup_base = paths.book_rollup_path()
+    rollup_merged = paths.book_rollup_merged_path()
+    identity_path = paths.book_visual_identity_path()
+    if not rollup_base.exists() and not rollup_merged.exists():
         raise SystemExit(
-            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            f"Missing {rollup_base.relative_to(ROOT)}. "
             "Run `python main.py rollup` first."
         )
 
-    if BOOK_VISUAL_IDENTITY_PATH.exists() and not force:
+    if identity_path.exists() and not force:
         print(
-            f"Skip visual-identity: {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} "
+            f"Skip visual-identity: {identity_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    chapters = load_chapters()
+    chapters = _chapters(paths)
     analyses: list[dict] = []
     missing_analysis: list[int] = []
     for ch in chapters:
-        analysis_path = chapter_analysis_path(ch.number)
+        analysis_path = paths.chapter_analysis_path(ch.number)
         if not analysis_path.exists():
             missing_analysis.append(ch.number)
             continue
@@ -511,11 +492,7 @@ def write_book_visual_identity(*, force: bool) -> Path | None:
             "Run `python main.py summarize --all` first."
         )
 
-    rollup_path = (
-        BOOK_ROLLUP_MERGED_PATH
-        if BOOK_ROLLUP_MERGED_PATH.exists()
-        else BOOK_ROLLUP_PATH
-    )
+    rollup_path = rollup_merged if rollup_merged.exists() else rollup_base
     rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
 
     from agents.visual_identity import build_visual_identity
@@ -529,15 +506,15 @@ def write_book_visual_identity(*, force: bool) -> Path | None:
         rollup,
         source_rollup=rollup_path.name,
     )
-    BOOK_VISUAL_IDENTITY_PATH.write_text(
+    identity_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_IDENTITY_PATH
+    return identity_path
 
 
 def cmd_visual_identity(args: argparse.Namespace) -> None:
-    path = write_book_visual_identity(force=args.force)
+    path = write_book_visual_identity(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -552,34 +529,38 @@ def cmd_visual_identity(args: argparse.Namespace) -> None:
     )
 
 
-def write_book_visual_characters(*, force: bool) -> Path | None:
+def write_book_visual_characters(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM character visual sheets from analyses + rollup + identity → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_ROLLUP_PATH.exists() and not BOOK_ROLLUP_MERGED_PATH.exists():
+    rollup_base = paths.book_rollup_path()
+    rollup_merged = paths.book_rollup_merged_path()
+    identity_path = paths.book_visual_identity_path()
+    characters_path = paths.book_visual_characters_path()
+    if not rollup_base.exists() and not rollup_merged.exists():
         raise SystemExit(
-            f"Missing {BOOK_ROLLUP_PATH.relative_to(ROOT)}. "
+            f"Missing {rollup_base.relative_to(ROOT)}. "
             "Run `python main.py rollup` first."
         )
-    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+    if not identity_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            f"Missing {identity_path.relative_to(ROOT)}. "
             "Run `python main.py visual-identity` first."
         )
 
-    if BOOK_VISUAL_CHARACTERS_PATH.exists() and not force:
+    if characters_path.exists() and not force:
         print(
-            f"Skip visual-characters: {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)} "
+            f"Skip visual-characters: {characters_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    chapters = load_chapters()
+    chapters = _chapters(paths)
     analyses: list[dict] = []
     missing_analysis: list[int] = []
     for ch in chapters:
-        analysis_path = chapter_analysis_path(ch.number)
+        analysis_path = paths.chapter_analysis_path(ch.number)
         if not analysis_path.exists():
             missing_analysis.append(ch.number)
             continue
@@ -592,37 +573,33 @@ def write_book_visual_characters(*, force: bool) -> Path | None:
             "Run `python main.py summarize --all` first."
         )
 
-    rollup_path = (
-        BOOK_ROLLUP_MERGED_PATH
-        if BOOK_ROLLUP_MERGED_PATH.exists()
-        else BOOK_ROLLUP_PATH
-    )
+    rollup_path = rollup_merged if rollup_merged.exists() else rollup_base
     rollup = json.loads(rollup_path.read_text(encoding="utf-8"))
-    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
 
     from agents.visual_characters import build_visual_characters
 
     print(
         f"Building visual characters from {len(analyses)} compact analyses "
         f"+ {rollup_path.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} ..."
+        f"+ {identity_path.relative_to(ROOT)} ..."
     )
     payload = build_visual_characters(
         analyses,
         rollup,
         identity,
         source_rollup=rollup_path.name,
-        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+        source_identity=identity_path.name,
     )
-    BOOK_VISUAL_CHARACTERS_PATH.write_text(
+    characters_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_CHARACTERS_PATH
+    return characters_path
 
 
 def cmd_visual_characters(args: argparse.Namespace) -> None:
-    path = write_book_visual_characters(force=args.force)
+    path = write_book_visual_characters(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -640,29 +617,31 @@ def cmd_visual_characters(args: argparse.Namespace) -> None:
     )
 
 
-def write_book_visual_places(*, force: bool) -> Path | None:
+def write_book_visual_places(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM place / setting sheets from analyses + identity → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+    identity_path = paths.book_visual_identity_path()
+    places_path = paths.book_visual_places_path()
+    if not identity_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            f"Missing {identity_path.relative_to(ROOT)}. "
             "Run `python main.py visual-identity` first."
         )
 
-    if BOOK_VISUAL_PLACES_PATH.exists() and not force:
+    if places_path.exists() and not force:
         print(
-            f"Skip visual-places: {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)} "
+            f"Skip visual-places: {places_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    chapters = load_chapters()
+    chapters = _chapters(paths)
     analyses: list[dict] = []
     missing_analysis: list[int] = []
     for ch in chapters:
-        analysis_path = chapter_analysis_path(ch.number)
+        analysis_path = paths.chapter_analysis_path(ch.number)
         if not analysis_path.exists():
             missing_analysis.append(ch.number)
             continue
@@ -675,28 +654,28 @@ def write_book_visual_places(*, force: bool) -> Path | None:
             "Run `python main.py summarize --all` first."
         )
 
-    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
 
     from agents.visual_places import build_visual_places
 
     print(
         f"Building visual places from {len(analyses)} compact analyses "
-        f"+ {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} ..."
+        f"+ {identity_path.relative_to(ROOT)} ..."
     )
     payload = build_visual_places(
         analyses,
         identity,
-        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
+        source_identity=identity_path.name,
     )
-    BOOK_VISUAL_PLACES_PATH.write_text(
+    places_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_PLACES_PATH
+    return places_path
 
 
 def cmd_visual_places(args: argparse.Namespace) -> None:
-    path = write_book_visual_places(force=args.force)
+    path = write_book_visual_places(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -716,39 +695,43 @@ def cmd_visual_places(args: argparse.Namespace) -> None:
     )
 
 
-def write_book_visual_scenes(*, force: bool) -> Path | None:
+def write_book_visual_scenes(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM scene briefs from analyses + identity + characters + places → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+    identity_path = paths.book_visual_identity_path()
+    characters_path = paths.book_visual_characters_path()
+    places_path = paths.book_visual_places_path()
+    scenes_path = paths.book_visual_scenes_path()
+    if not identity_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            f"Missing {identity_path.relative_to(ROOT)}. "
             "Run `python main.py visual-identity` first."
         )
-    if not BOOK_VISUAL_CHARACTERS_PATH.exists():
+    if not characters_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)}. "
+            f"Missing {characters_path.relative_to(ROOT)}. "
             "Run `python main.py visual-characters` first."
         )
-    if not BOOK_VISUAL_PLACES_PATH.exists():
+    if not places_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)}. "
+            f"Missing {places_path.relative_to(ROOT)}. "
             "Run `python main.py visual-places` first."
         )
 
-    if BOOK_VISUAL_SCENES_PATH.exists() and not force:
+    if scenes_path.exists() and not force:
         print(
-            f"Skip visual-scenes: {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)} "
+            f"Skip visual-scenes: {scenes_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    chapters = load_chapters()
+    chapters = _chapters(paths)
     analyses: list[dict] = []
     missing_analysis: list[int] = []
     for ch in chapters:
-        analysis_path = chapter_analysis_path(ch.number)
+        analysis_path = paths.chapter_analysis_path(ch.number)
         if not analysis_path.exists():
             missing_analysis.append(ch.number)
             continue
@@ -761,38 +744,36 @@ def write_book_visual_scenes(*, force: bool) -> Path | None:
             "Run `python main.py summarize --all` first."
         )
 
-    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
-    characters_payload = json.loads(
-        BOOK_VISUAL_CHARACTERS_PATH.read_text(encoding="utf-8")
-    )
-    places_payload = json.loads(BOOK_VISUAL_PLACES_PATH.read_text(encoding="utf-8"))
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    characters_payload = json.loads(characters_path.read_text(encoding="utf-8"))
+    places_payload = json.loads(places_path.read_text(encoding="utf-8"))
 
     from agents.visual_scenes import build_visual_scenes
 
     print(
         f"Building visual scenes from {len(analyses)} compact analyses "
-        f"+ {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)} ..."
+        f"+ {identity_path.relative_to(ROOT)} "
+        f"+ {characters_path.relative_to(ROOT)} "
+        f"+ {places_path.relative_to(ROOT)} ..."
     )
     payload = build_visual_scenes(
         analyses,
         identity,
         characters_payload,
         places_payload,
-        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
-        source_characters=BOOK_VISUAL_CHARACTERS_PATH.name,
-        source_places=BOOK_VISUAL_PLACES_PATH.name,
+        source_identity=identity_path.name,
+        source_characters=characters_path.name,
+        source_places=places_path.name,
     )
-    BOOK_VISUAL_SCENES_PATH.write_text(
+    scenes_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_SCENES_PATH
+    return scenes_path
 
 
 def cmd_visual_scenes(args: argparse.Namespace) -> None:
-    path = write_book_visual_scenes(force=args.force)
+    path = write_book_visual_scenes(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -808,74 +789,77 @@ def cmd_visual_scenes(args: argparse.Namespace) -> None:
     )
 
 
-def write_book_visual_handoff(*, force: bool) -> Path | None:
+def write_book_visual_handoff(paths: BookPaths, *, force: bool) -> Path | None:
     """LLM handoff: open questions + consistency over bible sheets → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+    identity_path = paths.book_visual_identity_path()
+    characters_path = paths.book_visual_characters_path()
+    places_path = paths.book_visual_places_path()
+    scenes_path = paths.book_visual_scenes_path()
+    handoff_path = paths.book_visual_handoff_path()
+    if not identity_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            f"Missing {identity_path.relative_to(ROOT)}. "
             "Run `python main.py visual-identity` first."
         )
-    if not BOOK_VISUAL_CHARACTERS_PATH.exists():
+    if not characters_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)}. "
+            f"Missing {characters_path.relative_to(ROOT)}. "
             "Run `python main.py visual-characters` first."
         )
-    if not BOOK_VISUAL_PLACES_PATH.exists():
+    if not places_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)}. "
+            f"Missing {places_path.relative_to(ROOT)}. "
             "Run `python main.py visual-places` first."
         )
-    if not BOOK_VISUAL_SCENES_PATH.exists():
+    if not scenes_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)}. "
+            f"Missing {scenes_path.relative_to(ROOT)}. "
             "Run `python main.py visual-scenes` first."
         )
 
-    if BOOK_VISUAL_HANDOFF_PATH.exists() and not force:
+    if handoff_path.exists() and not force:
         print(
-            f"Skip visual-handoff: {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)} "
+            f"Skip visual-handoff: {handoff_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
-    characters_payload = json.loads(
-        BOOK_VISUAL_CHARACTERS_PATH.read_text(encoding="utf-8")
-    )
-    places_payload = json.loads(BOOK_VISUAL_PLACES_PATH.read_text(encoding="utf-8"))
-    scenes_payload = json.loads(BOOK_VISUAL_SCENES_PATH.read_text(encoding="utf-8"))
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    characters_payload = json.loads(characters_path.read_text(encoding="utf-8"))
+    places_payload = json.loads(places_path.read_text(encoding="utf-8"))
+    scenes_payload = json.loads(scenes_path.read_text(encoding="utf-8"))
 
     from agents.visual_handoff import build_visual_handoff
 
     print(
         f"Building visual handoff from "
-        f"{BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)} ..."
+        f"{identity_path.relative_to(ROOT)} "
+        f"+ {characters_path.relative_to(ROOT)} "
+        f"+ {places_path.relative_to(ROOT)} "
+        f"+ {scenes_path.relative_to(ROOT)} ..."
     )
     payload = build_visual_handoff(
         identity,
         characters_payload,
         places_payload,
         scenes_payload,
-        source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
-        source_characters=BOOK_VISUAL_CHARACTERS_PATH.name,
-        source_places=BOOK_VISUAL_PLACES_PATH.name,
-        source_scenes=BOOK_VISUAL_SCENES_PATH.name,
+        source_identity=identity_path.name,
+        source_characters=characters_path.name,
+        source_places=places_path.name,
+        source_scenes=scenes_path.name,
     )
-    BOOK_VISUAL_HANDOFF_PATH.write_text(
+    handoff_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_HANDOFF_PATH
+    return handoff_path
 
 
 def cmd_visual_handoff(args: argparse.Namespace) -> None:
-    path = write_book_visual_handoff(force=args.force)
+    path = write_book_visual_handoff(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -885,65 +869,70 @@ def cmd_visual_handoff(args: argparse.Namespace) -> None:
     print(f"  {len(questions)} open_questions, {len(issues)} consistency_issues")
 
 
-def write_book_visual_resolved(*, force: bool) -> Path | None:
+def write_book_visual_resolved(paths: BookPaths, *, force: bool) -> Path | None:
     """Apply handoff answers into a locked resolved bible → state JSON.
 
     Returns the path written, or None if skipped.
     """
-    if not BOOK_VISUAL_IDENTITY_PATH.exists():
+    identity_path = paths.book_visual_identity_path()
+    characters_path = paths.book_visual_characters_path()
+    places_path = paths.book_visual_places_path()
+    scenes_path = paths.book_visual_scenes_path()
+    handoff_path = paths.book_visual_handoff_path()
+    answers_path = paths.book_visual_answers_path()
+    resolved_path = paths.book_visual_resolved_path()
+    if not identity_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_IDENTITY_PATH.relative_to(ROOT)}. "
+            f"Missing {identity_path.relative_to(ROOT)}. "
             "Run `python main.py visual-identity` first."
         )
-    if not BOOK_VISUAL_CHARACTERS_PATH.exists():
+    if not characters_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_CHARACTERS_PATH.relative_to(ROOT)}. "
+            f"Missing {characters_path.relative_to(ROOT)}. "
             "Run `python main.py visual-characters` first."
         )
-    if not BOOK_VISUAL_PLACES_PATH.exists():
+    if not places_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_PLACES_PATH.relative_to(ROOT)}. "
+            f"Missing {places_path.relative_to(ROOT)}. "
             "Run `python main.py visual-places` first."
         )
-    if not BOOK_VISUAL_SCENES_PATH.exists():
+    if not scenes_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_SCENES_PATH.relative_to(ROOT)}. "
+            f"Missing {scenes_path.relative_to(ROOT)}. "
             "Run `python main.py visual-scenes` first."
         )
-    if not BOOK_VISUAL_HANDOFF_PATH.exists():
+    if not handoff_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)}. "
+            f"Missing {handoff_path.relative_to(ROOT)}. "
             "Run `python main.py visual-handoff` first."
         )
-    if not BOOK_VISUAL_ANSWERS_PATH.exists():
+    if not answers_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_ANSWERS_PATH.relative_to(ROOT)}. "
+            f"Missing {answers_path.relative_to(ROOT)}. "
             "Download answers from `python main.py view-handoff` and place "
             "the file under state/."
         )
 
-    if BOOK_VISUAL_RESOLVED_PATH.exists() and not force:
+    if resolved_path.exists() and not force:
         print(
-            f"Skip visual-resolve: {BOOK_VISUAL_RESOLVED_PATH.relative_to(ROOT)} "
+            f"Skip visual-resolve: {resolved_path.relative_to(ROOT)} "
             "already exists (use --force to regenerate)"
         )
         return None
 
-    identity = json.loads(BOOK_VISUAL_IDENTITY_PATH.read_text(encoding="utf-8"))
-    characters_payload = json.loads(
-        BOOK_VISUAL_CHARACTERS_PATH.read_text(encoding="utf-8")
-    )
-    places_payload = json.loads(BOOK_VISUAL_PLACES_PATH.read_text(encoding="utf-8"))
-    scenes_payload = json.loads(BOOK_VISUAL_SCENES_PATH.read_text(encoding="utf-8"))
-    handoff = json.loads(BOOK_VISUAL_HANDOFF_PATH.read_text(encoding="utf-8"))
-    answers = json.loads(BOOK_VISUAL_ANSWERS_PATH.read_text(encoding="utf-8"))
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    characters_payload = json.loads(characters_path.read_text(encoding="utf-8"))
+    places_payload = json.loads(places_path.read_text(encoding="utf-8"))
+    scenes_payload = json.loads(scenes_path.read_text(encoding="utf-8"))
+    handoff = json.loads(handoff_path.read_text(encoding="utf-8"))
+    answers = json.loads(answers_path.read_text(encoding="utf-8"))
 
     from agents.visual_resolve import build_visual_resolved
 
     print(
         f"Resolving visual bible from "
-        f"{BOOK_VISUAL_ANSWERS_PATH.relative_to(ROOT)} "
-        f"+ {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)} "
+        f"{answers_path.relative_to(ROOT)} "
+        f"+ {handoff_path.relative_to(ROOT)} "
         f"+ bible sheets ..."
     )
     try:
@@ -954,25 +943,25 @@ def write_book_visual_resolved(*, force: bool) -> Path | None:
             scenes_payload,
             handoff,
             answers,
-            source_identity=BOOK_VISUAL_IDENTITY_PATH.name,
-            source_characters=BOOK_VISUAL_CHARACTERS_PATH.name,
-            source_places=BOOK_VISUAL_PLACES_PATH.name,
-            source_scenes=BOOK_VISUAL_SCENES_PATH.name,
-            source_handoff=BOOK_VISUAL_HANDOFF_PATH.name,
-            source_answers=BOOK_VISUAL_ANSWERS_PATH.name,
+            source_identity=identity_path.name,
+            source_characters=characters_path.name,
+            source_places=places_path.name,
+            source_scenes=scenes_path.name,
+            source_handoff=handoff_path.name,
+            source_answers=answers_path.name,
         )
     except RuntimeError as exc:
         raise SystemExit(str(exc)) from exc
 
-    BOOK_VISUAL_RESOLVED_PATH.write_text(
+    resolved_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    return BOOK_VISUAL_RESOLVED_PATH
+    return resolved_path
 
 
 def cmd_visual_resolve(args: argparse.Namespace) -> None:
-    path = write_book_visual_resolved(force=args.force)
+    path = write_book_visual_resolved(args.paths, force=args.force)
     if path is None:
         return
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -993,9 +982,11 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
     import socketserver
     import webbrowser
 
-    if not BOOK_VISUAL_HANDOFF_PATH.exists():
+    paths: BookPaths = args.paths
+    handoff_path = paths.book_visual_handoff_path()
+    if not handoff_path.exists():
         raise SystemExit(
-            f"Missing {BOOK_VISUAL_HANDOFF_PATH.relative_to(ROOT)}. "
+            f"Missing {handoff_path.relative_to(ROOT)}. "
             "Run `python main.py visual-handoff` first."
         )
     if not WEB_HANDOFF_HTML_PATH.exists():
@@ -1025,17 +1016,17 @@ def cmd_view_handoff(args: argparse.Namespace) -> None:
             print("\nStopped.")
 
 
-def footnotes_one(chapter: Chapter, *, force: bool) -> str:
+def footnotes_one(chapter: Chapter, paths: BookPaths, *, force: bool) -> str:
     """Research footnotes + weave enriched Markdown for one chapter.
 
     Returns 'wrote' or 'skip'.
     """
     from agents.footnote import research_footnotes
 
-    notes_path = chapter_analysis_path(chapter.number)
-    summary_path = chapter_summary_path(chapter.number)
-    footnotes_path = chapter_footnotes_path(chapter.number)
-    enriched_path = chapter_enriched_path(chapter.number)
+    notes_path = paths.chapter_analysis_path(chapter.number)
+    summary_path = paths.chapter_summary_path(chapter.number)
+    footnotes_path = paths.chapter_footnotes_path(chapter.number)
+    enriched_path = paths.chapter_enriched_path(chapter.number)
 
     if not notes_path.exists():
         raise SystemExit(
@@ -1075,7 +1066,8 @@ def footnotes_one(chapter: Chapter, *, force: bool) -> str:
 
 
 def cmd_footnotes(args: argparse.Namespace) -> None:
-    chapters = load_chapters()
+    paths: BookPaths = args.paths
+    chapters = _chapters(paths)
 
     if args.all:
         if args.chapter is not None:
@@ -1083,7 +1075,7 @@ def cmd_footnotes(args: argparse.Namespace) -> None:
         targets = chapters
     elif args.chapter is None:
         chapter = next(
-            (c for c in chapters if not chapter_footnotes_path(c.number).exists()),
+            (c for c in chapters if not paths.chapter_footnotes_path(c.number).exists()),
             None,
         )
         if chapter is None:
@@ -1102,7 +1094,7 @@ def cmd_footnotes(args: argparse.Namespace) -> None:
 
     wrote = skipped = 0
     for chapter in targets:
-        result = footnotes_one(chapter, force=args.force)
+        result = footnotes_one(chapter, paths, force=args.force)
         if result == "wrote":
             wrote += 1
         else:
@@ -1110,12 +1102,14 @@ def cmd_footnotes(args: argparse.Namespace) -> None:
 
     if args.all:
         print(f"\nFootnotes done: {wrote} written, {skipped} skipped")
-        report_path = write_book_report(chapters)
+        report_path = write_book_report(chapters, paths)
         print(f"Wrote {report_path.relative_to(ROOT)}")
 
 
 def cmd_export(args: argparse.Namespace) -> None:
-    written = export_report(args.format, force=args.force, mode=args.mode)
+    written = export_report(
+        args.format, force=args.force, mode=args.mode, paths=args.paths
+    )
     for path in written:
         print(f"Wrote {path.relative_to(ROOT)}")
 

@@ -5,20 +5,19 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** MB1 done (`BookPaths` + `--book`); next implement **MB2** (wire CLI).
-- **Last success:** `BookPaths` flat Alice compat; `python main.py chapters --book alice-wonderland` writes flat `state/chapters.json`.
-- **Do not redo:** MB1 path contract; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** MB2 done (CLI + enriched/export via `BookPaths`); next **MB3** (migrate Alice).
+- **Last success:** All commands resolve via `args.paths`; Alice flat smoke (`chapters`/`report`/`enriched`/`rollup`/`export`) still writes `state/` + `output/`.
+- **Do not redo:** MB1 path contract; MB2 CLI wiring; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **MB2 — Wire CLI** — all commands use `BookPaths` (no scattered `ROOT / "state"`)
+- [ ] **MB3 — Migrate Alice** — move source/`state`/`output` under `<book-id>`; drop flat fallback; smoke + architecture/runbook
 
 ## Next
 
-Multi-book foundation (after MB2; one PR/chat each; keep MB3 alone):
+Multi-book foundation (after MB3; one PR/chat each):
 
-- [ ] **MB3 — Migrate Alice** — move source/`state`/`output` under `<book-id>`; drop flat fallback; smoke + architecture/runbook
 - [ ] **MB4 — Light catalog** — `meta.json` / `catalog.json` (id, title, author, source kind); list/validate ids
 - [ ] **MB5 — Book-scope handoff viewer** — `view-handoff --book` + fetch `state/<id>/book-visual-handoff.json`
 
@@ -43,6 +42,7 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **MB2 — Wire CLI** — all commands + enriched/export use `BookPaths` (Alice still flat)
 - [x] **MB1 — Path contract** — `BookPaths` + CLI `--book <id>` (default `alice-wonderland`); flat Alice compat (no file moves)
 - [x] Enriched Alice v1 — binder + `export --mode enriched` → `book-enriched.*` (no new LLM); smoke HTML/EPUB
 - [x] Product direction: enriched book north star; companion report kept as second export (`idea/enriched_book_export.md`)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import re
+from functools import partial
 from pathlib import Path
 from typing import Iterable
 
@@ -11,10 +12,8 @@ import markdown
 from ebooklib import epub
 from xhtml2pdf import pisa
 
-ROOT = Path(__file__).resolve().parent
-OUTPUT_DIR = ROOT / "output"
-BOOK_REPORT_PATH = OUTPUT_DIR / "book-report.md"
-BOOK_ENRICHED_PATH = OUTPUT_DIR / "book-enriched.md"
+from book import BookPaths, DEFAULT_BOOK_ID, ROOT
+
 ILLUSTRATIONS_PREFIX = "illustrations/"
 
 FORMATS = ("html", "pdf", "epub")
@@ -24,16 +23,16 @@ ENRICHED_TITLE = "Alice's Adventures in Wonderland"
 
 _MODE_CONFIG = {
     "report": {
-        "source": BOOK_REPORT_PATH,
         "stem": "book-report",
         "title": DEFAULT_TITLE,
         "binder_hint": "python main.py report",
+        "source_attr": "book_report_path",
     },
     "enriched": {
-        "source": BOOK_ENRICHED_PATH,
         "stem": "book-enriched",
         "title": ENRICHED_TITLE,
         "binder_hint": "python main.py enriched",
+        "source_attr": "book_enriched_path",
     },
 }
 
@@ -100,7 +99,7 @@ def _illustration_srcs(body: str) -> list[str]:
     return out
 
 
-def _resolve_illustration(src: str, *, base: Path = OUTPUT_DIR) -> Path | None:
+def _resolve_illustration(src: str, *, base: Path) -> Path | None:
     """Map a relative ``illustrations/…`` src to an existing file under base."""
     if not src.startswith(ILLUSTRATIONS_PREFIX):
         return None
@@ -116,7 +115,7 @@ def _resolve_illustration(src: str, *, base: Path = OUTPUT_DIR) -> Path | None:
     return path if path.is_file() else None
 
 
-def _existing_illustration_paths(body: str, *, base: Path = OUTPUT_DIR) -> list[Path]:
+def _existing_illustration_paths(body: str, *, base: Path) -> list[Path]:
     paths: list[Path] = []
     for src in _illustration_srcs(body):
         resolved = _resolve_illustration(src, base=base)
@@ -142,10 +141,10 @@ def md_to_html(md_text: str, title: str = DEFAULT_TITLE) -> str:
     )
 
 
-def output_path(fmt: str, stem: str = "book-report") -> Path:
+def output_path(fmt: str, stem: str = "book-report", *, output_dir: Path) -> Path:
     if fmt not in FORMATS:
         raise ValueError(f"Unknown format: {fmt}")
-    return OUTPUT_DIR / f"{stem}.{fmt}"
+    return output_dir / f"{stem}.{fmt}"
 
 
 def resolve_formats(fmt: str) -> list[str]:
@@ -161,8 +160,8 @@ def write_html(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
     return dest
 
 
-def _pdf_link_callback(uri: str, rel: str) -> str:
-    """Resolve relative image URIs for xhtml2pdf against OUTPUT_DIR."""
+def _pdf_link_callback(uri: str, rel: str, *, output_dir: Path) -> str:
+    """Resolve relative image URIs for xhtml2pdf against output_dir."""
     del rel  # unused; required by pisa signature
     if not uri:
         return uri
@@ -172,18 +171,28 @@ def _pdf_link_callback(uri: str, rel: str) -> str:
     path = Path(uri)
     if path.is_absolute():
         return str(path) if path.is_file() else uri
-    resolved = _resolve_illustration(uri) if uri.startswith(ILLUSTRATIONS_PREFIX) else None
+    resolved = (
+        _resolve_illustration(uri, base=output_dir)
+        if uri.startswith(ILLUSTRATIONS_PREFIX)
+        else None
+    )
     if resolved is not None:
         return str(resolved)
-    candidate = (OUTPUT_DIR / uri).resolve()
+    candidate = (output_dir / uri).resolve()
     try:
-        candidate.relative_to(OUTPUT_DIR.resolve())
+        candidate.relative_to(output_dir.resolve())
     except ValueError:
         return uri
     return str(candidate) if candidate.is_file() else uri
 
 
-def write_pdf(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
+def write_pdf(
+    md_text: str,
+    dest: Path,
+    *,
+    title: str = DEFAULT_TITLE,
+    output_dir: Path | None = None,
+) -> Path:
     # xhtml2pdf prefers XHTML-ish markup; keep a simple document wrapper.
     body = _body_html(md_text)
     doc = (
@@ -197,20 +206,27 @@ def write_pdf(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
         f"<body>\n{body}\n</body>\n"
         "</html>\n"
     )
+    base = output_dir if output_dir is not None else dest.parent
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("wb") as out:
         result = pisa.CreatePDF(
             src=doc,
             dest=out,
             encoding="utf-8",
-            link_callback=_pdf_link_callback,
+            link_callback=partial(_pdf_link_callback, output_dir=base),
         )
     if result.err:
         raise RuntimeError(f"PDF export failed with {result.err} error(s)")
     return dest
 
 
-def write_epub(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
+def write_epub(
+    md_text: str,
+    dest: Path,
+    *,
+    title: str = DEFAULT_TITLE,
+    output_dir: Path | None = None,
+) -> Path:
     book = epub.EpubBook()
     book.set_identifier("book-review-report")
     book.set_title(title)
@@ -223,7 +239,8 @@ def write_epub(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
     chapter.content = f'<style type="text/css">{_CSS}</style>\n{body}'
     book.add_item(chapter)
 
-    for path in _existing_illustration_paths(body):
+    base = output_dir if output_dir is not None else dest.parent
+    for path in _existing_illustration_paths(body, base=base):
         item = epub.EpubItem(
             uid=f"ill-{path.name}",
             file_name=f"{ILLUSTRATIONS_PREFIX}{path.name}",
@@ -244,25 +261,20 @@ def write_epub(md_text: str, dest: Path, *, title: str = DEFAULT_TITLE) -> Path:
     return dest
 
 
-_WRITERS = {
-    "html": write_html,
-    "pdf": write_pdf,
-    "epub": write_epub,
-}
-
-
 def export_report(
     formats: Iterable[str] | str = "all",
     *,
     force: bool = False,
     mode: str = "report",
+    paths: BookPaths | None = None,
     source: Path | None = None,
     title: str | None = None,
 ) -> list[Path]:
     """Export binder Markdown to the requested formats.
 
     ``mode`` selects source stem/title (``report`` or ``enriched``). Explicit
-    ``source`` / ``title`` override the mode defaults.
+    ``source`` / ``title`` override the mode defaults. Artifact dirs come from
+    ``paths`` (default Alice flat layout).
 
     Returns paths written. Skips existing targets unless ``force``.
     Raises SystemExit if the Markdown source is missing.
@@ -273,8 +285,12 @@ def export_report(
     """
     if mode not in _MODE_CONFIG:
         raise ValueError(f"Unknown export mode: {mode}")
+    if paths is None:
+        paths = BookPaths(book_id=DEFAULT_BOOK_ID, root=ROOT)
     cfg = _MODE_CONFIG[mode]
-    src = source or cfg["source"]
+    source_attr = cfg["source_attr"]
+    assert isinstance(source_attr, str)
+    src = source or getattr(paths, source_attr)()
     stem = cfg["stem"]
     export_title = title if title is not None else cfg["title"]
     assert isinstance(src, Path)
@@ -294,15 +310,24 @@ def export_report(
 
     md_text = src.read_text(encoding="utf-8")
     written: list[Path] = []
+    output_dir = paths.output_dir
     for fmt in fmt_list:
-        dest = output_path(fmt, stem=stem)
+        dest = output_path(fmt, stem=stem, output_dir=output_dir)
         if dest.exists() and not force:
             print(
                 f"Skip export {fmt}: {dest.relative_to(ROOT)} already exists "
                 "(use --force to regenerate)"
             )
             continue
-        writer = _WRITERS[fmt]
-        path = writer(md_text, dest, title=export_title)
+        if fmt == "html":
+            path = write_html(md_text, dest, title=export_title)
+        elif fmt == "pdf":
+            path = write_pdf(
+                md_text, dest, title=export_title, output_dir=output_dir
+            )
+        else:
+            path = write_epub(
+                md_text, dest, title=export_title, output_dir=output_dir
+            )
         written.append(path)
     return written

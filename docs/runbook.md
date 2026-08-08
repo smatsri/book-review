@@ -189,10 +189,11 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 
 ## Smoke checks
 
-After changing the loader / splitter / `BookPaths`:
+After changing the loader / splitter / `BookPaths` / CLI path wiring:
 
-1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both still write flat `state/chapters.json`.
+1. `python main.py chapters` and `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; both still write flat `state/chapters.json` (Alice compat until MB3).
 2. Confirm `state/chapters.json` updated.
+3. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — still under flat `state/` + `output/`.
 
 After changing Reader / Editor / Critic:
 

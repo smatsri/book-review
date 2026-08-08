@@ -281,15 +281,15 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Multi-book foundation: five implementation slices
 
-**Status:** current (MB1 done; MB2 next)  
+**Status:** current (MB1–MB2 done; MB3 next)  
 **Context:** Enriched Alice v1 shipped; multi-book is the next product slice. Need reviewable chunks and a safe Alice migration.  
 **Decision:** Implement foundation as **MB1–MB5** (path contract → wire CLI → migrate Alice → light catalog → book-scoped handoff viewer). One PR/chat per slice; **MB3 alone**. Flat-path compat until MB3. PDF ingest / Naked Sun / pipeline UI stay after foundation. Slice list: [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md); live backlog: `todo.md` Now/Next.  
-**Consequences:** Agents pick **MB2** from Now; do not mix PDF or pipeline UI into MB1–MB5.  
+**Consequences:** Agents pick **MB3** from Now; do not mix PDF or pipeline UI into MB1–MB5.  
 **Extends:** “After Alice: multi-book…”; supersedes enriched-priority hold on multi-book (enriched v1 done).
 
 ## 2026-08 — MB1 path contract (`BookPaths` + `--book`)
 
-**Status:** current  
+**Status:** superseded by MB2 (contract still in force)  
 **Context:** Need a stable book-id path API before wiring every command or moving Alice files.  
 **Decision:**
 1. Default book id is `alice-wonderland` (slug; source file remains `data/books/alice-adventures-in-wonderland.txt`).
@@ -297,8 +297,16 @@ Short records of choices that should stay true across sessions. Add a new entry 
 3. CLI: every subcommand accepts `--book` (parent parser); `main()` builds `args.paths` and mkdirs state/output. Command bodies still use flat module constants until MB2.
 4. No file moves in MB1.
 
-**Consequences:** `--book` is accepted but does not yet redirect pipeline I/O for Alice; non-Alice ids resolve to scoped dirs for later slices.  
+**Consequences:** Path API landed; MB2 wires I/O through it.  
 **Extends:** Multi-book foundation five slices (MB1 implemented).
+
+## 2026-08 — MB2 wire CLI through `BookPaths`
+
+**Status:** current  
+**Context:** MB1 added `--book` + `BookPaths` but command bodies still used flat `state/` / `output/` constants.  
+**Decision:** Every CLI command (and `enriched_book` / `export_book`) resolves source + artifacts via `BookPaths` from `args.paths`. Alice default still flat (compat until MB3). No file moves.  
+**Consequences:** Non-Alice `--book` ids read/write scoped dirs; Alice smoke paths unchanged. Next: **MB3** migrate Alice under `<book-id>` and drop flat fallback.  
+**Extends:** MB1 path contract.
 
 ## 2026-08 — Agent-first playbook for next repos
 
