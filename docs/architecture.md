@@ -213,7 +213,7 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - Switch: `LLM_PROVIDER` = `gemini` (default) or `lmstudio`
 - Shared API: `agents/llm.py` → `generate_text(...)` (agents unchanged at call site)
 - **Gemini:** `GEMINI_API_KEY`, optional `GEMINI_MODEL` (default `gemini-3.5-flash`); SDK `google-genai`
-- **LM Studio:** OpenAI-compatible local server via `openai` SDK; `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `qwen/qwen3.5-9b`), optional `LMSTUDIO_API_KEY` (default `lm-studio`)
+- **LM Studio:** OpenAI-compatible local server via `openai` SDK; `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `google/gemma-4-12b`), optional `LMSTUDIO_API_KEY` (default `lm-studio`)
 - Reader / Critic: JSON mode (Gemini mime type / LM Studio `response_format=json_schema`; LM Studio rejects OpenAI’s `json_object`)
 - Editor draft + revise: Markdown sections — plot summary, characters, themes/motifs, notable quotes
 - Full-book report: deterministic merge of chapter Markdown (prefer enriched over summary; weaves `book-synthesis.md` when present; no LLM in `report` itself)

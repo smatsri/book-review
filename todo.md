@@ -5,8 +5,8 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Critic ~8k prompt fit; Naked Sun ch18 summary written via `--from critic`.
-- **Last success:** Smoke `summarize --book asimov-naked-sun --chapter 18 --from critic` → critique + summary.
+- **Stopped at:** Local LM Studio default switched to `google/gemma-4-12b` (docs + `.env.example`); Pipeline UI-3 still Now.
+- **Last success:** Gemma footnotes JSON on Naked Sun ch18; `.env` `LMSTUDIO_MODEL` wins after CLI restart.
 - **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
@@ -33,13 +33,14 @@ After multi-book foundation.
 - [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
 - [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
 - [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
-- [ ] Billing / model quality strategy — local Qwen for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
+- [ ] Billing / model quality strategy — local Gemma 4 12B for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] RAG / embeddings over chapters
 
 ## Done
 
 Recent:
 
+- [x] **Local model → Gemma 4 12B** — `LMSTUDIO_MODEL` / code default / runbook + architecture + decisions; supersedes Qwen-as-dev-default
 - [x] **Critic ~8k prompt fit** — head+tail chapter truncate + compact notes; Naked Sun ch18 `--from critic` smoke
 - [x] **Critic JSON resilience** — `agents/json_util.py`; Critic max tokens + one retry; Naked Sun ch15 `--from critic` smoke
 - [x] **Pipeline UI-2 — Run one CLI step** — `pipeline_run.py` + `POST/GET /api/run`; allowlist; one job; poll log + status; Run button in `web/pipeline.html`

@@ -90,7 +90,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Park billing; local Qwen for current dev
 
-**Status:** current  
+**Status:** superseded by “Local LM Studio model: Gemma 4 12B for current dev”  
 **Context:** Dual providers work; free-tier Gemini quota was the original pain; local Qwen via LM Studio is acceptable for the current development loop.  
 **Decision:** Do not decide paid Flash / Pro-Sonnet mix / per-agent hybrid now. Keep `LLM_PROVIDER=lmstudio` (local Qwen) as the default working setup for ongoing feature work. Revisit billing/hybrid when quota returns as a blocker or local quality/latency is insufficient.  
 **Consequences:** Next product work can proceed without a billing choice; cost notes above remain reference material.  
@@ -451,3 +451,11 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Size Critic for ~8k local context like visual-* agents: compact notes JSON (no indent), reserve headroom for chat template + output, and when chapter + fixed prompt parts exceed the budget, truncate chapter text with a clear marker keeping **head + tail** (openings and endings stay available). Prefer raising LM Studio context for full-text critique when possible; code path must not hard-fail long EPUB chapters on 8k defaults. JSON resilience (`parse_json_object`, `max_output_tokens=4096`, one retry) unchanged.  
 **Consequences:** Long chapters may lose mid-body evidence in the Critic prompt; draft + Reader notes still present. Resume with `summarize --book … --chapter N --from critic`.  
 **Extends / supersedes:** Critic JSON resilience point 3 (“full chapter text” always).
+
+## 2026-08 — Local LM Studio model: Gemma 4 12B for current dev
+
+**Status:** current  
+**Context:** Dev loop stays on `LLM_PROVIDER=lmstudio`. Local **Qwen-3.5-9B** worked for Alice fidelity but on *The Naked Sun* hit ~8k Critic context overflows and occasional invalid JSON. Trial of **Gemma 4 12B** (`google/gemma-4-12b`) produced valid footnotes JSON on long chapters; billing / paid cloud mix remains Later.  
+**Decision:** Default local model for ongoing feature work is **`google/gemma-4-12b`** via LM Studio (`LMSTUDIO_MODEL` / `agents/llm.py` fallback / `.env.example`). Keep `LLM_PROVIDER=lmstudio` as the working provider; do not decide paid Flash / Pro-Sonnet mix or per-agent hybrid now. Prefer raising LM Studio `n_ctx` for full-text Critic when hardware allows; code still sizes prompts for ~8k.  
+**Consequences:** Docs and example env point at Gemma. Prefill can be slow on MacBook (especially long chapter footnotes/Critic); tune GPU offload / cache in LM Studio. Historical Qwen vs Flash notes in this file and `idea/model_comparison_and_context_enrichment.md` remain reference, not the current default.  
+**Supersedes:** “Park billing; local Qwen for current dev” for the **which local model** question only (billing still parked / Later).

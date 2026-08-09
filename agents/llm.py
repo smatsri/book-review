@@ -11,7 +11,7 @@ from openai import OpenAI
 DEFAULT_PROVIDER = "gemini"
 DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
 DEFAULT_LMSTUDIO_BASE_URL = "http://127.0.0.1:1234/v1"
-DEFAULT_LMSTUDIO_MODEL = "qwen/qwen3.5-9b"
+DEFAULT_LMSTUDIO_MODEL = "google/gemma-4-12b"
 DEFAULT_LMSTUDIO_API_KEY = "lm-studio"
 
 

@@ -14,7 +14,7 @@ copy .env.example .env
 Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
 
 - **gemini** (default): set `GEMINI_API_KEY`. Optional: `GEMINI_MODEL` (default `gemini-3.5-flash`).
-- **lmstudio**: start LM Studio’s local server, load a model, set `LLM_PROVIDER=lmstudio`. Optional: `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `qwen/qwen3.5-9b`), `LMSTUDIO_API_KEY` (default `lm-studio`).
+- **lmstudio**: start LM Studio’s local server, load a model, set `LLM_PROVIDER=lmstudio`. Optional: `LMSTUDIO_BASE_URL` (default `http://127.0.0.1:1234/v1`), `LMSTUDIO_MODEL` (default `google/gemma-4-12b`), `LMSTUDIO_API_KEY` (default `lm-studio`).
 
 ## Commands
 
@@ -329,5 +329,5 @@ After changing the enriched binder:
 - Sample book: *Alice’s Adventures in Wonderland* under `data/books/`.
 - Book text is excluded from Cursor indexing via `.cursorignore`; agents should use `book.py` / CLI rather than reading the full raw file when possible.
 - Fresh `--all` makes up to four LLM calls per missing chapter (Reader + Editor draft + Critic + revise); expect several minutes (longer on local models). Use `--from` to avoid replaying earlier stages while iterating on Critic/revise.
-- Local Qwen (e.g. `qwen/qwen3.5-9b` in LM Studio) can take ~10 minutes per LLM call on a MacBook when reasoning is on, and will warm the machine; prefer Gemini for fast iteration. Thinking helps Critic most; keep it off for full-book thrash.
+- Local Gemma (e.g. `google/gemma-4-12b` in LM Studio) can take several minutes per LLM call on a MacBook (slow prompt prefill on long chapters) and will warm the machine; prefer Gemini for fast iteration. Raise LM Studio context above 8k when Criticing long EPUB chapters. Thinking helps Critic most; keep it off for full-book thrash.
 - Critic packs chapter + notes + draft; on ~8k local context it may head+tail-truncate long chapters (see `docs/decisions.md`). Raise LM Studio context if you want full-text critique. After an `exceed_context_size_error`, resume with `summarize --book <id> --chapter N --from critic`.
