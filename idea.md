@@ -49,6 +49,8 @@ Agent =
     State
 ```
 
+מפרט עתידי לכיוון Policy / מאפיינים הניתנים להגדרה לכל סוכן (בלי להחליף את ה־`SYSTEM_PROMPT` כולו): [`idea/agent_policy_config.md`](idea/agent_policy_config.md).
+
 לדוגמה:
 
 ## Reader Agent

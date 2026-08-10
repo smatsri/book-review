@@ -35,6 +35,7 @@ After multi-book foundation.
 - [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
 - [ ] Billing / model quality strategy — local Gemma 4 12B for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
 - [ ] RAG / embeddings over chapters
+- [ ] Agent policy / configurable characteristics — shared mechanism, per-agent taste knobs; see `idea/agent_policy_config.md`
 
 ## Done
 
