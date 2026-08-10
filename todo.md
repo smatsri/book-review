@@ -12,22 +12,21 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Now
 
-- [ ] *(empty — human on images; pick from Next / Later when ready for code)*
+- [ ] Pending (non-blocking): Naked Sun images pause
 
 ## Next
 
 After multi-book foundation:
 
 - [ ] Optional: small report placement/caption follow-ups
-- [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
 - [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
-- [ ] Reminder (non-blocking): Naked Sun `rollup` / `report` / `reduce` when images pause — see Parked
 
 ## Later
 
 After multi-book foundation.
 
+- [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
 - [ ] Split `main.py` into smaller, focused modules for readability and token management; keep entrypoint thin and move shared CLI helpers/command groups into dedicated files
 - [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
 - [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
