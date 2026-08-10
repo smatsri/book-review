@@ -5,25 +5,24 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Handoff **Save to state** (`POST /api/handoff-answers`) from viewer; Download kept as backup.
-- **Last success:** Pipeline UI-3 same-origin Open handoff; Gemma footnotes on Naked Sun ch18.
+- **Stopped at:** Human art / image creation in progress (does not block code).
+- **Last success:** Pipeline UI-3 same-origin Open handoff; Gemma footnotes on Naked Sun ch18; handoff **Save to state**.
 - **Do not redo:** MB1–MB5; EPUB ingest; UI-1–UI-3; handoff Save to state; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
-- **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
+- **Parked / reminders:** Naked Sun rollup / report / reduce (ch1–18 summaries present; optional, non-blocking while images are in progress); Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets) — `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] *(empty — pick from Next / Later)*
+- [ ] *(empty — human on images; pick from Next / Later when ready for code)*
 
 ## Next
 
 After multi-book foundation:
 
-- [ ] Optional: Naked Sun rollup / report / reduce after full summarize (ch1–18 summaries present)
-- [ ] Optional: plain_txt / numbered-heading split if EPUB path is insufficient (leftover `.txt` under `asimov-naked-sun/`)
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
 - [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
+- [ ] Reminder (non-blocking): Naked Sun `rollup` / `report` / `reduce` when images pause — see Parked
 
 ## Later
 
