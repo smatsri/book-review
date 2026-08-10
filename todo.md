@@ -8,7 +8,6 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 - **Stopped at:** Switching Now to Visual image prompts (prompt pack); Naked Sun sheets still not re-run.
 - **Last success:** Illustration-cast selection + smaller batches; Naked Sun aliases restored Elijah Baley; prompt-pack idea parked then promoted to Now.
 - **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images.
-- **Parked / reminders:** Naked Sun `visual-characters --force` (illustration cast) → scenes → handoff → resolve; optional reduce/identity/places; Enriched v1 polish.
 
 ## Now
 
@@ -16,24 +15,18 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Next
 
-After multi-book foundation:
-
-- [ ] Optional: small report placement/caption follow-ups
-- [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
-- [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
+- [ ] Split `main.py` into smaller, focused modules for readability and token management; keep entrypoint thin and move shared CLI helpers/command groups into dedicated files
+- [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
 
 ## Later
 
-After multi-book foundation.
-
-- [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
-- [ ] Split `main.py` into smaller, focused modules for readability and token management; keep entrypoint thin and move shared CLI helpers/command groups into dedicated files
-- [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
-- [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
-- [ ] Vision-LLM (or hybrid) art consistency review — optional; human pass enough for current Alice set
-- [ ] Billing / model quality strategy — local Gemma 4 12B for now; see `docs/decisions.md` + `idea/model_comparison_and_context_enrichment.md`
-- [ ] RAG / embeddings over chapters
 - [ ] Agent policy / configurable characteristics — shared mechanism, per-agent taste knobs; see `idea/agent_policy_config.md`
+- [ ] Optional: small report placement/caption follow-ups
+- [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
+- [ ] Enriched v1.1 polish — parked Known issues in `idea/enriched_book_export.md` (PDF width, EPUB line breaks, empty footnote lists)
+- [ ] Character companion sketch — idea note saved in `idea/character_companion_sketch.md`
+- [ ] PDF image/layout polish if EPUB/HTML isn’t enough (see also enriched Known issues)
+- [ ] RAG / embeddings over chapters
 
 ## Done
 
