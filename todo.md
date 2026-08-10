@@ -5,22 +5,16 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Visual-characters illustration cast (threshold/cap + batch 3 + JSON retry) ready; Naked Sun sheets not re-run yet.
-- **Last success:** Illustration-cast selection + smaller batches; Naked Sun aliases restored Elijah Baley.
+- **Stopped at:** Switching Now to Visual image prompts (prompt pack); Naked Sun sheets still not re-run.
+- **Last success:** Illustration-cast selection + smaller batches; Naked Sun aliases restored Elijah Baley; prompt-pack idea parked then promoted to Now.
 - **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images.
-- **Parked / reminders:** Naked Sun `visual-characters --force` → scenes → handoff → resolve; optional reduce/identity/places; Enriched v1 polish.
+- **Parked / reminders:** Naked Sun `visual-characters --force` (illustration cast) → scenes → handoff → resolve; optional reduce/identity/places; Enriched v1 polish.
 
 ## Now
-
-- [ ] Naked Sun `visual-characters --force` (illustration cast)
-
-## Now
-
-- [ ] Naked Sun `visual-characters --force` (full cast batches)
-
-## Next
 
 - [ ] Visual image prompts (prompt pack) — after resolve: compile Bing (~480) + full-model prompts from locked bible; see `idea/visual_image_prompts.md`
+
+## Next
 
 After multi-book foundation:
 
