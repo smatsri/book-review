@@ -72,7 +72,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/` with `meta.json` plus source file by kind (`<id>.txt`, `<id>.epub`, or `<id>.pdf`). Derived index: `data/books/catalog.json` (refreshed by `books`). Alice: `alice-wonderland/` |
 | `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible + optional `run-status.json` / `pipeline-run.log` from the operator UI |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
-| `web/` | Committed static viewers: `handoff.html` (visual handoff Q&A); `pipeline.html` (status board + allowlisted Run via `view-pipeline` APIs). |
+| `web/` | Committed static viewers: `handoff.html` (visual handoff Q&A + **Save to state** / Download); `pipeline.html` (status board + allowlisted Run + same-origin **Open handoff** via `view-pipeline` APIs). |
 
 ## Data model
 
@@ -191,13 +191,13 @@ Visual Bible handoff (`state/book-visual-handoff.json`, from `visual-handoff`):
 - Malformed rows dropped; missing `open_questions` / `consistency_issues` keys fail
 - Not woven into `book-report.md` yet; not run by `summarize --all`; skip unless `--force`
 
-Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/handoff.html` download):
+Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/handoff.html` **Save to state** via `POST /api/handoff-answers`, or Download):
 
 - `source_handoff` — `book-visual-handoff.json`
 - `answers` — one row per handoff `open_questions` entry: `{index, question, chosen, chosen_text, note}`
 - `index` — 0-based into that handoff’s `open_questions`; `chosen` — 0-based into that question’s `options`, or `null` if unanswered / no options; `chosen_text` / `question` denormalized for humans + resolve validation; `note` optional free text (empty string when unused)
-- Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; Download answers saves the file (place under `state/<book-id>/` manually)
-- No CLI / LLM; consistency issues are not answered here
+- Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; **Save to state** validates against the current handoff (same pairing rules as `visual-resolve`) and overwrites `state/<book-id>/book-visual-handoff-answers.json`; Download remains a backup
+- No LLM; consistency issues are not answered here
 
 Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`):
 
@@ -256,6 +256,5 @@ Do not assume these exist in code:
 - Multi-round critique (only one Critic → revise pass)
 - RAG / embeddings
 - PDF book ingest / non-Gutenberg chapter split
-- Pipeline UI-3 handoff integration in the operator console (UI-1 status + UI-2 allowlisted Run are shipped; see `view-pipeline`)
 
 Those are roadmap items in `todo.md` / `idea.md` (esp. [`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).

@@ -5,14 +5,14 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Local LM Studio default switched to `google/gemma-4-12b` (docs + `.env.example`); Pipeline UI-3 still Now.
-- **Last success:** Gemma footnotes JSON on Naked Sun ch18; `.env` `LMSTUDIO_MODEL` wins after CLI restart.
-- **Do not redo:** MB1–MB5; EPUB ingest; UI-1 status board; UI-2 Run; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
+- **Stopped at:** Handoff **Save to state** (`POST /api/handoff-answers`) from viewer; Download kept as backup.
+- **Last success:** Pipeline UI-3 same-origin Open handoff; Gemma footnotes on Naked Sun ch18.
+- **Do not redo:** MB1–MB5; EPUB ingest; UI-1–UI-3; handoff Save to state; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
 - **Parked:** Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets in all formats) — list in `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
 
 ## Now
 
-- [ ] **Pipeline UI-3** — handoff integrated as a stage action in the operator console
+- [ ] *(empty — pick from Next / Later)*
 
 ## Next
 
@@ -41,6 +41,8 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Handoff Save to state** — `POST /api/handoff-answers` + **Save to state** in `handoff.html`; Download kept; validates vs handoff
+- [x] **Pipeline UI-3 — handoff in operator console** — same-origin **Open handoff** from `view-pipeline` (8766); `view-handoff` 8765 kept as dedicated entry
 - [x] **Local model → Gemma 4 12B** — `LMSTUDIO_MODEL` / code default / runbook + architecture + decisions; supersedes Qwen-as-dev-default
 - [x] **Critic ~8k prompt fit** — head+tail chapter truncate + compact notes; Naked Sun ch18 `--from critic` smoke
 - [x] **Critic JSON resilience** — `agents/json_util.py`; Critic max tokens + one retry; Naked Sun ch15 `--from critic` smoke

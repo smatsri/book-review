@@ -429,8 +429,21 @@ Short records of choices that should stay true across sessions. Add a new entry 
 4. Not runnable: `illustrations` (manual JPGs), `visual_answers` (`view-handoff` nested server). Keep Copy CLI / handoff link.
 5. Primary port remains **8766** (`view-pipeline`); shared handler also serves `/api/run` on 8765.
 
-**Consequences:** UI-3 (handoff integrated in the console) is Next. Architecture / runbook document Run APIs and smoke.  
+**Consequences:** UI-3 (handoff integrated in the console) shipped next. Architecture / runbook document Run APIs and smoke.  
 **Extends:** Pipeline UI-1 status board.
+
+## 2026-08 — Pipeline UI-3: handoff in operator console
+
+**Status:** current  
+**Context:** UI-2 Run shipped; console still deep-linked handoff Q&A to port 8765 (`view-handoff`), so operators needed a second server mental model. Spec slice: book-scoped path to existing handoff UI ([`idea/pipeline_ui_and_multi_book.md`](../idea/pipeline_ui_and_multi_book.md)).  
+**Decision:**
+1. Ship **UI-3**: when `book-visual-handoff.json` exists, status stages emit `links.handoff` = `/web/handoff.html?book=<id>`; `web/pipeline.html` **Open handoff** uses that path same-origin (works on `view-pipeline` **8766** without hardcoding 8765).
+2. Answers: **Save to state** via `POST /api/handoff-answers` (`{ book, answers }`) writes `state/<id>/book-visual-handoff-answers.json` after validate-against-handoff; **Download answers** kept as backup. `visual_answers` stays non-runnable.
+3. `view-handoff` on **8765** remains the dedicated CLI / Cursor task entry; both CLIs share the same static+API handler.
+
+**Consequences:** Operator console alone is enough for handoff Q&A when handoff JSON exists. Pipeline layout polish stays Later.  
+**Extends:** Pipeline UI-2 allowlisted Run + poll; MB5 book-scoped handoff viewer.
+**Supersedes in part:** “Visual handoff answers download (viewer)” — no server POST — for the primary operator path (download remains available).
 
 ## 2026-08 — Critic JSON resilience for local models
 

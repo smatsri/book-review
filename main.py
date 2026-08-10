@@ -923,8 +923,8 @@ def write_book_visual_resolved(paths: BookPaths, *, force: bool) -> Path | None:
     if not answers_path.exists():
         raise SystemExit(
             f"Missing {answers_path.relative_to(ROOT)}. "
-            "Download answers from `python main.py view-handoff` and place "
-            "the file under state/<book-id>/."
+            "Use **Save to state** in `view-handoff` / Open handoff, "
+            "or Download answers and place the file under state/<book-id>/."
         )
 
     if resolved_path.exists() and not force:
@@ -1000,6 +1000,41 @@ def _http_ok(url: str) -> bool:
         return False
 
 
+def write_book_visual_answers(paths: BookPaths, answers: dict) -> Path:
+    """Validate answers against handoff and write state/<id>/book-visual-handoff-answers.json."""
+    from agents.visual_resolve import validate_answers_against_handoff
+
+    handoff_path = paths.book_visual_handoff_path()
+    if not handoff_path.is_file():
+        raise ValueError(
+            f"Missing {handoff_path.relative_to(paths.root)}. "
+            "Run visual-handoff first."
+        )
+    if not isinstance(answers, dict):
+        raise ValueError("Answers payload must be an object")
+    if "answers" not in answers:
+        raise ValueError("Answers payload missing 'answers'")
+    handoff = json.loads(handoff_path.read_text(encoding="utf-8"))
+    if not isinstance(handoff, dict):
+        raise ValueError("Handoff JSON must be an object")
+    try:
+        validate_answers_against_handoff(handoff, answers)
+    except RuntimeError as exc:
+        raise ValueError(str(exc)) from exc
+
+    out = {
+        "source_handoff": answers.get("source_handoff") or handoff_path.name,
+        "answers": answers["answers"],
+    }
+    answers_path = paths.book_visual_answers_path()
+    answers_path.parent.mkdir(parents=True, exist_ok=True)
+    answers_path.write_text(
+        json.dumps(out, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return answers_path
+
+
 def _repo_http_handler():
     """Static repo root + pipeline status APIs (used by view-handoff / view-pipeline)."""
     import http.server
@@ -1043,26 +1078,38 @@ def _repo_http_handler():
         def do_POST(self) -> None:
             parsed = urllib.parse.urlparse(self.path)
             path = parsed.path.rstrip("/") or "/"
-            if path != "/api/run":
-                self.send_error(404, "Not Found")
+            if path == "/api/run":
+                self._handle_run_post()
                 return
+            if path == "/api/handoff-answers":
+                self._handle_handoff_answers_post()
+                return
+            self.send_error(404, "Not Found")
+
+        def _read_json_body(self, *, max_bytes: int) -> dict | None:
             length_raw = self.headers.get("Content-Length", "0")
             try:
                 length = int(length_raw)
             except ValueError:
                 self._send_json(400, {"error": "Invalid Content-Length"})
-                return
-            if length < 0 or length > 65536:
+                return None
+            if length < 0 or length > max_bytes:
                 self._send_json(400, {"error": "Request body too large"})
-                return
+                return None
             raw = self.rfile.read(length) if length else b""
             try:
                 body = json.loads(raw.decode("utf-8") or "{}")
             except (UnicodeDecodeError, json.JSONDecodeError):
                 self._send_json(400, {"error": "Invalid JSON body"})
-                return
+                return None
             if not isinstance(body, dict):
                 self._send_json(400, {"error": "JSON body must be an object"})
+                return None
+            return body
+
+        def _handle_run_post(self) -> None:
+            body = self._read_json_body(max_bytes=65536)
+            if body is None:
                 return
             book_id = body.get("book")
             stage_id = body.get("stage")
@@ -1086,6 +1133,39 @@ def _repo_http_handler():
                 self._send_json(500, {"error": str(exc)})
                 return
             self._send_json(202, payload)
+
+        def _handle_handoff_answers_post(self) -> None:
+            body = self._read_json_body(max_bytes=262144)
+            if body is None:
+                return
+            book_id = body.get("book")
+            answers = body.get("answers")
+            if not isinstance(book_id, str) or not book_id.strip():
+                self._send_json(400, {"error": "Missing book"})
+                return
+            if not isinstance(answers, dict):
+                self._send_json(400, {"error": "Missing answers object"})
+                return
+            try:
+                meta = require_book_id(book_id.strip(), root=ROOT)
+                paths = BookPaths(meta.id, root=ROOT)
+                out_path = write_book_visual_answers(paths, answers)
+            except ValueError as exc:
+                msg = str(exc)
+                code = 404 if "Unknown book" in msg or msg.startswith("Missing ") else 400
+                self._send_json(code, {"error": msg})
+                return
+            except OSError as exc:
+                self._send_json(500, {"error": str(exc)})
+                return
+            self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "book": meta.id,
+                    "path": out_path.relative_to(ROOT).as_posix(),
+                },
+            )
 
         def _send_json(self, code: int, payload: object) -> None:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")

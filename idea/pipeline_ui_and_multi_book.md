@@ -86,7 +86,7 @@ Grow `web/` from a **one-page handoff questionnaire** into a **local operator co
 
 1. **Read-only status board** — per book, which artifacts exist (chapters → summarize → … → export).
 2. **Run controls** — start one CLI step; stream or poll logs/progress.
-3. **Handoff integrated** — book-scoped path to existing handoff UI.
+3. **Handoff integrated** — done (same-origin **Open handoff** from `view-pipeline` / `pipeline.html`).
 4. **Catalog** — add/select books (including PDF import entry point).
 
 ## Sequencing vs Alice

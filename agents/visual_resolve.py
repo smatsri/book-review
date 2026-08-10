@@ -394,4 +394,12 @@ def build_visual_resolved(
     }
 
 
-__all__ = ["build_visual_resolved"]
+def validate_answers_against_handoff(
+    handoff: dict[str, Any],
+    answers: dict[str, Any],
+) -> None:
+    """Raise RuntimeError if answers JSON does not pair with handoff questions."""
+    _validate_and_pair(handoff, answers)
+
+
+__all__ = ["build_visual_resolved", "validate_answers_against_handoff"]

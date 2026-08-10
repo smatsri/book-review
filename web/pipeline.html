@@ -202,18 +202,31 @@
       overflow-x: auto;
       white-space: pre;
     }
-    .stage a {
-      color: var(--accent);
-      font-size: 0.85rem;
-    }
     .actions {
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
       align-items: stretch;
     }
-    .actions button {
+    .actions button,
+    .actions a.primary {
       white-space: nowrap;
+      text-align: center;
+      text-decoration: none;
+    }
+    .actions a.primary {
+      display: block;
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fffdf9;
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+    }
+    .actions a.primary:hover {
+      border-color: var(--accent);
+      filter: brightness(1.05);
     }
 
     .empty {
@@ -486,17 +499,24 @@
           body.appendChild(cli);
         }
 
-        if (stage.links && stage.links.handoff) {
-          const link = document.createElement("a");
-          link.href = `http://127.0.0.1:8765${stage.links.handoff}`;
-          link.target = "_blank";
-          link.rel = "noopener";
-          link.textContent = "Open handoff viewer (port 8765)";
-          body.appendChild(link);
+        if (stage.links && stage.links.handoff_note) {
+          const note = document.createElement("p");
+          note.className = "detail";
+          note.textContent = stage.links.handoff_note;
+          body.appendChild(note);
         }
 
         const actions = document.createElement("div");
         actions.className = "actions";
+        if (stage.links && stage.links.handoff) {
+          const link = document.createElement("a");
+          link.className = "primary";
+          link.href = stage.links.handoff;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = "Open handoff";
+          actions.appendChild(link);
+        }
         if (stage.cli && !stage.cli.startsWith("#")) {
           const copyBtn = document.createElement("button");
           copyBtn.type = "button";

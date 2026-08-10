@@ -161,7 +161,7 @@ python main.py view-handoff
 python main.py view-handoff --book alice-wonderland
 ```
 
-Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html?book=<id>` (fetches `state/<id>/book-visual-handoff.json`). Also serves pipeline APIs (`/api/books`, `/api/status`, `/api/run`) so `web/pipeline.html` works on this port too. If port 8765 already serves this handoff **and** `/api/books`, re-running only reopens the browser (useful for the Cursor/VS Code task). If an old server is up without `/api/books`, stop it (Ctrl+C) and re-run. Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Download answers** → `book-visual-handoff-answers.json`. Save/move that file to `state/<id>/book-visual-handoff-answers.json` for `visual-resolve`. Stops with Ctrl+C when this process owns the server. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
+Serves the repo root on `http://127.0.0.1:8765` and opens `web/handoff.html?book=<id>` (fetches `state/<id>/book-visual-handoff.json`). Also serves pipeline APIs (`/api/books`, `/api/status`, `/api/run`, `POST /api/handoff-answers`) so `web/pipeline.html` works on this port too. If port 8765 already serves this handoff **and** `/api/books`, re-running only reopens the browser (useful for the Cursor/VS Code task). If an old server is up without `/api/books`, stop it (Ctrl+C) and re-run. Pick a radio option per open question (suggested pre-selected when present), add optional notes, then **Save to state** (writes `state/<id>/book-visual-handoff-answers.json` via `POST /api/handoff-answers`, validated against the handoff) or **Download answers** as a backup. Stops with Ctrl+C when this process owns the server. Same command is available as the Cursor/VS Code task **Open visual handoff** (Command Palette → Tasks: Run Task).
 
 Open the pipeline status board (status + allowlisted Run; no LLM in the server):
 
@@ -170,7 +170,7 @@ python main.py view-pipeline
 python main.py view-pipeline --book alice-wonderland
 ```
 
-Serves the repo root on `http://127.0.0.1:8766` with `GET /api/books`, `GET /api/status?book=<id>`, `GET /api/run`, and `POST /api/run` (JSON `{ "book", "stage" }` → allowlisted `python main.py …` subprocess), and opens `web/pipeline.html?book=<id>`. Pick a catalog book to see stage badges (`done` / `partial` / `missing`), copy-paste CLI hints, or **Run** a runnable stage. Progress is polled via `/api/run` plus filesystem status refresh; one job at a time (`409` if busy). Artifacts: `state/<id>/run-status.json` and `pipeline-run.log`. Illustrations and handoff-answers are not runnable from the UI. If port 8766 already serves `/api/books`, re-running only reopens the browser. Stops with Ctrl+C when this process owns the server. Handoff Q&A remains on port 8765 (`view-handoff`); the same `/api/run` routes exist on that shared handler if needed.
+Serves the repo root on `http://127.0.0.1:8766` with `GET /api/books`, `GET /api/status?book=<id>`, `GET /api/run`, `POST /api/run` (JSON `{ "book", "stage" }` → allowlisted `python main.py …` subprocess), and `POST /api/handoff-answers` (JSON `{ "book", "answers" }` → write `state/<id>/book-visual-handoff-answers.json`), and opens `web/pipeline.html?book=<id>`. Pick a catalog book to see stage badges (`done` / `partial` / `missing`), copy-paste CLI hints, or **Run** a runnable stage. Progress is polled via `/api/run` plus filesystem status refresh; one job at a time (`409` if busy). Artifacts: `state/<id>/run-status.json` and `pipeline-run.log`. Illustrations and handoff-answers are not runnable from the UI. When handoff JSON exists, **Open handoff** opens same-origin `web/handoff.html?book=<id>` on this port (**Save to state** or Download). If port 8766 already serves `/api/books`, re-running only reopens the browser. Stops with Ctrl+C when this process owns the server. Dedicated handoff entry remains `view-handoff` on port 8765; the same APIs exist on that shared handler.
 
 Apply handoff answers into a locked resolved bible (needs four bible files + handoff + answers; no LLM):
 
@@ -293,7 +293,8 @@ After changing visual handoff:
 2. Re-run `python main.py visual-handoff` — expect a skip message and no LLM call.
 3. Confirm steps 1–4 bible JSON files and `output/book-report.md` are unchanged by this command.
 4. With handoff JSON present, `python main.py view-handoff` — expect a local server on port 8765, browser URL includes `?book=alice-wonderland`, and the page lists open questions (with selectable options / suggested pre-selected when present) and consistency issues (Ctrl+C to stop).
-5. Pick options, add a note, **Download answers** — expect `book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`); place it at `state/<id>/book-visual-handoff-answers.json`.
+5. Pick options, add a note, **Save to state** — expect `state/<id>/book-visual-handoff-answers.json` with one `answers[]` row per open question (`index` / `question` / `chosen` / `chosen_text` / `note`). **Download answers** still emits the same JSON as a file backup.
+6. With Alice handoff JSON present via `view-pipeline`, **Open handoff** then **Save to state** — expect write under `state/alice-wonderland/` on port **8766** without a second server.
 
 After changing pipeline status board (`view-pipeline` / `pipeline_status.py` / `pipeline_run.py` / `web/pipeline.html`):
 
@@ -303,7 +304,8 @@ After changing pipeline status board (`view-pipeline` / `pipeline_status.py` / `
 4. **Copy CLI** on a stage — expect a `python main.py … --book <id>` string on the clipboard.
 5. On a fast no-LLM stage (e.g. **Report** or **Chapters** for Alice): **Run** — expect the run panel to show log output; `GET /api/run` moves from `running` to `finished` with `exit_code: 0`; status badges refresh.
 6. While a run is active, a second **Run** is disabled / `POST /api/run` returns `409`.
-7. **Illustrations** and **Handoff answers** rows — expect no **Run** button (Copy CLI / handoff link only).
+7. **Illustrations** and **Handoff answers** rows — expect no **Run** button (Copy CLI / **Open handoff** only).
+8. With Alice handoff JSON present, **Open handoff** — expect same-origin `web/handoff.html?book=alice-wonderland` on port **8766**, open questions listed; **Save to state** / Download available. Dedicated `view-handoff` on 8765 still works.
 
 After changing visual resolve:
 

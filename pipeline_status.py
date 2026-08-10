@@ -256,7 +256,11 @@ def build_pipeline_status(book_id: str, root: Path = ROOT) -> dict[str, Any]:
         if stage_id in ("visual_handoff", "visual_answers") and paths.book_visual_handoff_path().is_file():
             links = {
                 "handoff": f"/web/handoff.html?book={meta.id}",
-                "handoff_note": "Handoff viewer is on port 8765 (python main.py view-handoff)",
+                "handoff_note": (
+                    "Open handoff Q&A on this server when handoff JSON exists "
+                    "(Save to state, or Download answers). "
+                    "Dedicated CLI: python main.py view-handoff"
+                ),
             }
         stages.append(
             _stage(

@@ -282,7 +282,7 @@
 <body>
   <header>
     <h1>Visual Handoff</h1>
-    <p class="sub">Pick art options for open questions, then download answers for resolve.</p>
+    <p class="sub">Pick art options for open questions, then save answers for resolve (or download).</p>
   </header>
 
   <div class="toolbar">
@@ -296,7 +296,8 @@
     </select>
     <label class="file-btn" for="file-input">Load JSON…</label>
     <input id="file-input" type="file" accept="application/json,.json" />
-    <button type="button" class="primary" id="download-answers" disabled>Download answers</button>
+    <button type="button" class="primary" id="save-answers" disabled>Save to state</button>
+    <button type="button" id="download-answers" disabled>Download answers</button>
     <span class="status" id="status">Loading…</span>
   </div>
 
@@ -348,6 +349,7 @@
       topic: document.getElementById("topic-filter"),
       sev: document.getElementById("sev-filter"),
       file: document.getElementById("file-input"),
+      save: document.getElementById("save-answers"),
       download: document.getElementById("download-answers"),
     };
 
@@ -523,6 +525,7 @@
       }
 
       el.app.hidden = false;
+      el.save.disabled = !allQuestions.length;
       el.download.disabled = !allQuestions.length;
       updateStatusBar(el.status.dataset.label || undefined);
     }
@@ -549,6 +552,37 @@
           };
         }),
       };
+    }
+
+    async function saveAnswers() {
+      if (!data) return;
+      let bookId;
+      try {
+        bookId = bookIdFromQuery();
+      } catch (err) {
+        setStatus(err.message, true);
+        return;
+      }
+      el.save.disabled = true;
+      try {
+        const res = await fetch("/api/handoff-answers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ book: bookId, answers: buildAnswersPayload() }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(payload.error || `${res.status} ${res.statusText}`);
+        }
+        updateStatusBar(el.status.dataset.label || undefined);
+        setStatus(
+          `${el.status.dataset.label || "handoff"} · ${progressText()} · saved ${payload.path || ANSWERS_FILENAME}`
+        );
+      } catch (err) {
+        setStatus(`Save failed: ${err.message}`, true);
+      } finally {
+        el.save.disabled = !(data && (data.open_questions || []).length);
+      }
     }
 
     function downloadAnswers() {
@@ -588,6 +622,7 @@
         handoffUrl = handoffUrlForBook(bookIdFromQuery());
       } catch (err) {
         setStatus(err.message, true);
+        el.save.disabled = true;
         el.download.disabled = true;
         return;
       }
@@ -601,12 +636,16 @@
           `Could not load ${handoffUrl} (${err.message}). Use “Load JSON…” or open via \`python main.py view-handoff --book <id>\`.`,
           true
         );
+        el.save.disabled = true;
         el.download.disabled = true;
       }
     }
 
     el.topic.addEventListener("change", render);
     el.sev.addEventListener("change", render);
+    el.save.addEventListener("click", () => {
+      void saveAnswers();
+    });
     el.download.addEventListener("click", downloadAnswers);
 
     el.questions.addEventListener("change", (ev) => {
