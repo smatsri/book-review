@@ -130,11 +130,19 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — LLM character/theme alias merge
 
-**Status:** current  
+**Status:** superseded by “Alias merge harden (notes + validators + display-by-chapters)”  
 **Context:** Deterministic rollup leaves true aliases split (`Queen` vs `Queen of Hearts`). Downstream cast/theme use needs a merged index without replacing the cheap baseline.  
 **Decision:** Add Alias Merger agent + CLI `aliases` writing `state/book-rollup-merged.json` from `book-rollup.json`. One LLM call proposes clusters (exact input strings only); `apply_alias_clusters` in `rollup.py` validates, fills singletons, unions chapters/notes, and picks display name/theme as longest alias. Skip unless `--force`. Not invoked by `summarize --all`. No fuzzy string library in v1.  
 **Consequences:** Enrichment is opt-in and provider-dependent; baseline rollup remains authoritative for exact-normalized merges. Bad LLM clusters fail closed (unknown/overlap dropped).  
 **Extends:** “Book-level structured rollup (deterministic)”.
+
+## 2026-08 — Alias merge harden (notes + validators + display-by-chapters)
+
+**Status:** current  
+**Context:** Naked Sun `aliases` wrongly clustered Elijah Baley / Jessie Baley into Albert Minnim (surname merge; names-only prompt). Display-by-longest then labeled the protagonist Minnim; `visual-characters` cast index followed that.  
+**Decision:** (1) Alias Merger prompt includes compact per-character `chapters` count + up to 2 short notes (not names-only); stricter “shared surname ≠ same person” rules. (2) `apply_alias_clusters` runs deterministic `refine_character_alias_clusters` before merge: split clusters that mix distinct strong identities (different givens / family surname collisions); re-attach short/surname-only forms by surname or substring (chapter-count tie-break); titled ambiguous shorts (`Dr. X` matching multiple people) stay singletons; optional `alias_warnings` in merged JSON + CLI print. (3) Display `name` / `theme` = most source-row chapters (ties → longer, then alphabetical)—not longest string.  
+**Consequences:** Bad LLM people-merges fail softer (split + warn) instead of poisoning the cast index; re-run `aliases --force` then downstream visual/reduce as needed. Theme clustering unchanged beyond display rule. Single-token mis-attachments without a conflicting strong pair (e.g. `Gladia`→`Klorissa Cantoro`) still need notes/LLM caution.  
+**Extends / supersedes:** “LLM character/theme alias merge”.
 
 ## 2026-08 — Export HTML / PDF / EPUB (pure Python)
 
@@ -170,11 +178,27 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Visual Bible step 2 (character visual sheets)
 
-**Status:** current  
+**Status:** superseded by “Visual characters full cast (batched)”  
 **Context:** After book-level identity, illustrators need stable per-character looks with fact vs interpretation vs art_decision, before places/scenes/image gen.  
 **Decision:** Separate CLI `visual-characters` (like `visual-identity`): Visual Characters LLM writes `state/book-visual-characters.json` from compact Reader analyses (per-chapter character name/note only; no plot) + enriched rollup cast (top ~8 by chapter count; `book-rollup-merged.json` if present else `book-rollup.json`) + slim `book-visual-identity.json` trait values. Sized for ~8k local context (LM Studio / Qwen) with capped output tokens. Each character: `physical` / `personality` / `visual_language` trait arrays (`value` / `kind` / `confidence` / `note`). Requires identity file first. Names must match cast index; unknown/malformed rows dropped; missing `characters` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
 **Consequences:** One opt-in LLM call for character sheets; places / scenes / handoff / product weave stay later.  
 **Extends:** Visual Bible step 1 (book-level visual identity).
+
+## 2026-08 — Visual characters full cast (batched)
+
+**Status:** superseded by “Visual characters illustration cast (threshold + batch)”  
+**Context:** Top-~8-by-chapter-count cast for `visual-characters` was an ~8k context shortcut; with a poisoned alias merge it dropped Elijah Baley (absorbed as Albert Minnim) and omitted the rest of the rollup cast. Users expect every rollup character to get a sheet.  
+**Decision:** `visual-characters` uses the **full** rollup cast (`book-rollup-merged.json` if present else `book-rollup.json`) with no top-N truncation. Sheets are generated in LLM batches (~6 names), with chapter notes filtered to that batch’s names/aliases; one retry pass for any missing names; fail if still incomplete. Trait schema unchanged. Alias quality remains a separate prerequisite (see alias merge harden).  
+**Consequences:** More LLM calls on large casts; local ~8k still workable per batch; cast completeness is enforced in code rather than hoped for in one giant completion.  
+**Extends / supersedes:** Visual Bible step 2 (character visual sheets).
+
+## 2026-08 — Visual characters illustration cast (threshold + batch)
+
+**Status:** current  
+**Context:** Full-rollup sheets (28 Naked Sun rows incl. robot codes / one-shots) were slow and still truncated JSON on a 6-name batch (`max_output_tokens`). Literary rollup ≠ illustration cast.  
+**Decision:** Select an **illustration cast** from the rollup: keep names with ≥3 chapter hits (fill up to 8 by rank if needed; hard-keep #1-by-chapters; cap 12). Generate sheets in LLM batches of **3** with stricter 2-trait compact JSON, `parse_json_object`, one parse retry, and a missing-name retry (batch size 2). Fail if still incomplete. Alias quality remains a separate prerequisite.  
+**Consequences:** Recurring cast (e.g. Baley/Gladia/Daneel) gets sheets; walk-ons and serial numbers are skipped; fewer/safer local LLM calls than full cast.  
+**Extends / supersedes:** “Visual characters full cast (batched)”.
 
 ## 2026-08 — Visual Bible step 3 (key places / settings)
 

@@ -5,14 +5,18 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Human art / image creation in progress (does not block code).
-- **Last success:** Pipeline UI-3 same-origin Open handoff; Gemma footnotes on Naked Sun ch18; handoff **Save to state**.
-- **Do not redo:** MB1–MB5; EPUB ingest; UI-1–UI-3; handoff Save to state; Critic JSON harden; Critic 8k fit; Naked Sun ch18 critic resume; Full-book footnotes; visual bible through `visual-resolve` + handoff; Bing JPGs + human art pass; report scene weave; export image packing; enriched v1 binder. Older work → Done / `docs/decisions.md`.
-- **Parked / reminders:** Naked Sun rollup / report / reduce (ch1–18 summaries present; optional, non-blocking while images are in progress); Enriched v1 export polish (PDF half-width; EPUB per-sentence line breaks; empty/nested footnote bullets) — `idea/enriched_book_export.md` § Known issues; report human-iterate (optional); billing / Vision-LLM / RAG.
+- **Stopped at:** Visual-characters illustration cast (threshold/cap + batch 3 + JSON retry) ready; Naked Sun sheets not re-run yet.
+- **Last success:** Illustration-cast selection + smaller batches; Naked Sun aliases restored Elijah Baley.
+- **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images.
+- **Parked / reminders:** Naked Sun `visual-characters --force` → scenes → handoff → resolve; optional reduce/identity/places; Enriched v1 polish.
 
 ## Now
 
-- [ ] Pending (non-blocking): Naked Sun images pause
+- [ ] Naked Sun `visual-characters --force` (illustration cast)
+
+## Now
+
+- [ ] Naked Sun `visual-characters --force` (full cast batches)
 
 ## Next
 
@@ -39,6 +43,9 @@ After multi-book foundation.
 
 Recent:
 
+- [x] **Visual characters illustration cast** — ≥3 ch / fill 8 / cap 12 / keep #1; batch 3 + JSON retry; supersedes full-cast
+- [x] **Visual characters full cast (batched)** — superseded (too slow / truncated JSON on robot-heavy cast)
+- [x] **Alias merge harden** — notes + chapter counts in prompt; identity-conflict split validators; display by chapter count; docs + `test_alias_refine.py`
 - [x] **Handoff Save to state** — `POST /api/handoff-answers` + **Save to state** in `handoff.html`; Download kept; validates vs handoff
 - [x] **Pipeline UI-3 — handoff in operator console** — same-origin **Open handoff** from `view-pipeline` (8766); `view-handoff` 8765 kept as dedicated entry
 - [x] **Local model → Gemma 4 12B** — `LMSTUDIO_MODEL` / code default / runbook + architecture + decisions; supersedes Qwen-as-dev-default

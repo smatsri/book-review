@@ -125,7 +125,7 @@ python main.py visual-characters
 python main.py visual-characters --force
 ```
 
-Writes `state/book-visual-characters.json` (per-character `physical` / `personality` / `visual_language` trait arrays with `kind` + `confidence`). Uses `book-rollup-merged.json` if present else `book-rollup.json`, plus `state/book-visual-identity.json`. Does not rebuild the report. Skips when the characters file already exists unless `--force`.
+Writes `state/book-visual-characters.json` (per-character `physical` / `personality` / `visual_language` trait arrays with `kind` + `confidence`). Builds an **illustration cast** from `book-rollup-merged.json` if present else `book-rollup.json` (≥3 chapters, cap 12, always keeps #1-by-chapters), plus `state/book-visual-identity.json`. Sheets are built in LLM batches (~3 names) with a JSON parse retry. Does not rebuild the report. Skips when the characters file already exists unless `--force`.
 
 LLM place / setting sheets (needs all chapter analyses + `visual-identity`; not part of `summarize --all`):
 
@@ -246,10 +246,9 @@ After changing map/merge:
 
 After changing alias merge:
 
-1. With `state/book-rollup.json` present, `python main.py aliases --force` — expect `state/book-rollup-merged.json` with `source`, `characters` (`name` / `aliases` / `notes` / `chapters`), and `themes` (`theme` / `aliases` / `chapters`).
+1. With `state/book-rollup.json` present, `python main.py aliases --force` — expect `state/book-rollup-merged.json` with `source`, `characters` (`name` / `aliases` / `notes` / `chapters`), and `themes` (`theme` / `aliases` / `chapters`). Display names should follow chapter frequency (e.g. Elijah Baley over a longer wrong merge label). Unsafe LLM people-merges may print `warning:` lines and appear under optional `alias_warnings`.
 2. Re-run `python main.py aliases` — expect a skip message and no LLM call.
-3. Prefer fewer character/theme rows than the baseline when the model merges aliases (e.g. Queen / Queen of Hearts).
-
+3. Prefer fewer character/theme rows than the baseline when the model merges aliases (e.g. Queen / Queen of Hearts), without collapsing distinct people who share a surname.
 After changing footnotes:
 
 1. With chapter-1 analysis + summary present, `python main.py footnotes --chapter 1 --force` — expect `state/chapter-01-footnotes.json` and `output/chapter-01-enriched.md` with `[^ch01-…]` markers.
@@ -271,7 +270,7 @@ After changing visual identity:
 
 After changing visual characters:
 
-1. With all chapter analyses + rollup + `state/book-visual-identity.json` present, `python main.py visual-characters --force` — expect `state/book-visual-characters.json` with `characters` sheets (`physical` / `personality` / `visual_language` trait objects).
+1. With all chapter analyses + rollup + `state/book-visual-identity.json` present, `python main.py visual-characters --force` — expect `state/book-visual-characters.json` with sheets for the illustration cast (recurring names, ≤12; includes #1-by-chapters); CLI prints cast list + batch progress.
 2. Re-run `python main.py visual-characters` — expect a skip message and no LLM call.
 3. Confirm character names match the rollup cast and `output/book-report.md` is unchanged by this command.
 

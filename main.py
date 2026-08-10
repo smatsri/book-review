@@ -392,6 +392,8 @@ def cmd_aliases(args: argparse.Namespace) -> None:
         f"{len(payload['characters'])} characters ({multi_chars} multi-alias), "
         f"{len(payload['themes'])} themes ({multi_themes} multi-alias)"
     )
+    for warning in payload.get("alias_warnings") or []:
+        print(f"  warning: {warning}")
 
 
 def write_book_synthesis(paths: BookPaths, *, force: bool) -> Path | None:
@@ -624,7 +626,7 @@ def cmd_visual_characters(args: argparse.Namespace) -> None:
     print(f"Wrote {path.relative_to(ROOT)}")
     print(
         f"  {len(payload.get('chapters_included') or [])} chapters, "
-        f"{len(characters)} characters, "
+        f"{len(characters)} characters (illustration cast), "
         f"{physical} physical, "
         f"{personality} personality, "
         f"{visual_language} visual_language"

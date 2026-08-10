@@ -59,7 +59,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
 | `agents/critic.py` | Critic agent: chapter + analysis + draft → structured critique JSON (chapter may be head+tail truncated to fit ~8k local context) |
-| `agents/alias_merger.py` | Alias Merger: rollup name lists → character/theme alias clusters (JSON) |
+| `agents/alias_merger.py` | Alias Merger: rollup characters (name + chapter count + short notes) + theme labels → alias clusters (JSON) |
 | `agents/reducer.py` | Reducer agent: chapter summaries + rollup → book-level Markdown synthesis |
 | `agents/visual_identity.py` | Visual Identity agent: compact analyses + rollup → book-level visual identity JSON |
 | `agents/visual_characters.py` | Visual Characters agent: analyses + rollup + identity → character visual sheets JSON |
@@ -116,9 +116,11 @@ Merged rollup (`state/book-rollup-merged.json`, from `aliases`):
 
 - `source` — `book-rollup.json`
 - `chapters_included` — copied from baseline rollup
-- `characters` — `{name, aliases[], notes[], chapters[]}` after LLM clustering + deterministic apply
+- `characters` — `{name, aliases[], notes[], chapters[]}` after LLM clustering + deterministic refine/apply
 - `themes` — `{theme, aliases[], chapters[]}` likewise
-- Display `name` / `theme` = longest alias (ties → more source chapters, then alphabetical)
+- Display `name` / `theme` = most source-row chapters (ties → longer alias, then alphabetical)
+- Character clusters that mix distinct strong identities are split before merge; CLI may print `alias_warnings`
+- Optional `alias_warnings` — human-readable split notes when refine rewrote an LLM cluster
 - Unknown / overlapping LLM labels dropped; uncovered labels become singletons
 - Not run by `summarize --all`; requires existing `book-rollup.json`; skip unless `--force`
 
@@ -157,8 +159,8 @@ Character visual sheets (`state/book-visual-characters.json`, from `visual-chara
 - `chapters_included` — chapter numbers from the analyses
 - `characters` — array of `{name, physical, personality, visual_language}` where each sheet array is `{value, kind, confidence, note}` traits
 - Requires `book-visual-identity.json` plus all chapter analyses + rollup (`book-rollup-merged.json` if present else `book-rollup.json`)
-- LLM inputs: slim identity trait values, enriched rollup cast (top ~8 by chapter count with notes), compact analyses (per-chapter character name/note only); sized for ~8k local context; no full book text
-- Names must match the cast index; unknown / malformed character rows dropped; missing `characters` key fails
+- LLM inputs: slim identity trait values, **illustration cast** from rollup (≥3 chapter hits, fill to 8 by rank, always keep #1-by-chapters, cap 12), chapter notes filtered per batch; sheets in ~3-character LLM batches with JSON parse retry + missing-name retry; sized for ~8k local context per batch; no full book text
+- Names must match the cast index; unknown / malformed character rows dropped; incomplete cast after retry fails; missing `characters` key fails
 - Not woven into `book-report.md` yet; not run by `summarize --all`; skip unless `--force`
 
 Place / setting sheets (`state/book-visual-places.json`, from `visual-places`):
@@ -218,10 +220,10 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - Editor draft + revise: Markdown sections — plot summary, characters, themes/motifs, notable quotes
 - Full-book report: deterministic merge of chapter Markdown (prefer enriched over summary; weaves `book-synthesis.md` when present; no LLM in `report` itself)
 - Book rollup: deterministic merge of Reader analyses into `state/book-rollup.json` (no LLM)
-- Alias merge: one LLM call over rollup name lists → `state/book-rollup-merged.json`
+- Alias merge: one LLM call over character entries (name + chapter count + short notes) + theme labels → `state/book-rollup-merged.json`; deterministic identity refine + chapter-count display
 - Reduce: one LLM call over compact analyses + slim rollup → `output/book-synthesis.md`; rebuilds report
 - Visual identity: one LLM call over compact analyses + slim rollup → `state/book-visual-identity.json` (no report weave)
-- Visual characters: one LLM call over compact analyses + enriched rollup cast + slim identity → `state/book-visual-characters.json` (no report weave)
+- Visual characters: batched LLM calls over compact analyses + **illustration cast** (threshold/cap) + slim identity → `state/book-visual-characters.json` (no report weave)
 - Visual places: one LLM call over compact analyses (plot + events) + slim identity → `state/book-visual-places.json` (no report weave)
 - Visual scenes: one LLM call over compact analyses (plot + events + cast names) + slim identity + character/place sheet names → `state/book-visual-scenes.json` (no report weave)
 - Visual handoff: deterministic consistency checks + one LLM call over slim bible sheets → `state/book-visual-handoff.json` (no report weave)
