@@ -297,6 +297,8 @@ LLM Response
 
 מפרט מלא לתוצר Visual Bible (סגנון, דמויות, סצנות, רמות ביטחון): [`idea/visual_bible_for_books.md`](idea/visual_bible_for_books.md).
 
+שלב עתידי אחרי resolve — קומפילציית פרומפטים למודל תמונה (Bing ~480 מול מודל מלא): [`idea/visual_image_prompts.md`](idea/visual_image_prompts.md).
+
 ---
 
 ## Footnote Agent

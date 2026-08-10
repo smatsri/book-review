@@ -20,6 +20,8 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Next
 
+- [ ] Visual image prompts (prompt pack) — after resolve: compile Bing (~480) + full-model prompts from locked bible; see `idea/visual_image_prompts.md`
+
 After multi-book foundation:
 
 - [ ] Optional: small report placement/caption follow-ups
