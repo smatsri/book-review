@@ -551,3 +551,13 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** `chapters` → 4 Kafka parts; Alice 12 / Naked Sun 18 unchanged. Analysis “chapters” are pipeline units, not publisher chapters.  
 **Extends:** Kafka catalogued; EPUB ingest via numbered TOC / short-story spine concat.
+
+## 2026-08 — Handoff Save when no open questions
+
+**Status:** current  
+**Context:** With zero `open_questions`, the handoff viewer disabled **Save to state** / Download, so operators could not create `book-visual-handoff-answers.json` and `visual-resolve` stayed blocked even though empty `answers: []` already validates.
+
+**Decision:** Keep Save/Download enabled whenever handoff JSON is loaded. Empty questions emit `{ source_handoff, answers: [] }`. Backend pairing rules unchanged (0 == 0). Status copy notes “no questions — ready to save.”
+
+**Consequences:** Empty questionnaires can still lock a deep-copied resolved bible with empty `resolutions` / `unresolved`.  
+**Extends:** Pipeline UI-3 handoff Save to state; Visual handoff answers resolve/apply CLI.

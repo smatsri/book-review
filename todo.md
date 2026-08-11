@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Penal Colony `visual-places` OK after JSON harden. Next: `visual-scenes` → handoff → resolve.
-- **Last success:** `visual-places --force` → `state/kafka-penal-colony/book-visual-places.json` (1 place); compact traits + `parse_json_object` + one retry.
-- **Do not redo:** Penal Colony catalog/placement; paragraph_budget opt-in design; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
+- **Stopped at:** Handoff viewer Save/Download enabled for empty `open_questions` (`answers: []`).
+- **Last success:** `web/handoff.html` no longer disables Save when question count is 0; docs note empty answers → `visual-resolve` lock path.
+- **Do not redo:** Penal Colony catalog/placement; paragraph_budget; visual places JSON harden; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
 
@@ -34,6 +34,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
+- [x] **Handoff empty-questions Save** — Save/Download enabled when `open_questions` is `[]`; writes `answers: []` for `visual-resolve`
 - [x] **Visual places JSON resilience** — `parse_json_object` + compact 2-trait prompt + one retry; Kafka `visual-places --force` smoke
 - [x] **Kafka paragraph_budget split** — opt-in `meta.chapter_split`; short-story EPUB path only; 4 parts @ 3500w; Alice/Naked Sun untouched
 - [x] **Kafka Penal Colony catalog + default** — `data/books/kafka-penal-colony/` EPUB + meta; `DEFAULT_BOOK_ID`; single-TOC EPUB ingest; chapters smoke

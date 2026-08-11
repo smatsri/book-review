@@ -200,6 +200,7 @@ Visual handoff answers (`state/book-visual-handoff-answers.json`, from `web/hand
 - `answers` — one row per handoff `open_questions` entry: `{index, question, chosen, chosen_text, note}`
 - `index` — 0-based into that handoff’s `open_questions`; `chosen` — 0-based into that question’s `options`, or `null` if unanswered / no options; `chosen_text` / `question` denormalized for humans + resolve validation; `note` optional free text (empty string when unused)
 - Viewer pre-selects `suggested` when present; selection/notes survive topic filter re-renders; **Save to state** validates against the current handoff (same pairing rules as `visual-resolve`) and overwrites `state/<book-id>/book-visual-handoff-answers.json`; Download remains a backup
+- Zero `open_questions` is valid: Save/Download stay enabled and write `{ answers: [] }` so `visual-resolve` can lock a deep-copied bible with empty `resolutions` / `unresolved`
 - No LLM; consistency issues are not answered here
 
 Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`):

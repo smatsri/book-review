@@ -412,6 +412,7 @@
     function progressText() {
       const questions = data && data.open_questions ? data.open_questions : [];
       const total = questions.length;
+      if (total === 0) return "no questions — ready to save";
       let chosen = 0;
       for (let i = 0; i < total; i++) {
         const entry = answers.get(i);
@@ -482,7 +483,13 @@
       el.iCount.textContent = String(issues.length);
 
       if (!questions.length) {
-        el.questions.innerHTML = `<p class="empty">No open questions${topic ? " for this topic" : ""}.</p>`;
+        el.questions.innerHTML = `<p class="empty">No open questions${
+          topic ? " for this topic" : ""
+        }.${
+          !topic && !allQuestions.length
+            ? " Save to state writes an empty answers file so visual-resolve can lock the bible."
+            : ""
+        }</p>`;
       } else {
         el.questions.innerHTML = questions
           .map(({ q, index }) => {
@@ -525,8 +532,9 @@
       }
 
       el.app.hidden = false;
-      el.save.disabled = !allQuestions.length;
-      el.download.disabled = !allQuestions.length;
+      // Enable even when open_questions is [] — empty answers unlock visual-resolve.
+      el.save.disabled = false;
+      el.download.disabled = false;
       updateStatusBar(el.status.dataset.label || undefined);
     }
 
@@ -581,7 +589,7 @@
       } catch (err) {
         setStatus(`Save failed: ${err.message}`, true);
       } finally {
-        el.save.disabled = !(data && (data.open_questions || []).length);
+        el.save.disabled = !data;
       }
     }
 
