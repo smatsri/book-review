@@ -46,7 +46,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text or EPUB, produce `Chapter` list; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json`. Gutenberg/plain_txt: strip markers + `CHAPTER` split. EPUB: ebooklib TOC entries matching `N. Title` (skips front/back); PDF ingest not built. |
+| `book.py` | Load book text or EPUB, produce `Chapter` list; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json`. Gutenberg/plain_txt: strip markers + `CHAPTER` split. EPUB: ebooklib numbered `N. Title` TOC (multi-chapter) or single unnumbered TOC + spine concat (short story); PDF ingest not built. |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
@@ -54,7 +54,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `export_book.py` | Deterministic export of binder MD → HTML / PDF / EPUB (`--mode report|enriched`); packs `illustrations/` JPGs into EPUB, relative links for HTML, xhtml2pdf `link_callback` for PDF |
 | `pipeline_status.py` | Deterministic filesystem scan of `state/<id>/` + `output/<id>/` → JSON stage status (`done` / `partial` / `missing`, plus `runnable`) for the local pipeline board |
 | `pipeline_run.py` | Thin allowlisted subprocess runner for the board: one global job; writes `state/<id>/run-status.json` + `pipeline-run.log` |
-| `main.py` | CLI: `books`, `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `view-pipeline`, `footnotes`, `export`; every book-scoped command accepts `--book` (default `alice-wonderland`, must be in catalog) and resolves artifacts via `args.paths` (`BookPaths`). |
+| `main.py` | CLI: `books`, `chapters`, `summarize`, `report`, `enriched`, `rollup`, `aliases`, `reduce`, `visual-identity`, `visual-characters`, `visual-places`, `visual-scenes`, `visual-handoff`, `visual-resolve`, `view-handoff`, `view-pipeline`, `footnotes`, `export`; every book-scoped command accepts `--book` (default `kafka-penal-colony`, must be in catalog) and resolves artifacts via `args.paths` (`BookPaths`). |
 | `agents/llm.py` | Shared LLM helper (Gemini or LM Studio) |
 | `agents/reader.py` | Reader agent: chapter → structured JSON analysis |
 | `agents/editor.py` | Editor agent: analysis → draft Markdown; revise draft using Critic JSON |
@@ -69,7 +69,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 | `agents/visual_resolve.py` | Deterministic resolve: handoff answers + four bible sheets → locked `book-visual-resolved.json` |
 | `agents/visual_traits.py` | Shared Visual Bible trait-row normalization (`value` / `kind` / `confidence` / `note`) |
 | `agents/footnote.py` | Footnote agent: chapter + analysis → structured footnotes JSON |
-| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/` with `meta.json` plus source file by kind (`<id>.txt`, `<id>.epub`, or `<id>.pdf`). Derived index: `data/books/catalog.json` (refreshed by `books`). In catalog today: `alice-wonderland`, `asimov-naked-sun`. **Lab focus:** next title `kafka-penal-colony` (*In the Penal Colony*); Naked Sun parked for active work — see `docs/decisions.md`. |
+| `data/books/` | Source texts (ignored by Cursor via `.cursorignore`). Per book: `data/books/<book-id>/` with `meta.json` plus source file by kind (`<id>.txt`, `<id>.epub`, or `<id>.pdf`). Derived index: `data/books/catalog.json` (refreshed by `books`). In catalog today: `alice-wonderland`, `asimov-naked-sun`, `kafka-penal-colony`. **Lab / CLI default:** `kafka-penal-colony` (*In the Penal Colony*); Naked Sun parked for active work — see `docs/decisions.md`. |
 | `state/` | Per-book trees `state/<book-id>/`: chapter metadata + Reader/Editor/Critic artifacts + rollups + footnotes JSON + visual bible + optional `run-status.json` / `pipeline-run.log` from the operator UI |
 | `output/` | Per-book trees `output/<book-id>/`: per-chapter summaries + enriched MD + synthesis + merged `book-report.md` / `book-enriched.md` (scene JPGs woven from `illustrations/` when resolved bible present) + HTML/PDF/EPUB for each binder + `illustrations/` scene JPGs |
 | `web/` | Committed static viewers: `handoff.html` (visual handoff Q&A + **Save to state** / Download); `pipeline.html` (status board + allowlisted Run + same-origin **Open handoff** via `view-pipeline` APIs). |
@@ -82,7 +82,7 @@ Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / 
 
 - `id` — stable slug (must match directory name)
 - `title`, `author` — display fields
-- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (`epub` expects `<id>.epub` and loads via numbered TOC; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt` still using Gutenberg `CHAPTER` split; PDF ingest not built)
+- `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (`epub` expects `<id>.epub`; loads via numbered TOC or single-TOC short-story spine concat; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt` still using Gutenberg `CHAPTER` split; PDF ingest not built)
 - `catalog.json` — derived snapshot of all metas (not the source of truth)
 
 `Chapter` (`book.py`):

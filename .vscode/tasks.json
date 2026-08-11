@@ -4,7 +4,7 @@
     {
       "label": "Open visual pipeline",
       "type": "shell",
-      "command": "${workspaceFolder}/.venv/bin/python main.py view-pipeline --book asimov-naked-sun",
+      "command": "${workspaceFolder}/.venv/bin/python main.py view-pipeline --book kafka-penal-colony",
       "options": {
         "cwd": "${workspaceFolder}"
       },

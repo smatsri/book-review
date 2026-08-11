@@ -5,13 +5,13 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Docs only — park Naked Sun; active lab book → Kafka *In the Penal Colony* (`docs/decisions.md`).
-- **Last success:** Decision + todo redirect; no catalog/source/code yet for Penal Colony.
-- **Do not redo:** Naked Sun visual/prompt iteration; alias merge harden; full-cast experiment; MB1–MB5; EPUB; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
+- **Stopped at:** Cataloged `kafka-penal-colony` EPUB + CLI default; chapters smoke (1 chapter). Next: Reader → visual bible loop.
+- **Last success:** `books --validate` ok; `chapters` → 1 chapter (~11k words); short-story EPUB spine-concat ingest.
+- **Do not redo:** Penal Colony catalog/placement; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
 
-- [ ] Kafka *In the Penal Colony* — catalog + source (`kafka-penal-colony`), then short Reader → visual bible loop (local-model lab; Alice stays regression)
+- [ ] Kafka *In the Penal Colony* — short Reader → visual bible loop (local-model lab; default `--book` is `kafka-penal-colony`; Alice stays explicit regression via `--book alice-wonderland`)
 
 ## Next
 
@@ -34,6 +34,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
+- [x] **Kafka Penal Colony catalog + default** — `data/books/kafka-penal-colony/` EPUB + meta; `DEFAULT_BOOK_ID`; single-TOC EPUB ingest; chapters smoke
 - [x] **Lab book redirect (docs)** — park Naked Sun; Now = Kafka *In the Penal Colony*; prompt pack → Next; decisions + runbook + architecture
 - [x] **Chat retrospective → decisions** — no rewrite for image quality; bible ≠ image prompt; JSON mostly model/truncation
 - [x] **Visual characters illustration cast** — ≥3 ch / fill 8 / cap 12 / keep #1; batch 3 + JSON retry; supersedes full-cast

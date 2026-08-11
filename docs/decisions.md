@@ -512,7 +512,7 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 ## 2026-08 — Lab book: park Naked Sun; move to Kafka *In the Penal Colony*
 
-**Status:** current  
+**Status:** superseded by Kafka catalog + CLI default  
 **Context:** Naked Sun exposed real Visual Bible gaps (theme/psychology painted as planetary surface; report-faithful prompts ≠ book landscape) and is expensive to iterate on a local ~8k model (18 chapters, fat cast, Critic context). Prompt-only fixes are not enough for multi-book confidence; need a short, concrete lab title. Metamorphosis rejected as too familiar / meme-overfit.
 
 **Decision:**
@@ -523,3 +523,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Operators and agents read `todo.md` Now for Penal Colony onboarding; Naked Sun historical decisions/smoke in runbook remain valid.  
 **Extends:** Retrospective (visual quality vs rewrite); multi-book catalog; Visual Bible places/identity.
+
+## 2026-08 — Kafka *In the Penal Colony* catalogued; CLI default
+
+**Status:** current  
+**Context:** Operator EPUB arrived; docs-only lab redirect still had Alice as `DEFAULT_BOOK_ID` and no `kafka-penal-colony` tree. This EPUB has a single unnumbered TOC entry pointing at a title page; story body is the next spine document.
+
+**Decision:**
+1. Catalog id `kafka-penal-colony` at `data/books/kafka-penal-colony/` with `meta.source_kind` = `epub` and `kafka-penal-colony.epub`.
+2. CLI / `BookPaths` default book id is `kafka-penal-colony` (Alice regression via explicit `--book alice-wonderland`).
+3. EPUB ingest keeps numbered `N. Title` TOC for multi-chapter books; if none match and TOC has exactly one entry, treat as one chapter and concatenate linear spine document text (covers title-page TOC hrefs).
+4. Do not change handoff HTML’s invalid-`?book=` fallback away from Alice in this slice.
+
+**Consequences:** `books --validate` and bare `chapters` exercise Penal Colony; Naked Sun numbered-TOC path unchanged.  
+**Extends / supersedes:** Lab book redirect (docs); EPUB ingest via numbered TOC.

@@ -11,11 +11,12 @@ from urllib.parse import unquote, urlparse
 
 from ebooklib import epub
 
-DEFAULT_BOOK_ID = "alice-wonderland"
+DEFAULT_BOOK_ID = "kafka-penal-colony"
 
 ROOT = Path(__file__).resolve().parent
+# Legacy Gutenberg helper for load_book() when path omitted (not the CLI default id).
 DEFAULT_BOOK = (
-    ROOT / "data" / "books" / DEFAULT_BOOK_ID / f"{DEFAULT_BOOK_ID}.txt"
+    ROOT / "data" / "books" / "alice-wonderland" / "alice-wonderland.txt"
 )
 
 START_MARKER = "*** START OF THE PROJECT GUTENBERG EBOOK"
@@ -498,8 +499,25 @@ def _strip_epub_chapter_heading(text: str, number: int, title: str) -> str:
     return text
 
 
+def _epub_spine_document_texts(book: epub.EpubBook) -> list[str]:
+    """Plain-text bodies for linear spine documents (skip empty)."""
+    bodies: list[str] = []
+    for entry in book.spine or []:
+        idref = entry[0] if isinstance(entry, (list, tuple)) else entry
+        if not idref:
+            continue
+        item = book.get_item_with_id(idref)
+        if item is None:
+            continue
+        raw = item.get_content().decode("utf-8", errors="replace")
+        text = _html_to_text(raw).strip()
+        if text:
+            bodies.append(text)
+    return bodies
+
+
 def load_epub_chapters(path: Path) -> list[Chapter]:
-    """Load chapters from EPUB via numbered TOC entries (skip front/back matter)."""
+    """Load chapters from EPUB via numbered TOC, or one short-story TOC entry."""
     if not path.is_file():
         raise FileNotFoundError(f"Missing EPUB: {path}")
 
@@ -529,11 +547,32 @@ def load_epub_chapters(path: Path) -> list[Chapter]:
             )
         )
 
-    if not chapters:
-        raise ValueError(
-            f"No numbered TOC chapters (N. Title) found in EPUB: {path}"
-        )
-    return chapters
+    if chapters:
+        return chapters
+
+    # Short story / unnumbered TOC: single entry; TOC may point at a title page,
+    # so concatenate linear spine documents for the body.
+    if len(toc_entries) == 1:
+        title = toc_entries[0][0].strip()
+        joined = "\n\n".join(_epub_spine_document_texts(book))
+        body = _strip_epub_chapter_heading(joined, 1, title)
+        if not body:
+            raise ValueError(
+                f"EPUB short-story body empty after spine concat: {path}"
+            )
+        return [
+            Chapter(
+                number=1,
+                roman=_int_to_roman(1),
+                title=title,
+                text=body,
+            )
+        ]
+
+    raise ValueError(
+        f"No numbered TOC chapters (N. Title) and not a single-TOC short story "
+        f"in EPUB: {path}"
+    )
 
 
 def load_chapters_for_book(meta: BookMeta, paths: BookPaths) -> list[Chapter]:

@@ -11,6 +11,12 @@
       "title": "The Naked Sun",
       "author": "Isaac Asimov",
       "source_kind": "epub"
+    },
+    {
+      "id": "kafka-penal-colony",
+      "title": "In the Penal Colony",
+      "author": "Franz Kafka",
+      "source_kind": "epub"
     }
   ]
 }
