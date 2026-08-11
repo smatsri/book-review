@@ -5,8 +5,8 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Penal Colony opt-in `paragraph_budget` split (4 parts). Next: Reader → visual bible loop.
-- **Last success:** `chapter_split` on kafka meta only; `chapters` → 4 parts (~3.2k/3.2k/3.4k/1.8k); Alice 12 / Naked Sun 18 unchanged; unit tests ok.
+- **Stopped at:** Penal Colony `visual-places` OK after JSON harden. Next: `visual-scenes` → handoff → resolve.
+- **Last success:** `visual-places --force` → `state/kafka-penal-colony/book-visual-places.json` (1 place); compact traits + `parse_json_object` + one retry.
 - **Do not redo:** Penal Colony catalog/placement; paragraph_budget opt-in design; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
@@ -34,6 +34,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
+- [x] **Visual places JSON resilience** — `parse_json_object` + compact 2-trait prompt + one retry; Kafka `visual-places --force` smoke
 - [x] **Kafka paragraph_budget split** — opt-in `meta.chapter_split`; short-story EPUB path only; 4 parts @ 3500w; Alice/Naked Sun untouched
 - [x] **Kafka Penal Colony catalog + default** — `data/books/kafka-penal-colony/` EPUB + meta; `DEFAULT_BOOK_ID`; single-TOC EPUB ingest; chapters smoke
 - [x] **Lab book redirect (docs)** — park Naked Sun; Now = Kafka *In the Penal Colony*; prompt pack → Next; decisions + runbook + architecture

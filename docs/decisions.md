@@ -204,9 +204,9 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Status:** current  
 **Context:** After identity + character sheets, illustrators need stable looks for recurring / illustration-worthy places before scene briefs / image gen. No places index exists in Reader/rollup.  
-**Decision:** Separate CLI `visual-places` (like `visual-characters`): Visual Places LLM writes `state/book-visual-places.json` from compact Reader analyses (truncated plot + capped events) + slim `book-visual-identity.json` trait values. LLM selects up to ~8 key places (no Reader/rollup schema change). Sized for ~8k local context with capped output tokens. Each place: `architecture` / `climate` / `atmosphere` / `symbols` trait arrays (`value` / `kind` / `confidence` / `note`). Requires identity file first; does not require rollup or character sheets. Duplicate/malformed place rows dropped; missing `places` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
-**Consequences:** One opt-in LLM call for place sheets; scene briefs / handoff / product weave stay later.  
-**Extends:** Visual Bible step 2 (character visual sheets).
+**Decision:** Separate CLI `visual-places` (like `visual-characters`): Visual Places LLM writes `state/book-visual-places.json` from compact Reader analyses (truncated plot + capped events) + slim `book-visual-identity.json` trait values. LLM selects up to ~8 key places (no Reader/rollup schema change). Sized for ~8k local context with capped output tokens. Each place: `architecture` / `climate` / `atmosphere` / `symbols` trait arrays (`value` / `kind` / `confidence` / `note`). Prompt asks for exactly 2 short traits per array. Uses `parse_json_object` and **one** LLM retry on truncated/invalid JSON (same damage control as visual-characters / Critic). Requires identity file first; does not require rollup or character sheets. Duplicate/malformed place rows dropped; missing `places` key fails. Shared trait normalize in `agents/visual_traits.py`. No full book text; no report/export weave. Not part of `summarize --all`. Skip unless `--force`.  
+**Consequences:** One opt-in LLM call for place sheets (plus optional parse retry); scene briefs / handoff / product weave stay later.  
+**Extends:** Visual Bible step 2 (character visual sheets); Critic / visual-characters JSON resilience.
 
 ## 2026-08 — Visual Bible step 4 (scene briefs)
 

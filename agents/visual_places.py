@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from agents.json_util import parse_json_object
 from agents.llm import generate_text
 from agents.visual_traits import normalize_trait_list
 
@@ -21,11 +22,12 @@ Art decisions are allowed but must use kind art_decision and low confidence.
 Keep looks consistent with the visual identity when making art decisions.
 Return valid JSON only."""
 
-# Sized for ~8k local contexts (LM Studio / Qwen) with room for JSON output.
+# Sized for ~8k local contexts (LM Studio / Gemma) with room for JSON output.
 _MAX_PLOT_CHARS = 350
 _MAX_EVENTS_PER_CHAPTER = 4
 _MAX_EVENT_CHARS = 80
 _MAX_PLACES = 8
+_MAX_OUTPUT_TOKENS = 4096
 _IDENTITY_TRAIT_KEYS = (
     "artistic_style",
     "color_palette",
@@ -114,6 +116,15 @@ def _normalize_place(raw: Any) -> dict[str, Any] | None:
     return sheet
 
 
+def _parse_places_payload(raw: str) -> list[Any]:
+    data = parse_json_object(raw)
+    if "places" not in data:
+        raise RuntimeError("Visual places JSON missing required key 'places'")
+    if not isinstance(data["places"], list):
+        raise RuntimeError("Visual places JSON 'places' must be an array")
+    return data["places"]
+
+
 def build_visual_places(
     chapter_analyses: list[dict[str, Any]],
     identity: dict[str, Any],
@@ -121,7 +132,11 @@ def build_visual_places(
     source_identity: str,
     model: str | None = None,
 ) -> dict[str, Any]:
-    """Build place / setting visual sheets JSON from analyses and identity."""
+    """Build place / setting visual sheets JSON from analyses and identity.
+
+    One LLM call with compact prompt; one JSON parse retry on truncation /
+    invalid output (same damage-control pattern as visual-characters).
+    """
     if not chapter_analyses:
         raise ValueError("chapter_analyses must not be empty")
 
@@ -159,18 +174,13 @@ Each place sheet must have:
 - "symbols": array of trait objects (recurring visual motifs tied to this place)
 
 Each trait object must have:
-- "value": short string
+- "value": short string (under ~6 words)
 - "kind": one of "fact", "interpretation", "art_decision"
 - "confidence": number from 0.0 to 1.0
-  - 1.0 explicit in the notes
-  - 0.7 strong inference
-  - 0.4 soft interpretation
-  - 0.1 pure art decision
-- "note": brief rationale (may be empty string)
+- "note": empty string or under ~6 words
 
 Prefer recurring or illustration-worthy settings. Cap at {_MAX_PLACES} places.
-Prefer 2–3 short traits per array. Keep each "value" brief and each "note" under ~8 words (or empty).
-Keep total JSON compact.
+Use exactly 2 traits per array. Keep JSON compact — no trailing commentary.
 Do not add other top-level keys. Do not invent places not supported by the notes.
 """
 
@@ -180,23 +190,32 @@ Do not add other top-level keys. Do not invent places not supported by the notes
         model=model,
         temperature=0.3,
         json_mode=True,
-        max_output_tokens=4096,
+        max_output_tokens=_MAX_OUTPUT_TOKENS,
     )
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Visual places returned invalid JSON: {exc}") from exc
-
-    if not isinstance(data, dict):
-        raise RuntimeError("Visual places JSON must be an object")
-    if "places" not in data:
-        raise RuntimeError("Visual places JSON missing required key 'places'")
-    if not isinstance(data["places"], list):
-        raise RuntimeError("Visual places JSON 'places' must be an array")
+        entries = _parse_places_payload(raw)
+    except (json.JSONDecodeError, ValueError, RuntimeError) as first_exc:
+        print("  visual-places JSON parse failed; retrying once ...")
+        raw = generate_text(
+            system=SYSTEM_PROMPT,
+            user=user_prompt
+            + "\n\nPrevious output was invalid or truncated JSON. "
+            "Reply with a complete compact JSON object only.",
+            model=model,
+            temperature=0.1,
+            json_mode=True,
+            max_output_tokens=_MAX_OUTPUT_TOKENS,
+        )
+        try:
+            entries = _parse_places_payload(raw)
+        except (json.JSONDecodeError, ValueError, RuntimeError) as exc:
+            raise RuntimeError(
+                f"Visual places returned invalid JSON: {exc}"
+            ) from first_exc
 
     places: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for entry in data["places"]:
+    for entry in entries:
         sheet = _normalize_place(entry)
         if sheet is None:
             continue

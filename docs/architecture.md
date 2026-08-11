@@ -225,7 +225,7 @@ Resolved Visual Bible (`state/book-visual-resolved.json`, from `visual-resolve`)
 - Reduce: one LLM call over compact analyses + slim rollup → `output/book-synthesis.md`; rebuilds report
 - Visual identity: one LLM call over compact analyses + slim rollup → `state/book-visual-identity.json` (no report weave)
 - Visual characters: batched LLM calls over compact analyses + **illustration cast** (threshold/cap) + slim identity → `state/book-visual-characters.json` (no report weave)
-- Visual places: one LLM call over compact analyses (plot + events) + slim identity → `state/book-visual-places.json` (no report weave)
+- Visual places: one LLM call over compact analyses (plot + events) + slim identity → `state/book-visual-places.json` (`parse_json_object` + one parse retry; no report weave)
 - Visual scenes: one LLM call over compact analyses (plot + events + cast names) + slim identity + character/place sheet names → `state/book-visual-scenes.json` (no report weave)
 - Visual handoff: deterministic consistency checks + one LLM call over slim bible sheets → `state/book-visual-handoff.json` (no report weave)
 - Visual resolve: deterministic apply of handoff answers → `state/book-visual-resolved.json` (no LLM; no report weave)
