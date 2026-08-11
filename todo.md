@@ -5,9 +5,9 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Switching Now to Visual image prompts (prompt pack); Naked Sun sheets still not re-run.
-- **Last success:** Illustration-cast selection + smaller batches; Naked Sun aliases restored Elijah Baley; prompt-pack idea parked then promoted to Now.
-- **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images.
+- **Stopped at:** Documented chat retrospective in `docs/decisions.md` (visual ≠ rewrite; JSON mostly model).
+- **Last success:** Decision entry — no full rewrite for image quality; prompt pack remains Now; JSON = model/truncation + incremental tooling.
+- **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
 
@@ -32,6 +32,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
+- [x] **Chat retrospective → decisions** — no rewrite for image quality; bible ≠ image prompt (prompt pack Now); JSON mostly model/truncation
 - [x] **Visual characters illustration cast** — ≥3 ch / fill 8 / cap 12 / keep #1; batch 3 + JSON retry; supersedes full-cast
 - [x] **Visual characters full cast (batched)** — superseded (too slow / truncated JSON on robot-heavy cast)
 - [x] **Alias merge harden** — notes + chapter counts in prompt; identity-conflict split validators; display by chapter count; docs + `test_alias_refine.py`

@@ -496,3 +496,16 @@ Short records of choices that should stay true across sessions. Add a new entry 
 **Decision:** Default local model for ongoing feature work is **`google/gemma-4-12b`** via LM Studio (`LMSTUDIO_MODEL` / `agents/llm.py` fallback / `.env.example`). Keep `LLM_PROVIDER=lmstudio` as the working provider; do not decide paid Flash / Pro-Sonnet mix or per-agent hybrid now. Prefer raising LM Studio `n_ctx` for full-text Critic when hardware allows; code still sizes prompts for ~8k.  
 **Consequences:** Docs and example env point at Gemma. Prefill can be slow on MacBook (especially long chapter footnotes/Critic); tune GPU offload / cache in LM Studio. Historical Qwen vs Flash notes in this file and `idea/model_comparison_and_context_enrichment.md` remain reference, not the current default.  
 **Supersedes:** “Park billing; local Qwen for current dev” for the **which local model** question only (billing still parked / Later).
+
+## 2026-08 — Retrospective: visual quality vs rewrite; JSON reliability
+
+**Status:** current  
+**Context:** After Naked Sun report + manual images: feeding `book-visual-resolved.json` into Gemini to invent image prompts produced weak art; ChatGPT prompts written from book knowledge looked better. That raised doubt about the whole Visual Bible / Python pipeline and interest in a full rewrite (new orchestration library and/or non-Python). Separately: recurring LLM JSON parse failures (especially local / truncated output).
+
+**Decision:**
+1. **Do not rewrite the repo or switch language** for image quality. Literary pipeline + enriched export still have value; the gap is a missing **bible → image-prompt compiler**, not “multi-agent analysis is wrong.”
+2. Treat `book-visual-resolved.json` as locked art direction, **not** a paste-ready image prompt. Next product slice stays the prompt pack in [`idea/visual_image_prompts.md`](../idea/visual_image_prompts.md) (`visual-resolve` → prompts → external gen). Optional: thin parallel experiments for prompt craft without deleting this codebase.
+3. **JSON:** failures are mostly **model + truncation / weak schema**, not missing a magic parser. Packages help at layers — validate shape (`pydantic` / `jsonschema`), best-effort repair (`json-repair`), real structured-output schemas at the API — but none guarantee valid JSON. Prefer stronger models + real schemas + short outputs; keep `json_util` / retry as damage control (Critic already).
+
+**Consequences:** Prioritize prompt-pack work over greenfield rewrite. Do not judge the whole project by raw-resolved→image quality. JSON hardening stays incremental; do not expect a library alone to fix local-model flakiness.
+**Extends:** Scene images manual; Visual resolve; Critic JSON resilience; Visual image prompts idea.
