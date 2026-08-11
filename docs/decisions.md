@@ -509,3 +509,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** Prioritize prompt-pack work over greenfield rewrite. Do not judge the whole project by raw-resolved→image quality. JSON hardening stays incremental; do not expect a library alone to fix local-model flakiness.
 **Extends:** Scene images manual; Visual resolve; Critic JSON resilience; Visual image prompts idea.
+
+## 2026-08 — Lab book: park Naked Sun; move to Kafka *In the Penal Colony*
+
+**Status:** current  
+**Context:** Naked Sun exposed real Visual Bible gaps (theme/psychology painted as planetary surface; report-faithful prompts ≠ book landscape) and is expensive to iterate on a local ~8k model (18 chapters, fat cast, Critic context). Prompt-only fixes are not enough for multi-book confidence; need a short, concrete lab title. Metamorphosis rejected as too familiar / meme-overfit.
+
+**Decision:**
+1. **Stop active work** on *The Naked Sun* (no further visual bible re-runs, prompt experiments, or feature driving from that title). Keep it in catalog for **occasional** smoke/stress (EPUB, long chapter, illustration-cast) only.
+2. **Next lab book:** Kafka *In the Penal Colony* — planned id `kafka-penal-colony` (public-domain short story; small cast; apparatus + valley as surface-vs-mood stress). Catalog + source not added in this docs-only change.
+3. **Regression:** Alice remains the fast visual/pipeline regression. Prompt-pack slice stays valuable but is **Next** until the Penal Colony loop (or Alice) is the active bible under test.
+4. Do not treat fixing one Solaria landscape sheet as multi-book confidence; evidence/schema/eval still needed later.
+
+**Consequences:** Operators and agents read `todo.md` Now for Penal Colony onboarding; Naked Sun historical decisions/smoke in runbook remain valid.  
+**Extends:** Retrospective (visual quality vs rewrite); multi-book catalog; Visual Bible places/identity.

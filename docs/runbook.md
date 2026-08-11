@@ -20,6 +20,8 @@ Copy `.env.example` to `.env`. Choose provider with `LLM_PROVIDER`:
 
 Optional `--book <id>` on every book-scoped command (default `alice-wonderland`; must appear in the catalog). Artifacts live under `state/<id>/` and `output/<id>/`; source under `data/books/<id>/<id>.txt`. Elsewhere below, bare `state/…` / `output/…` paths mean under that book id.
 
+**Active lab book:** Kafka *In the Penal Colony* (`kafka-penal-colony`, once catalogued) — short local-model loop. **Alice** stays default regression. ***The Naked Sun*** is parked for active feature work (EPUB / long-chapter smoke only); see `docs/decisions.md` (“Lab book: park Naked Sun…”).
+
 List registered books (no LLM; refreshes `data/books/catalog.json` from per-book `meta.json`):
 
 ```powershell

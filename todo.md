@@ -5,21 +5,23 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Documented chat retrospective in `docs/decisions.md` (visual ≠ rewrite; JSON mostly model).
-- **Last success:** Decision entry — no full rewrite for image quality; prompt pack remains Now; JSON = model/truncation + incremental tooling.
-- **Do not redo:** Alias merge harden; full-cast experiment (superseded); MB1–MB5; EPUB; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
+- **Stopped at:** Docs only — park Naked Sun; active lab book → Kafka *In the Penal Colony* (`docs/decisions.md`).
+- **Last success:** Decision + todo redirect; no catalog/source/code yet for Penal Colony.
+- **Do not redo:** Naked Sun visual/prompt iteration; alias merge harden; full-cast experiment; MB1–MB5; EPUB; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
 
-- [ ] Visual image prompts (prompt pack) — after resolve: compile Bing (~480) + full-model prompts from locked bible; see `idea/visual_image_prompts.md`
+- [ ] Kafka *In the Penal Colony* — catalog + source (`kafka-penal-colony`), then short Reader → visual bible loop (local-model lab; Alice stays regression)
 
 ## Next
 
+- [ ] Visual image prompts (prompt pack) — after resolve: compile Bing (~480) + full-model prompts from locked bible; see `idea/visual_image_prompts.md` (resume once Penal Colony bible exists or on Alice)
 - [ ] Split `main.py` into smaller, focused modules for readability and token management; keep entrypoint thin and move shared CLI helpers/command groups into dedicated files
 - [ ] Pipeline UI polish — `web/pipeline.html` layout / run panel UX (after UI-2 works; not blocking UI-3)
 
 ## Later
 
+- [ ] *The Naked Sun* — occasional stress test only (EPUB / long-chapter / fat cast); no active feature work
 - [ ] Agent policy / configurable characteristics — shared mechanism, per-agent taste knobs; see `idea/agent_policy_config.md`
 - [ ] Optional: small report placement/caption follow-ups
 - [ ] Enriched v2+ (inline footnotes, mid-chapter scenes, character plates) — see spec
@@ -32,7 +34,8 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
-- [x] **Chat retrospective → decisions** — no rewrite for image quality; bible ≠ image prompt (prompt pack Now); JSON mostly model/truncation
+- [x] **Lab book redirect (docs)** — park Naked Sun; Now = Kafka *In the Penal Colony*; prompt pack → Next; decisions + runbook + architecture
+- [x] **Chat retrospective → decisions** — no rewrite for image quality; bible ≠ image prompt; JSON mostly model/truncation
 - [x] **Visual characters illustration cast** — ≥3 ch / fill 8 / cap 12 / keep #1; batch 3 + JSON retry; supersedes full-cast
 - [x] **Visual characters full cast (batched)** — superseded (too slow / truncated JSON on robot-heavy cast)
 - [x] **Alias merge harden** — notes + chapter counts in prompt; identity-conflict split validators; display by chapter count; docs + `test_alias_refine.py`
