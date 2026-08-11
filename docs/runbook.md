@@ -211,9 +211,9 @@ Default `--mode report` requires `output/book-report.md` (run `report` or `summa
 After changing the loader / splitter / `BookPaths` / catalog / CLI path wiring:
 
 1. `python main.py books --validate` — expect `alice-wonderland`, `asimov-naked-sun`, and `kafka-penal-colony` ok and refreshed `data/books/catalog.json`.
-2. `python main.py chapters` — expect **1** Kafka chapter (`In the Penal Colony`); writes `state/kafka-penal-colony/chapters.json`.
-3. `python main.py chapters --book alice-wonderland` — expect a sensible chapter count and titles; writes `state/alice-wonderland/chapters.json`.
-4. `python main.py chapters --book asimov-naked-sun` — expect **18** chapters (`CHAPTER I. A Question Is Asked` … `CHAPTER XVIII. …`); writes `state/asimov-naked-sun/chapters.json`.
+2. `python main.py chapters` — expect **4** Kafka parts from opt-in `paragraph_budget` (`In the Penal Colony (Part N)`, ~3k words each except a shorter last part); writes `state/kafka-penal-colony/chapters.json`.
+3. `python main.py chapters --book alice-wonderland` — expect **12** chapters (unchanged Gutenberg `CHAPTER` split); writes `state/alice-wonderland/chapters.json`.
+4. `python main.py chapters --book asimov-naked-sun` — expect **18** chapters (`CHAPTER I. A Question Is Asked` … `CHAPTER XVIII. …`; numbered TOC, no `chapter_split`); writes `state/asimov-naked-sun/chapters.json`.
 5. `python main.py chapters --book no-such-book` — expect unknown-id error listing known books.
 6. Optional: `python main.py report` / `enriched` / `rollup` / `export --format html --force` with `--book alice-wonderland` — under `state/alice-wonderland/` + `output/alice-wonderland/`.
 

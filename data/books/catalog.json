@@ -16,7 +16,11 @@
       "id": "kafka-penal-colony",
       "title": "In the Penal Colony",
       "author": "Franz Kafka",
-      "source_kind": "epub"
+      "source_kind": "epub",
+      "chapter_split": {
+        "mode": "paragraph_budget",
+        "target_words": 3500
+      }
     }
   ]
 }

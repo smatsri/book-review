@@ -26,6 +26,16 @@ CHAPTER_RE = re.compile(r"^CHAPTER\s+([IVXLCDM]+)\.\s*$", re.MULTILINE)
 EPUB_NUMBERED_TOC_RE = re.compile(r"^(\d+)\.\s+(.+)$")
 
 SOURCE_KINDS = frozenset({"gutenberg_txt", "plain_txt", "pdf", "epub"})
+CHAPTER_SPLIT_MODES = frozenset({"paragraph_budget"})
+DEFAULT_PARAGRAPH_BUDGET_WORDS = 3500
+
+
+@dataclass(frozen=True)
+class ChapterSplit:
+    """Optional opt-in chapter packing (per-book meta; never implied)."""
+
+    mode: str
+    target_words: int
 
 
 @dataclass(frozen=True)
@@ -36,6 +46,7 @@ class BookMeta:
     title: str
     author: str
     source_kind: str
+    chapter_split: ChapterSplit | None = None
 
 
 @dataclass(frozen=True)
@@ -143,6 +154,24 @@ def catalog_path(root: Path = ROOT) -> Path:
     return books_dir(root) / "catalog.json"
 
 
+def _parse_chapter_split(raw: object) -> ChapterSplit | None:
+    """Parse optional meta.chapter_split; None means default loader behavior."""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError("Book meta chapter_split must be a JSON object")
+    mode = raw.get("mode")
+    if not isinstance(mode, str) or mode not in CHAPTER_SPLIT_MODES:
+        allowed = ", ".join(sorted(CHAPTER_SPLIT_MODES))
+        raise ValueError(f"Book meta chapter_split.mode must be one of: {allowed}")
+    target = raw.get("target_words", DEFAULT_PARAGRAPH_BUDGET_WORDS)
+    if not isinstance(target, int) or isinstance(target, bool) or target < 1:
+        raise ValueError(
+            "Book meta chapter_split.target_words must be a positive integer"
+        )
+    return ChapterSplit(mode=mode, target_words=target)
+
+
 def _parse_book_meta(raw: object, *, expected_id: str | None = None) -> BookMeta:
     if not isinstance(raw, dict):
         raise ValueError("Book meta must be a JSON object")
@@ -166,11 +195,17 @@ def _parse_book_meta(raw: object, *, expected_id: str | None = None) -> BookMeta
         raise ValueError(
             f"Book meta id {book_id!r} does not match directory {expected_id!r}"
         )
+    chapter_split = _parse_chapter_split(raw.get("chapter_split"))
+    if chapter_split is not None and source_kind != "epub":
+        raise ValueError(
+            "Book meta chapter_split is only supported for source_kind epub"
+        )
     return BookMeta(
         id=book_id,
         title=title.strip(),
         author=author.strip(),
         source_kind=source_kind,
+        chapter_split=chapter_split,
     )
 
 
@@ -206,7 +241,13 @@ def write_catalog(root: Path = ROOT, books: list[BookMeta] | None = None) -> Pat
     entries = books if books is not None else load_catalog(root)
     path = catalog_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"books": [asdict(b) for b in entries]}
+    catalog_books: list[dict] = []
+    for book in entries:
+        row = asdict(book)
+        if row.get("chapter_split") is None:
+            row.pop("chapter_split", None)
+        catalog_books.append(row)
+    payload = {"books": catalog_books}
     path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -516,8 +557,127 @@ def _epub_spine_document_texts(book: epub.EpubBook) -> list[str]:
     return bodies
 
 
-def load_epub_chapters(path: Path) -> list[Chapter]:
-    """Load chapters from EPUB via numbered TOC, or one short-story TOC entry."""
+class _HTMLParagraphCollector(HTMLParser):
+    """Collect non-empty <p> text nodes in document order."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.paragraphs: list[str] = []
+        self._buf: list[str] = []
+        self._in_p = 0
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in ("script", "style"):
+            self._skip_depth += 1
+            return
+        if self._skip_depth:
+            return
+        if tag == "p":
+            self._in_p += 1
+            if self._in_p == 1:
+                self._buf = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("script", "style") and self._skip_depth:
+            self._skip_depth -= 1
+            return
+        if self._skip_depth:
+            return
+        if tag == "p" and self._in_p:
+            self._in_p -= 1
+            if self._in_p == 0:
+                text = re.sub(r"\s+", " ", "".join(self._buf)).strip()
+                if text:
+                    self.paragraphs.append(text)
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth or not self._in_p:
+            return
+        self._buf.append(data)
+
+
+def _html_paragraphs(html: str) -> list[str]:
+    parser = _HTMLParagraphCollector()
+    parser.feed(html)
+    parser.close()
+    return parser.paragraphs
+
+
+def _epub_spine_paragraphs(book: epub.EpubBook) -> list[str]:
+    """All non-empty <p> texts from linear spine documents, in order."""
+    paragraphs: list[str] = []
+    for entry in book.spine or []:
+        idref = entry[0] if isinstance(entry, (list, tuple)) else entry
+        if not idref:
+            continue
+        item = book.get_item_with_id(idref)
+        if item is None:
+            continue
+        raw = item.get_content().decode("utf-8", errors="replace")
+        paragraphs.extend(_html_paragraphs(raw))
+    return paragraphs
+
+
+def pack_paragraphs_by_word_budget(
+    paragraphs: list[str], target_words: int
+) -> list[list[str]]:
+    """Pack paragraphs into parts; cut only at paragraph boundaries.
+
+    Greedy: start a new part when adding the next paragraph would exceed
+    ``target_words``, unless the current part is still empty (oversized
+    single paragraph stays alone).
+    """
+    if target_words < 1:
+        raise ValueError("target_words must be >= 1")
+    if not paragraphs:
+        return []
+
+    parts: list[list[str]] = []
+    current: list[str] = []
+    current_words = 0
+    for paragraph in paragraphs:
+        words = len(paragraph.split())
+        if current and current_words + words > target_words:
+            parts.append(current)
+            current = [paragraph]
+            current_words = words
+        else:
+            current.append(paragraph)
+            current_words += words
+    if current:
+        parts.append(current)
+    return parts
+
+
+def _chapters_from_paragraph_parts(
+    parts: list[list[str]], *, story_title: str
+) -> list[Chapter]:
+    chapters: list[Chapter] = []
+    for index, part in enumerate(parts, start=1):
+        body = "\n\n".join(part).strip()
+        if not body:
+            continue
+        title = f"{story_title} (Part {index})" if story_title else f"Part {index}"
+        chapters.append(
+            Chapter(
+                number=index,
+                roman=_int_to_roman(index),
+                title=title,
+                text=body,
+            )
+        )
+    return chapters
+
+
+def load_epub_chapters(
+    path: Path, *, chapter_split: ChapterSplit | None = None
+) -> list[Chapter]:
+    """Load chapters from EPUB via numbered TOC, or short-story fallback.
+
+    Numbered ``N. Title`` TOC always wins (multi-chapter books unchanged).
+    Optional ``chapter_split`` applies only on the single-TOC short-story path.
+    """
     if not path.is_file():
         raise FileNotFoundError(f"Missing EPUB: {path}")
 
@@ -554,6 +714,25 @@ def load_epub_chapters(path: Path) -> list[Chapter]:
     # so concatenate linear spine documents for the body.
     if len(toc_entries) == 1:
         title = toc_entries[0][0].strip()
+        if (
+            chapter_split is not None
+            and chapter_split.mode == "paragraph_budget"
+        ):
+            paragraphs = _epub_spine_paragraphs(book)
+            if not paragraphs:
+                raise ValueError(
+                    f"EPUB paragraph_budget split found no <p> text: {path}"
+                )
+            parts = pack_paragraphs_by_word_budget(
+                paragraphs, chapter_split.target_words
+            )
+            packed = _chapters_from_paragraph_parts(parts, story_title=title)
+            if not packed:
+                raise ValueError(
+                    f"EPUB paragraph_budget split produced no chapters: {path}"
+                )
+            return packed
+
         joined = "\n\n".join(_epub_spine_document_texts(book))
         body = _strip_epub_chapter_heading(joined, 1, title)
         if not body:
@@ -580,7 +759,9 @@ def load_chapters_for_book(meta: BookMeta, paths: BookPaths) -> list[Chapter]:
     if meta.source_kind in ("gutenberg_txt", "plain_txt"):
         return load_chapters(paths.source_path)
     if meta.source_kind == "epub":
-        return load_epub_chapters(paths.epub_path)
+        return load_epub_chapters(
+            paths.epub_path, chapter_split=meta.chapter_split
+        )
     if meta.source_kind == "pdf":
         raise ValueError(
             f"PDF ingest is not implemented yet (book {meta.id!r})."

@@ -537,3 +537,17 @@ Short records of choices that should stay true across sessions. Add a new entry 
 
 **Consequences:** `books --validate` and bare `chapters` exercise Penal Colony; Naked Sun numbered-TOC path unchanged.  
 **Extends / supersedes:** Lab book redirect (docs); EPUB ingest via numbered TOC.
+
+## 2026-08 — Opt-in EPUB `paragraph_budget` chapter_split
+
+**Status:** current  
+**Context:** Kafka *In the Penal Colony* is one unnumbered-TOC short story (~11.7k words / ~61 `<p>`). That is ~3× Naked Sun chapter average and stresses local Critic context. Alice (Gutenberg) and Naked Sun (numbered TOC) must stay unchanged.
+
+**Decision:**
+1. Optional `meta.chapter_split`: `{ "mode": "paragraph_budget", "target_words": N }` — epub only; omitted books keep prior loader behavior.
+2. Numbered `N. Title` TOC always wins; `chapter_split` applies only on the existing single-TOC short-story fallback.
+3. Pack linear-spine `<p>` texts greedily by cumulative words (cut only at paragraph boundaries); titles become `{story} (Part N)`.
+4. Enable on `kafka-penal-colony` with `target_words` 3500 (~4 analysis parts). Do not default-split fat chapters on other books.
+
+**Consequences:** `chapters` → 4 Kafka parts; Alice 12 / Naked Sun 18 unchanged. Analysis “chapters” are pipeline units, not publisher chapters.  
+**Extends:** Kafka catalogued; EPUB ingest via numbered TOC / short-story spine concat.

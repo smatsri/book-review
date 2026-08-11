@@ -5,13 +5,13 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 ## Session
 
-- **Stopped at:** Cataloged `kafka-penal-colony` EPUB + CLI default; chapters smoke (1 chapter). Next: Reader → visual bible loop.
-- **Last success:** `books --validate` ok; `chapters` → 1 chapter (~11k words); short-story EPUB spine-concat ingest.
-- **Do not redo:** Penal Colony catalog/placement; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
+- **Stopped at:** Penal Colony opt-in `paragraph_budget` split (4 parts). Next: Reader → visual bible loop.
+- **Last success:** `chapter_split` on kafka meta only; `chapters` → 4 parts (~3.2k/3.2k/3.4k/1.8k); Alice 12 / Naked Sun 18 unchanged; unit tests ok.
+- **Do not redo:** Penal Colony catalog/placement; paragraph_budget opt-in design; Naked Sun visual/prompt iteration; alias merge harden; MB1–MB5; EPUB numbered TOC; UI; Critic harden; Alice visual/images; rewrite debate settled in decisions.
 
 ## Now
 
-- [ ] Kafka *In the Penal Colony* — short Reader → visual bible loop (local-model lab; default `--book` is `kafka-penal-colony`; Alice stays explicit regression via `--book alice-wonderland`)
+- [ ] Kafka *In the Penal Colony* — short Reader → visual bible loop on split parts (local-model lab; default `--book` is `kafka-penal-colony`; Alice stays explicit regression via `--book alice-wonderland`)
 
 ## Next
 
@@ -34,6 +34,7 @@ Agents: read **Session** + **Now** first. See `AGENTS.md`.
 
 Recent:
 
+- [x] **Kafka paragraph_budget split** — opt-in `meta.chapter_split`; short-story EPUB path only; 4 parts @ 3500w; Alice/Naked Sun untouched
 - [x] **Kafka Penal Colony catalog + default** — `data/books/kafka-penal-colony/` EPUB + meta; `DEFAULT_BOOK_ID`; single-TOC EPUB ingest; chapters smoke
 - [x] **Lab book redirect (docs)** — park Naked Sun; Now = Kafka *In the Penal Colony*; prompt pack → Next; decisions + runbook + architecture
 - [x] **Chat retrospective → decisions** — no rewrite for image quality; bible ≠ image prompt; JSON mostly model/truncation

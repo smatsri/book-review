@@ -46,7 +46,7 @@ chapters chapter-NN enriched rollup rollup- chapter- book-    visual-         vi
 
 | Path | Role |
 |------|------|
-| `book.py` | Load book text or EPUB, produce `Chapter` list; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json`. Gutenberg/plain_txt: strip markers + `CHAPTER` split. EPUB: ebooklib numbered `N. Title` TOC (multi-chapter) or single unnumbered TOC + spine concat (short story); PDF ingest not built. |
+| `book.py` | Load book text or EPUB, produce `Chapter` list; `BookPaths` always resolves `data/books/<id>/`, `state/<id>/`, `output/<id>/` per `--book`; light catalog via per-book `meta.json` → derived `catalog.json`. Gutenberg/plain_txt: strip markers + `CHAPTER` split. EPUB: ebooklib numbered `N. Title` TOC (multi-chapter) wins always; else single unnumbered TOC → spine concat (one chapter) or opt-in `meta.chapter_split` `paragraph_budget` (pack `<p>` by word target). PDF ingest not built. |
 | `rollup.py` | Deterministic merge of chapter analyses → book-level characters/themes; `apply_alias_clusters` for enrichment |
 | `footnotes.py` | Deterministic Markdown Extra weave of footnote JSON into enriched chapter MD; `endnotes_markdown` for reading-edition chapter Notes |
 | `illustrations.py` | Deterministic scene→JPG map; report + enriched binders insert markdown under matching chapters (chapter files stay pristine) |
@@ -83,13 +83,14 @@ Book registry (`data/books/<book-id>/meta.json`, discovered by `load_catalog` / 
 - `id` — stable slug (must match directory name)
 - `title`, `author` — display fields
 - `source_kind` — `gutenberg_txt` \| `plain_txt` \| `pdf` \| `epub` (`epub` expects `<id>.epub`; loads via numbered TOC or single-TOC short-story spine concat; `plain_txt` is non-Gutenberg chaptered text under `<id>.txt` still using Gutenberg `CHAPTER` split; PDF ingest not built)
-- `catalog.json` — derived snapshot of all metas (not the source of truth)
+- `chapter_split` — optional; epub only. `{ "mode": "paragraph_budget", "target_words": N }` packs spine `<p>` into analysis parts on the short-story path only (numbered TOC still wins; omit on chaptered books). Used today on `kafka-penal-colony` (`target_words` 3500)
+- `catalog.json` — derived snapshot of all metas (not the source of truth; omits null `chapter_split`)
 
 `Chapter` (`book.py`):
 
-- `number` — Arabic chapter number (from Roman numeral for Gutenberg; from TOC `N.` for EPUB)
+- `number` — Arabic chapter number (from Roman numeral for Gutenberg; from TOC `N.` for EPUB; sequential for paragraph_budget parts)
 - `roman` — Roman numeral from the heading, or derived from `number` for EPUB
-- `title` — first non-empty line after `CHAPTER …` (Gutenberg) or TOC title after `N.` (EPUB)
+- `title` — first non-empty line after `CHAPTER …` (Gutenberg), TOC title after `N.` (EPUB), or `{story} (Part N)` for paragraph_budget parts
 - `text` — chapter body
 - `heading` — `CHAPTER {roman}. {title}`
 
